@@ -13,7 +13,7 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:${versioned("fabric_api")}")
     implementation("folk.sisby:kaleido-config:${setting("kaleido")}")
     include("folk.sisby:kaleido-config:${setting("kaleido")}")
-    integration("clutternomore")?.let { modCompileOnly("maven.modrinth:clutter-no-more:$it") { isTransitive = false } }
+    integration("clutternomore")?.let { modCompileOnly("maven.modrinth:clutternomore:$it") { isTransitive = false } }
     integration("sodium")?.let { modCompileOnly("maven.modrinth:sodium:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { modCompileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("create")?.let { modCompileOnly("maven.modrinth:create-fabric:$it") { isTransitive = false } } ?: integration("create", "neoforge")?.let { compileOnly("maven.modrinth:create:$it") { isTransitive = false } }

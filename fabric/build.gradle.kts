@@ -9,7 +9,7 @@ dependencies {
     implementation("net.fabricmc.fabric-api:fabric-api:${versioned("fabric_api")}")
     implementation("folk.sisby:kaleido-config:${setting("kaleido")}")
     include("folk.sisby:kaleido-config:${setting("kaleido")}")
-    integration("clutternomore")?.let { compileOnly("maven.modrinth:clutter-no-more:$it") { isTransitive = false } }
+    integration("clutternomore")?.let { compileOnly("maven.modrinth:clutternomore:$it") { isTransitive = false } }
     integration("sodium")?.let { compileOnly("net.caffeinemc:sodium-fabric:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { compileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
 }
