@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "offgrid:block/mixed_slab"
+    }
+  }
+}

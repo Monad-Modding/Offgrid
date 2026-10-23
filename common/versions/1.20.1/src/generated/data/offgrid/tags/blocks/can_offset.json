@@ -1,0 +1,334 @@
+{
+  "replace": false,
+  "values": [
+    "#offgrid:can_overlay",
+    "minecraft:tripwire_hook",
+    "minecraft:dragon_egg",
+    "minecraft:player_head",
+    "minecraft:player_wall_head",
+    {
+      "id": "create:analog_lever",
+      "required": false
+    },
+    {
+      "id": "supplementaries:crank",
+      "required": false
+    },
+    {
+      "id": "supplementaries:wind_vane",
+      "required": false
+    },
+    {
+      "id": "abundant_atmosphere:mud_lamp",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:dimmer",
+      "required": false
+    },
+    {
+      "id": "supplementaries:item_shelf",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flower_box",
+      "required": false
+    },
+    {
+      "id": "simulated:iron_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:copper_handle",
+      "required": false
+    },
+    {
+      "id": "supplementaries:jar",
+      "required": false
+    },
+    {
+      "id": "supplementaries:jar_boat",
+      "required": false
+    },
+    {
+      "id": "supplementaries:cage",
+      "required": false
+    },
+    {
+      "id": "supplementaries:statue",
+      "required": false
+    },
+    {
+      "id": "supplementaries:lunch_basket",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:cutting_board",
+      "required": false
+    },
+    {
+      "id": "nomansland:tap",
+      "required": false
+    },
+    {
+      "id": "etched:radio",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:toolbox",
+      "required": false
+    },
+    {
+      "id": "envelope:paper_box",
+      "required": false
+    },
+    {
+      "id": "envelope:letter",
+      "required": false
+    },
+    {
+      "id": "envelope:package",
+      "required": false
+    },
+    {
+      "id": "envelope:sealed_package",
+      "required": false
+    },
+    {
+      "id": "another_furniture:white_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:light_gray_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:gray_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:black_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:brown_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:yellow_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:lime_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:green_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:cyan_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:blue_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:light_blue_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:magenta_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:pink_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:purple_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:red_lamp",
+      "required": false
+    },
+    {
+      "id": "another_furniture:orange_lamp",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:exposed_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:weathered_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:oxidized_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_exposed_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_weathered_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_oxidized_floodlight",
+      "required": false
+    },
+    {
+      "id": "simulated:white_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:light_gray_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:gray_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:black_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:brown_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:yellow_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:lime_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:green_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:cyan_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:blue_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:light_blue_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:magenta_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:pink_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:purple_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:red_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:orange_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:white_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:light_gray_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:gray_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:black_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:brown_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:yellow_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:lime_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:green_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:cyan_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:blue_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:light_blue_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:magenta_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:pink_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:purple_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:red_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:orange_nameplate",
+      "required": false
+    },
+    {
+      "id": "passager:pigeon_nest",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:skillet",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:cooking_pot",
+      "required": false
+    }
+  ]
+}

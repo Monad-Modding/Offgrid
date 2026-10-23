@@ -1,0 +1,10 @@
+.gradle/
+build/
+out/
+run/
+runs/
+.idea/
+*.iml
+.kotlin/
+.DS_Store
+common/versions/*/src/generated/.cache

@@ -1,0 +1,703 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:torch",
+    "minecraft:wall_torch",
+    "minecraft:soul_torch",
+    "minecraft:soul_wall_torch",
+    "minecraft:redstone_torch",
+    "minecraft:redstone_wall_torch",
+    "minecraft:lantern",
+    "minecraft:soul_lantern",
+    "minecraft:end_rod",
+    "minecraft:moss_carpet",
+    "minecraft:skeleton_skull",
+    "minecraft:skeleton_wall_skull",
+    "minecraft:wither_skeleton_skull",
+    "minecraft:wither_skeleton_wall_skull",
+    "minecraft:zombie_head",
+    "minecraft:zombie_wall_head",
+    "minecraft:creeper_head",
+    "minecraft:creeper_wall_head",
+    "minecraft:piglin_head",
+    "minecraft:piglin_wall_head",
+    "minecraft:dragon_head",
+    "minecraft:dragon_wall_head",
+    "minecraft:small_amethyst_bud",
+    "minecraft:medium_amethyst_bud",
+    "minecraft:large_amethyst_bud",
+    "minecraft:amethyst_cluster",
+    {
+      "id": "#c:buds",
+      "required": false
+    },
+    {
+      "id": "#c:clusters",
+      "required": false
+    },
+    "minecraft:sea_pickle",
+    "minecraft:turtle_egg",
+    "minecraft:sniffer_egg",
+    "minecraft:lever",
+    "minecraft:cake",
+    "#minecraft:candle_cakes",
+    "#minecraft:candles",
+    "#minecraft:buttons",
+    "#minecraft:pressure_plates",
+    "#minecraft:wool_carpets",
+    "#minecraft:standing_signs",
+    "#minecraft:wall_signs",
+    "#minecraft:flower_pots",
+    "#minecraft:banners",
+    "minecraft:lightning_rod",
+    "#offgrid:can_blocklog",
+    {
+      "id": "caverns_and_chasms:cupric_torch",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:cupric_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:sconce_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:sconce_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:sconce_soul_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:sconce_soul_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_soul_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_soul_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_sconce_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_sconce_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_sconce_soul_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_sconce_soul_wall_torch",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:cupric_lantern",
+      "required": false
+    },
+    {
+      "id": "upgrade_aquatic:tooth_lantern",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:copper_lantern",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:exposed_copper_lantern",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:weathered_copper_lantern",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:oxidized_copper_lantern",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_copper_lantern",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_exposed_copper_lantern",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_weathered_copper_lantern",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_oxidized_copper_lantern",
+      "required": false
+    },
+    {
+      "id": "blocksabound:light_bulb",
+      "required": false
+    },
+    {
+      "id": "blocksabound:soul_light_bulb",
+      "required": false
+    },
+    {
+      "id": "blocksabound:redstone_light_bulb",
+      "required": false
+    },
+    {
+      "id": "blocksabound:copper_light_bulb",
+      "required": false
+    },
+    {
+      "id": "blocksabound:cage_light_bulb",
+      "required": false
+    },
+    {
+      "id": "blocksabound:soul_cage_light_bulb",
+      "required": false
+    },
+    {
+      "id": "blocksabound:redstone_cage_light_bulb",
+      "required": false
+    },
+    {
+      "id": "blocksabound:copper_cage_light_bulb",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_white",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_light_gray",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_gray",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_black",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_brown",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_yellow",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_lime",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_green",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_cyan",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_blue",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_light_blue",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_magenta",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_pink",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_purple",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_red",
+      "required": false
+    },
+    {
+      "id": "supplementaries:candle_holder_orange",
+      "required": false
+    },
+    {
+      "id": "abundant_atmosphere:rust_moss_carpet",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:full_tatami_mat",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:half_tatami_mat",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:canvas_rug",
+      "required": false
+    },
+    {
+      "id": "supplementaries:doormat",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_white",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_light_gray",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_gray",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_black",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_brown",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_yellow",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_lime",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_green",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_cyan",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_blue",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_light_blue",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_magenta",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_pink",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_purple",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_red",
+      "required": false
+    },
+    {
+      "id": "supplementaries:flag_orange",
+      "required": false
+    },
+    {
+      "id": "supplementaries:spider_head",
+      "required": false
+    },
+    {
+      "id": "supplementaries:spider_wall_head",
+      "required": false
+    },
+    {
+      "id": "supplementaries:enderman_head",
+      "required": false
+    },
+    {
+      "id": "supplementaries:enderman_wall_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:deeper_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:deeper_wall_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:evendeeper_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:evendeeper_wall_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:peeper_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:peeper_wall_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:mime_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:mime_wall_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:piglin_alchemist_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:piglin_alchemist_wall_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:piglin_traveler_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:piglin_traveler_wall_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:piglin_brute_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:piglin_brute_wall_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:zombified_piglin_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:zombified_piglin_wall_head",
+      "required": false
+    },
+    {
+      "id": "nirvana:reefer_head",
+      "required": false
+    },
+    {
+      "id": "nirvana:reefer_wall_head",
+      "required": false
+    },
+    {
+      "id": "nomansland:small_quartzite_bud",
+      "required": false
+    },
+    {
+      "id": "nomansland:medium_quartzite_bud",
+      "required": false
+    },
+    {
+      "id": "nomansland:large_quartzite_bud",
+      "required": false
+    },
+    {
+      "id": "nomansland:quartzite_cluster",
+      "required": false
+    },
+    {
+      "id": "nomansland:pebbles",
+      "required": false
+    },
+    {
+      "id": "nomansland:seashells",
+      "required": false
+    },
+    {
+      "id": "nomansland:shelf_mushroom",
+      "required": false
+    },
+    {
+      "id": "nomansland:tortoise_egg",
+      "required": false
+    },
+    {
+      "id": "nomansland:warding_effigy",
+      "required": false
+    },
+    {
+      "id": "abundant_atmosphere:moss_clump",
+      "required": false
+    },
+    {
+      "id": "abundant_atmosphere:rust_moss_clump",
+      "required": false
+    },
+    {
+      "id": "abundant_atmosphere:gourdnut",
+      "required": false
+    },
+    {
+      "id": "abundant_atmosphere:carved_gourdnut",
+      "required": false
+    },
+    {
+      "id": "abundant_atmosphere:lamp_o_gourd",
+      "required": false
+    },
+    {
+      "id": "incubation:twig_nest",
+      "required": false
+    },
+    {
+      "id": "incubation:hay_nest",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:exposed_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:weathered_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:oxidized_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_exposed_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_weathered_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_oxidized_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "create:desk_bell",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:winch",
+      "required": false
+    },
+    {
+      "id": "upgrade_aquatic:elder_eye",
+      "required": false
+    },
+    {
+      "id": "brewinandchewin:coaster",
+      "required": false
+    },
+    {
+      "id": "supplementaries:hourglass",
+      "required": false
+    },
+    {
+      "id": "supplementaries:goblet",
+      "required": false
+    },
+    {
+      "id": "supplementaries:globe",
+      "required": false
+    },
+    {
+      "id": "supplementaries:globe_sepia",
+      "required": false
+    },
+    {
+      "id": "amendments:directional_cake",
+      "required": false
+    },
+    {
+      "id": "amendments:double_cake",
+      "required": false
+    },
+    {
+      "id": "amendments:nomansland/double_fruit_cake",
+      "required": false
+    },
+    {
+      "id": "nomansland:fruit_cake",
+      "required": false
+    },
+    {
+      "id": "nomansland:pear_cobbler",
+      "required": false
+    },
+    {
+      "id": "nomansland:stallion_strips",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:apple_pie",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:sweet_berry_cheesecake",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:chocolate_pie",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:pumpkin_pie",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:roast_chicken_block",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:honey_glazed_ham_block",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:shepherds_pie_block",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:stuffed_pumpkin_block",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:gleaming_salad_block",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:rice_roll_medley_block",
+      "required": false
+    },
+    {
+      "id": "brewinandchewin:unripe_flaxen_cheese_wheel",
+      "required": false
+    },
+    {
+      "id": "brewinandchewin:unripe_scarlet_cheese_wheel",
+      "required": false
+    },
+    {
+      "id": "brewinandchewin:flaxen_cheese_wheel",
+      "required": false
+    },
+    {
+      "id": "brewinandchewin:scarlet_cheese_wheel",
+      "required": false
+    },
+    {
+      "id": "brewinandchewin:pizza",
+      "required": false
+    },
+    {
+      "id": "brewinandchewin:rich_chocolate_cake",
+      "required": false
+    },
+    {
+      "id": "brewinandchewin:pumpkin_roll",
+      "required": false
+    },
+    {
+      "id": "brewinandchewin:quiche",
+      "required": false
+    },
+    {
+      "id": "brewinandchewin:glow_berry_meringue_pie",
+      "required": false
+    },
+    {
+      "id": "onion_onion:motley_grill_block",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_soul",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_green",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_ender",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_glow",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_nether_brass",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_lever",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall_soul",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall_green",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall_ender",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall_glow",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall_nether_brass",
+      "required": false
+    }
+  ]
+}

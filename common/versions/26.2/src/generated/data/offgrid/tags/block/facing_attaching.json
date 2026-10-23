@@ -1,0 +1,373 @@
+{
+  "values": [
+    "#minecraft:wall_signs",
+    "minecraft:wall_torch",
+    "minecraft:soul_wall_torch",
+    "minecraft:redstone_wall_torch",
+    "minecraft:white_wall_banner",
+    "minecraft:orange_wall_banner",
+    "minecraft:magenta_wall_banner",
+    "minecraft:light_blue_wall_banner",
+    "minecraft:yellow_wall_banner",
+    "minecraft:lime_wall_banner",
+    "minecraft:pink_wall_banner",
+    "minecraft:gray_wall_banner",
+    "minecraft:light_gray_wall_banner",
+    "minecraft:cyan_wall_banner",
+    "minecraft:purple_wall_banner",
+    "minecraft:blue_wall_banner",
+    "minecraft:brown_wall_banner",
+    "minecraft:green_wall_banner",
+    "minecraft:red_wall_banner",
+    "minecraft:black_wall_banner",
+    "minecraft:skeleton_wall_skull",
+    "minecraft:wither_skeleton_wall_skull",
+    "minecraft:zombie_wall_head",
+    "minecraft:creeper_wall_head",
+    "minecraft:piglin_wall_head",
+    "minecraft:dragon_wall_head",
+    "minecraft:player_wall_head",
+    "#c:buds",
+    "#c:clusters",
+    "minecraft:end_rod",
+    "minecraft:tripwire_hook",
+    "minecraft:copper_wall_torch",
+    "#minecraft:lightning_rods",
+    {
+      "id": "nomansland:shelf_mushroom",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall_soul",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall_green",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall_ender",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall_glow",
+      "required": false
+    },
+    {
+      "id": "supplementaries:sconce_wall_nether_brass",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:cupric_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:sconce_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:sconce_soul_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_soul_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_sconce_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:extinguished_sconce_soul_wall_torch",
+      "required": false
+    },
+    {
+      "id": "nomansland:small_quartzite_bud",
+      "required": false
+    },
+    {
+      "id": "nomansland:medium_quartzite_bud",
+      "required": false
+    },
+    {
+      "id": "nomansland:large_quartzite_bud",
+      "required": false
+    },
+    {
+      "id": "nomansland:quartzite_cluster",
+      "required": false
+    },
+    {
+      "id": "nomansland:tap",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:exposed_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:weathered_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:oxidized_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_exposed_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_weathered_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_oxidized_lightning_rod",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:exposed_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:weathered_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:oxidized_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_exposed_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_weathered_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_oxidized_floodlight",
+      "required": false
+    },
+    {
+      "id": "simulated:iron_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:copper_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:white_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:light_gray_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:gray_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:black_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:brown_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:yellow_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:lime_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:green_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:cyan_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:blue_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:light_blue_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:magenta_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:pink_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:purple_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:red_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:orange_handle",
+      "required": false
+    },
+    {
+      "id": "simulated:white_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:light_gray_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:gray_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:black_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:brown_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:yellow_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:lime_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:green_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:cyan_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:blue_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:light_blue_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:magenta_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:pink_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:purple_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:red_nameplate",
+      "required": false
+    },
+    {
+      "id": "simulated:orange_nameplate",
+      "required": false
+    },
+    {
+      "id": "supplementaries:crank",
+      "required": false
+    },
+    {
+      "id": "supplementaries:item_shelf",
+      "required": false
+    },
+    {
+      "id": "create:desk_bell",
+      "required": false
+    },
+    {
+      "id": "upgrade_aquatic:elder_eye",
+      "required": false
+    },
+    {
+      "id": "upgrade_aquatic:tooth_lantern",
+      "required": false
+    },
+    {
+      "id": "supplementaries:spider_wall_head",
+      "required": false
+    },
+    {
+      "id": "supplementaries:enderman_wall_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:deeper_wall_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:evendeeper_wall_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:peeper_wall_head",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:mime_wall_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:piglin_alchemist_wall_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:piglin_traveler_wall_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:piglin_brute_wall_head",
+      "required": false
+    },
+    {
+      "id": "piglinproliferation:zombified_piglin_wall_head",
+      "required": false
+    },
+    {
+      "id": "nirvana:reefer_wall_head",
+      "required": false
+    }
+  ]
+}

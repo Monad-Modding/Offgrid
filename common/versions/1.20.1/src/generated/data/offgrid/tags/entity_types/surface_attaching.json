@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "exposure:photograph_frame",
+      "required": false
+    },
+    {
+      "id": "exposure:glass_photograph_frame",
+      "required": false
+    },
+    {
+      "id": "exposure:glow_photograph_frame",
+      "required": false
+    }
+  ]
+}

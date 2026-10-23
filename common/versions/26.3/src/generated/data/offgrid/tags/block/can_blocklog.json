@@ -1,0 +1,16 @@
+{
+  "values": [
+    "#c:glass_panes",
+    "#c:chains",
+    "#c:fences",
+    "#minecraft:fences",
+    "#minecraft:walls",
+    "#c:bars",
+    "#minecraft:bars",
+    "#minecraft:chains",
+    {
+      "id": "farmersdelight:rope",
+      "required": false
+    }
+  ]
+}

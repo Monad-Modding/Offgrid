@@ -1,0 +1,25 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#c:glass_panes",
+      "required": false
+    },
+    {
+      "id": "#forge:glass_panes",
+      "required": false
+    },
+    {
+      "id": "#forge:fences",
+      "required": false
+    },
+    "#minecraft:fences",
+    "#minecraft:walls",
+    "minecraft:chain",
+    "minecraft:iron_bars",
+    {
+      "id": "farmersdelight:rope",
+      "required": false
+    }
+  ]
+}

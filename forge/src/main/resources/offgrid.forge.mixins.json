@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.tazer.offgrid.forge.mixin",
+  "plugin": "${mixin_plugin}",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "compat.gallery.GalleryEventsMixin"
+  ],
+  "client": [
+    "BlockRenderDispatcherMixin",
+    "ParticleEngineMixin",
+    "RebuildTaskMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

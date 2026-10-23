@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.tazer.offgrid.fabric.mixin",
+  "plugin": "${mixin_plugin}",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ServerPlayerGameModeMixin"
+  ],
+  "client": [
+    "MultiPlayerGameModeMixin",
+    "RebuildTaskMixin",
+    "SectionCompilerMixin",
+    "compat.sodium.BlockOcclusionCacheMixin",
+    "compat.sodium.BlockRenderContextAccessor",
+    "compat.sodium.BlockRendererMixin",
+    "compat.sodium.ChunkBuilderMeshingTaskMixin",
+    "compat.sodium.WorldSliceMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

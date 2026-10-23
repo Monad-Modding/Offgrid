@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "${id}",
+  "version": "${version}",
+  "name": "${name}",
+  "description": "${description}",
+  "authors": ["${authors}"],
+  "license": "${license}",
+  "environment": "*",
+  "mixins": ["offgrid.mixins.json", "offgrid.fabric.mixins.json"],
+  "accessWidener": "offgrid.accesswidener",
+  "entrypoints": {
+    "main": ["dev.tazer.offgrid.fabric.OffgridFabric"],
+    "client": ["dev.tazer.offgrid.fabric.client.OffgridFabricClient"],
+    "fabric-datagen": ["dev.tazer.offgrid.fabric.data.OffgridDataGenerator"]
+  },
+  "depends": {
+    "fabricloader": ">=${fabric_loader}",
+    "fabric-api": "*",
+    "minecraft": "${fabric_minecraft}",
+    "java": ">=${java}"
+  },
+  "breaks": ${fabric_breaks}
+}

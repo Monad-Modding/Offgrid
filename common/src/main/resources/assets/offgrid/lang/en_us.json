@@ -1,0 +1,7 @@
+{
+  "block.offgrid.mixed_slab": "Mixed Slab",
+  "commands.offgrid.inspect.empty": "Nothing off the grid at %s",
+  "commands.offgrid.inspect.cell": "%s: offset %s, %s overlays",
+  "commands.offgrid.inspect.overlay": "#%s %s at offset %s",
+  "commands.offgrid.clear": "Cleared %s overlays and the offset at %s"
+}

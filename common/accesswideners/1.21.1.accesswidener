@@ -1,0 +1,3 @@
+accessWidener v2 named
+accessible class net/minecraft/world/level/chunk/LevelChunk$BoundTickingBlockEntity
+accessible class net/minecraft/world/level/block/entity/BlockEntityType$BlockEntitySupplier
