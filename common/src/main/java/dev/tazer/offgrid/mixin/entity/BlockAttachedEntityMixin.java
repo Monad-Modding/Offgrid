@@ -31,7 +31,7 @@ public abstract class BlockAttachedEntityMixin implements SurfaceMounted {
 
     @Override
     public Vec3 offgrid$getSurfaceOffset() {
-        return this.offgrid$surfaceOffset;
+        return this.offgrid$surfaceOffset == null ? Vec3.ZERO : this.offgrid$surfaceOffset;
     }
 
     @Override
