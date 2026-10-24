@@ -41,7 +41,7 @@ public final class OffgridBlocks {
     }
 
     public static void registerBlockEntities(BiConsumer<ResourceLocation, BlockEntityType<?>> registrar) {
-        mixedSlabEntity = Services.PLATFORM.createBlockEntityType(MixedSlabBlockEntity::new, mixedSlab);
+        mixedSlabEntity = Services.PLATFORM.createBlockEntityType(Services.PLATFORM::createMixedSlabEntity, mixedSlab);
         registrar.accept(MIXED_SLAB_ID, mixedSlabEntity);
     }
 

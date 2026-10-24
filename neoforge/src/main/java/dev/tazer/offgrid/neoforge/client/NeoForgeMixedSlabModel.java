@@ -115,6 +115,7 @@ public final class NeoForgeMixedSlabModel implements BlockStateModel {
 package dev.tazer.offgrid.neoforge.client;
 
 import dev.tazer.offgrid.client.MixedSlabColors;
+import dev.tazer.offgrid.neoforge.NeoForgeMixedSlabBlockEntity;
 import dev.tazer.offgrid.slab.MixedSlabBlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
@@ -130,7 +131,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.ChunkRenderTypeSet;
 import net.neoforged.neoforge.client.model.IDynamicBakedModel;
 import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.client.model.data.ModelProperty;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -138,9 +138,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class NeoForgeMixedSlabModel implements IDynamicBakedModel {
-
-    private static final ModelProperty<BlockState> FIRST = new ModelProperty<>();
-    private static final ModelProperty<BlockState> SECOND = new ModelProperty<>();
 
     private final BakedModel fallback;
 
@@ -154,14 +151,14 @@ public final class NeoForgeMixedSlabModel implements IDynamicBakedModel {
 
     @Override
     public @NotNull ModelData getModelData(@NotNull BlockAndTintGetter level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull ModelData data) {
-        if (!(level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) || !entity.isComplete()) return data;
-        return ModelData.builder().with(FIRST, entity.getFirst()).with(SECOND, entity.getSecond()).build();
+        if (!(level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity)) return data;
+        return entity.getModelData();
     }
 
     @Override
     public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, @NotNull RandomSource random, @NotNull ModelData data, @Nullable RenderType renderType) {
-        BlockState first = data.get(FIRST);
-        BlockState second = data.get(SECOND);
+        BlockState first = data.get(NeoForgeMixedSlabBlockEntity.FIRST);
+        BlockState second = data.get(NeoForgeMixedSlabBlockEntity.SECOND);
         if (first == null || second == null) return List.of();
         List<BakedQuad> quads = new ArrayList<>();
         this.addHalf(quads, first, false, side, random, renderType);
@@ -179,15 +176,15 @@ public final class NeoForgeMixedSlabModel implements IDynamicBakedModel {
 
     @Override
     public @NotNull ChunkRenderTypeSet getRenderTypes(@NotNull BlockState state, @NotNull RandomSource random, @NotNull ModelData data) {
-        BlockState first = data.get(FIRST);
-        BlockState second = data.get(SECOND);
-        if (first == null || second == null) return ChunkRenderTypeSet.of(RenderType.solid());
+        BlockState first = data.get(NeoForgeMixedSlabBlockEntity.FIRST);
+        BlockState second = data.get(NeoForgeMixedSlabBlockEntity.SECOND);
+        if (first == null || second == null) return ChunkRenderTypeSet.all();
         return ChunkRenderTypeSet.union(modelOf(first).getRenderTypes(first, random, ModelData.EMPTY), modelOf(second).getRenderTypes(second, random, ModelData.EMPTY));
     }
 
     @Override
     public @NotNull TextureAtlasSprite getParticleIcon(@NotNull ModelData data) {
-        BlockState second = data.get(SECOND);
+        BlockState second = data.get(NeoForgeMixedSlabBlockEntity.SECOND);
         return second == null ? this.fallback.getParticleIcon() : modelOf(second).getParticleIcon(ModelData.EMPTY);
     }
 

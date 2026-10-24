@@ -1,5 +1,6 @@
 package dev.tazer.offgrid.slab;
 
+import dev.tazer.offgrid.platform.Services;
 import dev.tazer.offgrid.world.MovingBlockData;
 import dev.tazer.offgrid.world.MovingBlockDataHolder;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -84,7 +85,7 @@ public class MixedSlabBlock extends BaseEntityBlock {
 
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new MixedSlabBlockEntity(pos, state);
+        return Services.PLATFORM.createMixedSlabEntity(pos, state);
     }
 
     @Nullable

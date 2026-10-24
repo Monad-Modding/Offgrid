@@ -3,13 +3,16 @@ package dev.tazer.offgrid.neoforge;
 import dev.tazer.offgrid.network.PacketType;
 import dev.tazer.offgrid.platform.Platform;
 import dev.tazer.offgrid.slab.MixedSlabBlock;
+import dev.tazer.offgrid.slab.MixedSlabBlockEntity;
 import dev.tazer.offgrid.world.OffgridChunk;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.neoforged.fml.ModList;
@@ -80,6 +83,13 @@ public final class NeoForgePlatform implements Platform {
     public MixedSlabBlock createMixedSlab(BlockBehaviour.Properties properties) {
         return new NeoForgeMixedSlabBlock(properties);
     }
+
+    //? if <26 {
+    @Override
+    public MixedSlabBlockEntity createMixedSlabEntity(BlockPos pos, BlockState state) {
+        return new NeoForgeMixedSlabBlockEntity(pos, state);
+    }
+    //?}
 
     @Override
     public <T> void sendToServer(PacketType<T> type, T packet) {

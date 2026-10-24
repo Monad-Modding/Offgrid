@@ -61,6 +61,7 @@ public class MixedSlabBlockEntity extends BlockEntity {
     public void setHalves(BlockState first, BlockState second) {
         this.first = first;
         this.second = second;
+        this.onHalvesChanged();
         this.setChanged();
         if (this.level != null) {
             this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
@@ -129,7 +130,11 @@ public class MixedSlabBlockEntity extends BlockEntity {
     }
     //?}
 
+    protected void onHalvesChanged() {
+    }
+
     private void refreshClient() {
+        this.onHalvesChanged();
         if (this.level != null && this.level.isClientSide()) {
             this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_IMMEDIATE);
         }

@@ -11,6 +11,7 @@
   ],
   "client": [
     "MinecraftPickMixin",
+    "ModelBlockRendererMixin",
     "MultiPlayerGameModeMixin",
     "RebuildTaskMixin",
     "SectionCompilerMixin",
