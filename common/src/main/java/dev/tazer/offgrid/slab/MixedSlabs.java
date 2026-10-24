@@ -1,6 +1,8 @@
 package dev.tazer.offgrid.slab;
 
 import dev.tazer.offgrid.registry.OffgridBlocks;
+import dev.tazer.offgrid.world.MovingBlockData;
+import dev.tazer.offgrid.world.OffgridIndex;
 import dev.tazer.offgrid.world.Players;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -71,6 +73,24 @@ public final class MixedSlabs {
             entity.setHalves(halves.first(), halves.second());
         }
         return true;
+    }
+
+    public static boolean mergesInto(Level level, BlockPos from, BlockState moving, BlockPos to, BlockState fixed, Direction direction) {
+        if (merge(moving, fixed, direction) == null) return false;
+        return !OffgridIndex.hasCell(level, from.getX(), from.getY(), from.getZ()) && !OffgridIndex.hasCell(level, to.getX(), to.getY(), to.getZ());
+    }
+
+    @Nullable
+    public static Merge merge(BlockState moving, BlockState fixed, Direction direction) {
+        SlabFamily family = familyOf(fixed);
+        if (family == null || !family.isSingle(moving)) return null;
+        Direction side = family.side(moving);
+        if (side != family.side(fixed).getOpposite() || side == direction) return null;
+        SlabFamily.Halves halves = family.combine(fixed, moving);
+        if (halves == null) return null;
+        BlockState state = moving.getBlock() == fixed.getBlock() ? family.doubled(fixed) : mixedState(halves.axis(), halves.first(), halves.second());
+        MovingBlockData.Stationary stationary = family.side(fixed).getAxisDirection() == Direction.AxisDirection.POSITIVE ? MovingBlockData.Stationary.SECOND : MovingBlockData.Stationary.FIRST;
+        return new Merge(state, halves.first(), halves.second(), stationary);
     }
 
     public static BlockState mixedState(Direction.Axis axis, @Nullable BlockState first, @Nullable BlockState second) {
@@ -161,5 +181,8 @@ public final class MixedSlabs {
     public static boolean containsSecond(Vec3 point, BlockPos pos, Direction.Axis axis) {
         if (axis == Direction.Axis.Y) return true;
         return axis.choose(point.x - pos.getX(), point.y - pos.getY(), point.z - pos.getZ()) > 0.5;
+    }
+
+    public record Merge(BlockState state, BlockState first, BlockState second, MovingBlockData.Stationary stationary) {
     }
 }

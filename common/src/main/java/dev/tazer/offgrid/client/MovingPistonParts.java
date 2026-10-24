@@ -13,6 +13,11 @@ public interface MovingPistonParts {
 
     void offgrid$setSecondHalf(@Nullable MovingBlockRenderState half);
 
+    @Nullable
+    MovingBlockRenderState offgrid$getStationaryHalf();
+
+    void offgrid$setStationaryHalf(@Nullable MovingBlockRenderState half);
+
     List<MovingOverlayPart> offgrid$getOverlays();
 
     void offgrid$setOverlays(List<MovingOverlayPart> overlays);

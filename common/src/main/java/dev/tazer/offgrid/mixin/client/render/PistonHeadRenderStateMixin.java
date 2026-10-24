@@ -19,6 +19,10 @@ public abstract class PistonHeadRenderStateMixin implements MovingPistonParts {
     private MovingBlockRenderState offgrid$secondHalf;
 
     @Unique
+    @Nullable
+    private MovingBlockRenderState offgrid$stationaryHalf;
+
+    @Unique
     private List<MovingOverlayPart> offgrid$overlays = List.of();
 
     @Override
@@ -30,6 +34,17 @@ public abstract class PistonHeadRenderStateMixin implements MovingPistonParts {
     @Override
     public void offgrid$setSecondHalf(@Nullable MovingBlockRenderState half) {
         this.offgrid$secondHalf = half;
+    }
+
+    @Override
+    @Nullable
+    public MovingBlockRenderState offgrid$getStationaryHalf() {
+        return this.offgrid$stationaryHalf;
+    }
+
+    @Override
+    public void offgrid$setStationaryHalf(@Nullable MovingBlockRenderState half) {
+        this.offgrid$stationaryHalf = half;
     }
 
     @Override

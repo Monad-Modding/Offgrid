@@ -43,4 +43,14 @@ public final class HorizontalSlabs implements SlabFamily {
     public boolean keepsShape(BlockState candidate, BlockState original) {
         return this.isSingle(candidate) && candidate.getValue(SlabBlock.TYPE) == original.getValue(SlabBlock.TYPE);
     }
+
+    @Override
+    public Direction side(BlockState single) {
+        return single.getValue(SlabBlock.TYPE) == SlabType.BOTTOM ? Direction.DOWN : Direction.UP;
+    }
+
+    @Override
+    public BlockState doubled(BlockState single) {
+        return MixedSlabs.dry(single.setValue(SlabBlock.TYPE, SlabType.DOUBLE));
+    }
 }

@@ -6,11 +6,13 @@ import com.llamalad7.mixinextras.sugar.Local;
 import dev.tazer.offgrid.slab.MixedSlabBlock;
 import dev.tazer.offgrid.slab.MixedSlabs;
 import dev.tazer.offgrid.world.MovingBlockData;
+import dev.tazer.offgrid.world.SlabMergeHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
+import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.PushReaction;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,9 +33,11 @@ public abstract class PistonBaseBlockMixin {
     }
 
     @WrapOperation(method = "moveBlocks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/piston/MovingPistonBlock;newMovingBlockEntity(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/Direction;ZZ)Lnet/minecraft/world/level/block/entity/BlockEntity;", ordinal = 0))
-    private BlockEntity offgrid$captureMovingBlock(BlockPos pos, BlockState movingState, BlockState movedState, Direction facing, boolean extending, boolean sourcePiston, Operation<BlockEntity> original, @Local(argsOnly = true) Level level) {
-        BlockEntity moving = original.call(pos, movingState, movedState, facing, extending, sourcePiston);
-        MovingBlockData.capture(level, pos.relative(extending ? facing.getOpposite() : facing), moving);
+    private BlockEntity offgrid$captureMovingBlock(BlockPos pos, BlockState movingState, BlockState movedState, Direction facing, boolean extending, boolean sourcePiston, Operation<BlockEntity> original, @Local(argsOnly = true) Level level, @Local PistonStructureResolver resolver) {
+        BlockState fixed = ((SlabMergeHolder) resolver).offgrid$getSlabMerges().get(pos);
+        MixedSlabs.Merge merge = fixed == null ? null : MixedSlabs.merge(movedState, fixed, extending ? facing : facing.getOpposite());
+        BlockEntity moving = original.call(pos, movingState, merge == null ? movedState : merge.state(), facing, extending, sourcePiston);
+        MovingBlockData.capture(level, pos.relative(extending ? facing.getOpposite() : facing), moving, merge);
         return moving;
     }
 }

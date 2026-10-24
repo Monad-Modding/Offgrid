@@ -19,6 +19,10 @@ public interface SlabFamily {
 
     boolean keepsShape(BlockState candidate, BlockState original);
 
+    Direction side(BlockState single);
+
+    BlockState doubled(BlockState single);
+
     record Halves(BlockState first, BlockState second, Direction.Axis axis) {
     }
 }

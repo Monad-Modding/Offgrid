@@ -50,4 +50,14 @@ public final class VerticalSlabs implements SlabFamily {
     public boolean keepsShape(BlockState candidate, BlockState original) {
         return this.isSingle(candidate) && candidate.getValue(VerticalSlabBlock.FACING) == original.getValue(VerticalSlabBlock.FACING);
     }
+
+    @Override
+    public Direction side(BlockState single) {
+        return single.getValue(VerticalSlabBlock.FACING);
+    }
+
+    @Override
+    public BlockState doubled(BlockState single) {
+        return MixedSlabs.dry(single.setValue(VerticalSlabBlock.DOUBLE, true));
+    }
 }

@@ -53,12 +53,17 @@ public abstract class PistonHeadRendererMixin {
             }
         }
         parts.offgrid$setOverlays(List.copyOf(overlays));
-        if (data == null || !data.hasHalves() || !(state.getBlock() instanceof MixedSlabBlock)) {
-            parts.offgrid$setSecondHalf(null);
-            return original.call(pos, state, biome, level);
+        parts.offgrid$setSecondHalf(null);
+        parts.offgrid$setStationaryHalf(null);
+        if (data == null || !data.hasHalves() || !(state.getBlock() instanceof MixedSlabBlock || data.stationary() != MovingBlockData.Stationary.NONE)) return original.call(pos, state, biome, level);
+        if (data.stationary() == MovingBlockData.Stationary.NONE) {
+            parts.offgrid$setSecondHalf(original.call(pos, data.second(), biome, level));
+            return original.call(pos, data.first(), biome, level);
         }
-        parts.offgrid$setSecondHalf(original.call(pos, data.second(), biome, level));
-        return original.call(pos, data.first(), biome, level);
+        boolean firstStationary = data.stationary() == MovingBlockData.Stationary.FIRST;
+        BlockPos stationaryPos = piston.getBlockPos();
+        parts.offgrid$setStationaryHalf(original.call(stationaryPos, firstStationary ? data.first() : data.second(), level.getBiome(stationaryPos), level));
+        return original.call(pos, firstStationary ? data.second() : data.first(), biome, level);
     }
 
     //? if >=26.2 {
@@ -69,6 +74,13 @@ public abstract class PistonHeadRendererMixin {
         MovingBlockRenderState second = parts.offgrid$getSecondHalf();
         if (second != null) {
             original.call(collector, poseStack, second, order);
+        }
+        MovingBlockRenderState stationary = parts.offgrid$getStationaryHalf();
+        if (stationary != null) {
+            poseStack.pushPose();
+            poseStack.translate(-state.xOffset, -state.yOffset, -state.zOffset);
+            original.call(collector, poseStack, stationary, order);
+            poseStack.popPose();
         }
         for (MovingOverlayPart overlay : parts.offgrid$getOverlays()) {
             poseStack.pushPose();
@@ -86,6 +98,13 @@ public abstract class PistonHeadRendererMixin {
         if (second != null) {
             original.call(collector, poseStack, second);
         }
+        MovingBlockRenderState stationary = parts.offgrid$getStationaryHalf();
+        if (stationary != null) {
+            poseStack.pushPose();
+            poseStack.translate(-state.xOffset, -state.yOffset, -state.zOffset);
+            original.call(collector, poseStack, stationary);
+            poseStack.popPose();
+        }
         for (MovingOverlayPart overlay : parts.offgrid$getOverlays()) {
             poseStack.pushPose();
             poseStack.translate(overlay.offset().x, overlay.offset().y, overlay.offset().z);
@@ -98,17 +117,28 @@ public abstract class PistonHeadRendererMixin {
     @WrapOperation(method = "render(Lnet/minecraft/world/level/block/piston/PistonMovingBlockEntity;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/blockentity/PistonHeadRenderer;renderBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;Lnet/minecraft/world/level/Level;ZI)V"))
     private void offgrid$renderMixedSlab(PistonHeadRenderer renderer, BlockPos pos, BlockState state, PoseStack poseStack, MultiBufferSource buffers, Level level, boolean extended, int overlay, Operation<Void> original, @Local(argsOnly = true) PistonMovingBlockEntity piston, @Local(argsOnly = true) float partialTick) {
         MovingBlockData data = ((MovingBlockDataHolder) piston).offgrid$getMovingBlockData();
-        if (data == null || !data.hasHalves() || !(state.getBlock() instanceof MixedSlabBlock)) {
+        if (data == null || !data.hasHalves() || !(state.getBlock() instanceof MixedSlabBlock || data.stationary() != MovingBlockData.Stationary.NONE)) {
             original.call(renderer, pos, state, poseStack, buffers, level, extended, overlay);
         } else {
-            original.call(renderer, pos, data.first(), poseStack, buffers, level, extended, overlay);
-            original.call(renderer, pos, data.second(), poseStack, buffers, level, extended, overlay);
+            offgrid$renderHalf(renderer, pos, data.first(), data.stationary() == MovingBlockData.Stationary.FIRST, poseStack, buffers, level, extended, overlay, original, piston, partialTick);
+            offgrid$renderHalf(renderer, pos, data.second(), data.stationary() == MovingBlockData.Stationary.SECOND, poseStack, buffers, level, extended, overlay, original, piston, partialTick);
         }
         if (data == null || data.cell() == null || state != piston.getMovedState()) return;
         int light = LevelRenderer.getLightColor(level, pos);
         for (AssembledCell.AssembledOverlay carried : data.cell().overlays()) {
             AssembledOverlayRender.render(level, pos, state, carried, ((MovingBlockDataHolder) piston).offgrid$getRenderedEntities(), poseStack, buffers, light, partialTick);
         }
+    }
+
+    private static void offgrid$renderHalf(PistonHeadRenderer renderer, BlockPos pos, BlockState half, boolean stationary, PoseStack poseStack, MultiBufferSource buffers, Level level, boolean extended, int overlay, Operation<Void> original, PistonMovingBlockEntity piston, float partialTick) {
+        if (!stationary) {
+            original.call(renderer, pos, half, poseStack, buffers, level, extended, overlay);
+            return;
+        }
+        poseStack.pushPose();
+        poseStack.translate(-piston.getXOff(partialTick), -piston.getYOff(partialTick), -piston.getZOff(partialTick));
+        original.call(renderer, piston.getBlockPos(), half, poseStack, buffers, level, extended, overlay);
+        poseStack.popPose();
     }
     //?}
 }

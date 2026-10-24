@@ -1,1 +1,7 @@
-- Initial release
+- Added Embeddium support for Forge 1.20.1
+- Fixed pick block on mixed slabs not working in Fabric
+- Fixed a hanging entity crash
+- Fixed a fabric world crash when Sodium is not installed
+- Fixed collision handling and Added Lithium support
+- Fixed mixed slabs being invisible on single block sublevels
+- Slabs can now be pushed together in any orientation to form a mixed slab
