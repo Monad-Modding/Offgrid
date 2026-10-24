@@ -10,6 +10,9 @@
   ],
   "client": [
     "BlockRenderDispatcherMixin",
+    "compat.embeddium.BlockOcclusionCacheMixin",
+    "compat.embeddium.BlockRendererMixin",
+    "compat.embeddium.WorldSliceMixin",
     "ParticleEngineMixin",
     "RebuildTaskMixin"
   ],

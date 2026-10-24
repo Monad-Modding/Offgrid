@@ -45,6 +45,7 @@ dependencies {
     integration("gallery")?.let { modCompileOnly("maven.modrinth:gallery:$it") { isTransitive = false } }
     integration("create")?.let { modCompileOnly("maven.modrinth:create:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { modCompileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
+    integration("embeddium")?.let { modCompileOnly("maven.modrinth:embeddium:$it") { isTransitive = false } }
 }
 
 tasks.named<Jar>("jar") {

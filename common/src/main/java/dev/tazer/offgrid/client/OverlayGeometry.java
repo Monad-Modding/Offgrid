@@ -49,12 +49,22 @@ public final class OverlayGeometry {
     private OverlayGeometry() {
     }
 
+    public static boolean hasOverlays(BlockGetter getter, BlockPos origin) {
+        return scan(getter, origin, null);
+    }
+
     public static List<Entry> collect(BlockGetter getter, BlockPos origin) {
-        OffgridIndex index = OffgridIndex.of(getter);
-        if (index == null || index.isEmpty()) return List.of();
-        OffgridChunk chunk = index.getChunk(ChunkPos.asLong(origin.getX() >> 4, origin.getZ() >> 4));
-        if (chunk == null) return List.of();
         List<Entry> entries = new ArrayList<>();
+        scan(getter, origin, entries);
+        return entries;
+    }
+
+    private static boolean scan(BlockGetter getter, BlockPos origin, @Nullable List<Entry> into) {
+        OffgridIndex index = OffgridIndex.of(getter);
+        if (index == null || index.isEmpty()) return false;
+        OffgridChunk chunk = index.getChunk(ChunkPos.asLong(origin.getX() >> 4, origin.getZ() >> 4));
+        if (chunk == null) return false;
+        boolean found = false;
         int minY = origin.getY();
         int maxY = minY + 15;
         for (Long2ObjectMap.Entry<Cell> entry : chunk.getCells().long2ObjectEntrySet()) {
@@ -66,16 +76,19 @@ public final class OverlayGeometry {
             if (y < minY || y > maxY) {
                 continue;
             }
-            BlockPos host = BlockPos.of(entry.getLongKey());
             for (Overlay overlay : cell.overlays()) {
                 BlockState state = overlay.getState();
-                if (state.getRenderShape() == RenderShape.MODEL) {
-                    Blocklogging.Blocklog cut = Blocklogging.at(getter, host, overlay);
-                    entries.add(new Entry(host, overlay, state, overlay.getOffset(), cut == null ? null : cut.open()));
+                if (state.getRenderShape() != RenderShape.MODEL) {
+                    continue;
                 }
+                if (into == null) return true;
+                BlockPos host = BlockPos.of(entry.getLongKey());
+                Blocklogging.Blocklog cut = Blocklogging.at(getter, host, overlay);
+                into.add(new Entry(host, overlay, state, overlay.getOffset(), cut == null ? null : cut.open()));
+                found = true;
             }
         }
-        return entries;
+        return found;
     }
 
     //? if >=26 {

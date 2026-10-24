@@ -14,6 +14,7 @@ import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModList;
 
 import java.util.Map;
 
@@ -27,6 +28,9 @@ public final class OffgridForgeClient {
         modBus.addListener(OffgridForgeClient::onBlockColors);
         modBus.addListener(OffgridForgeClient::onModifyBakingResult);
         MinecraftForge.EVENT_BUS.addListener(OffgridForgeClient::onRenderStage);
+        if (ModList.get().isLoaded("embeddium")) {
+            EmbeddiumMeshing.register();
+        }
     }
 
     private static void onBlockColors(RegisterColorHandlersEvent.Block event) {
