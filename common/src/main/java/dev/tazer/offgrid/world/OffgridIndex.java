@@ -6,6 +6,8 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunk;
 import org.jetbrains.annotations.Nullable;
 
 public final class OffgridIndex {
@@ -20,6 +22,19 @@ public final class OffgridIndex {
     @Nullable
     public static OffgridIndex of(@Nullable BlockGetter getter) {
         return getter instanceof OffgridIndexHolder holder ? holder.offgrid$getIndex() : null;
+    }
+
+    public static boolean hasCell(@Nullable BlockGetter getter, int x, int y, int z) {
+        OffgridIndex index = of(getter);
+        return index != null && !index.isEmpty() && index.getCell(x, y, z) != null;
+    }
+
+    public static boolean hasCellsInSection(ChunkAccess chunk, int sectionIndex) {
+        if (!(chunk instanceof LevelChunk levelChunk)) return false;
+        OffgridIndex index = of(levelChunk.getLevel());
+        if (index == null || index.isEmpty()) return false;
+        OffgridChunk data = index.getChunk(chunk.getPos().toLong());
+        return data != null && data.hasCellsInSection(chunk.getSectionYFromSectionIndex(sectionIndex));
     }
 
     @Nullable

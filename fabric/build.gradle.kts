@@ -12,6 +12,7 @@ dependencies {
     integration("clutternomore")?.let { compileOnly("maven.modrinth:clutternomore:$it") { isTransitive = false } }
     integration("sodium")?.let { compileOnly("net.caffeinemc:sodium-fabric:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { compileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
+    integration("lithium")?.let { compileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }
 }
 
 loom {

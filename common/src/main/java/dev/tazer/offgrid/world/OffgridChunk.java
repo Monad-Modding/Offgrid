@@ -5,9 +5,13 @@ import com.mojang.serialization.Dynamic;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.tazer.offgrid.Offgrid;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -28,6 +32,8 @@ public final class OffgridChunk {
 
     private final List<ScheduledTick> ticks = new ArrayList<>();
     private volatile Long2ObjectMap<Cell> cells = Long2ObjectMaps.emptyMap();
+    @Nullable
+    private volatile SectionIndex sections;
     private int nextId;
 
     public OffgridChunk() {
@@ -97,6 +103,21 @@ public final class OffgridChunk {
 
     public Long2ObjectMap<Cell> getCells() {
         return this.cells;
+    }
+
+    public boolean hasCellsInSection(int sectionY) {
+        Long2ObjectMap<Cell> current = this.cells;
+        if (current.isEmpty()) return false;
+        SectionIndex index = this.sections;
+        if (index == null || index.cells() != current) {
+            IntOpenHashSet ys = new IntOpenHashSet();
+            for (long key : current.keySet()) {
+                ys.add(SectionPos.blockToSectionCoord(BlockPos.getY(key)));
+            }
+            index = new SectionIndex(current, ys);
+            this.sections = index;
+        }
+        return index.ys().contains(sectionY);
     }
 
     public boolean isEmpty() {
@@ -174,5 +195,8 @@ public final class OffgridChunk {
                 Codec.INT.fieldOf("id").forGetter(ScheduledTick::id),
                 Codec.LONG.fieldOf("trigger").forGetter(ScheduledTick::trigger)
         ).apply(instance, ScheduledTick::new));
+    }
+
+    private record SectionIndex(Long2ObjectMap<Cell> cells, IntSet ys) {
     }
 }

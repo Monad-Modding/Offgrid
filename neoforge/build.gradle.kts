@@ -41,4 +41,5 @@ dependencies {
     integration("gallery")?.let { compileOnly("maven.modrinth:gallery:$it") { isTransitive = false } }
     integration("create")?.let { compileOnly("maven.modrinth:create:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { compileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
+    integration("lithium")?.let { compileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }
 }

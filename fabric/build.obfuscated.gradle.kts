@@ -16,6 +16,7 @@ dependencies {
     integration("clutternomore")?.let { modCompileOnly("maven.modrinth:clutternomore:$it") { isTransitive = false } }
     integration("sodium")?.let { modCompileOnly("maven.modrinth:sodium:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { modCompileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
+    integration("lithium")?.let { modCompileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }
     integration("create")?.let { modCompileOnly("maven.modrinth:create-fabric:$it") { isTransitive = false } } ?: integration("create", "neoforge")?.let { compileOnly("maven.modrinth:create:$it") { isTransitive = false } }
     integration("sable")?.let { modCompileOnly("dev.ryanhcode.sable:sable-fabric-$mcVersion:$it") { isTransitive = false } }
     integration("sable_companion")?.let { compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-$mcVersion:$it") { isTransitive = false } }
