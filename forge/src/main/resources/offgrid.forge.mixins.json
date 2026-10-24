@@ -5,6 +5,7 @@
   "plugin": "${mixin_plugin}",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "FireBlockMixin",
     "compat.gallery.GalleryEventsMixin"
   ],
   "client": [

@@ -19,6 +19,8 @@ public abstract class ConditionalMixinPlugin implements IMixinConfigPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger("Offgrid Mixin Plugin");
     private static final String MOD_PRESENT = Type.getDescriptor(IfModPresent.class);
     private static final String MOD_PRESENT_LIST = Type.getDescriptor(IfModPresent.List.class);
+    private static final String MOD_ABSENT = Type.getDescriptor(IfModAbsent.class);
+    private static final String MOD_ABSENT_LIST = Type.getDescriptor(IfModAbsent.List.class);
     private static final String DEV_ENVIRONMENT = Type.getDescriptor(IfDevEnvironment.class);
 
     private Set<String> modIds = Set.of();
@@ -67,18 +69,34 @@ public abstract class ConditionalMixinPlugin implements IMixinConfigPlugin {
                     if (!this.isPresent(inner, mixinClassName)) return false;
                 }
             }
+            if (annotation.desc.equals(MOD_ABSENT) && !this.isAbsent(annotation, mixinClassName)) return false;
+            if (annotation.desc.equals(MOD_ABSENT_LIST)) {
+                for (AnnotationNode inner : value(annotation, List.<AnnotationNode>of())) {
+                    if (!this.isAbsent(inner, mixinClassName)) return false;
+                }
+            }
         }
         return true;
     }
 
     private boolean isPresent(AnnotationNode annotation, String mixinClassName) {
+        if (this.hasMod(annotation)) return true;
+        LOGGER.debug("Skipping mixin {}; mod '{}' is not present", mixinClassName, value(annotation, ""));
+        return false;
+    }
+
+    private boolean isAbsent(AnnotationNode annotation, String mixinClassName) {
+        if (!this.hasMod(annotation)) return true;
+        LOGGER.debug("Skipping mixin {}; mod '{}' is present", mixinClassName, value(annotation, ""));
+        return false;
+    }
+
+    private boolean hasMod(AnnotationNode annotation) {
         String modId = value(annotation, "");
         if (modId.isEmpty()) {
             throw new IllegalArgumentException("modid must not be empty");
         }
-        if (this.modIds.contains(modId)) return true;
-        LOGGER.debug("Skipping mixin {}; mod '{}' is not present", mixinClassName, modId);
-        return false;
+        return this.modIds.contains(modId);
     }
 
     @SuppressWarnings("unchecked")

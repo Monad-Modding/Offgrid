@@ -1,6 +1,7 @@
 package dev.tazer.offgrid.world;
 
 import dev.tazer.offgrid.OffgridTags;
+import dev.tazer.offgrid.mixin.access.FireBlockAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -9,10 +10,12 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -215,6 +218,16 @@ public final class Overlays {
     public static void destroyAll(ServerLevel level, BlockPos host) {
         for (Overlay overlay : Cells.overlays(level, host)) {
             destroy(level, host, overlay);
+        }
+    }
+
+    public static void burn(FireBlock fire, Level level, BlockPos pos, int chance, RandomSource random) {
+        if (!(level instanceof ServerLevel server) || !Cells.hasOverlays(level, pos)) return;
+        for (Overlay overlay : Cells.overlays(level, pos)) {
+            int odds = ((FireBlockAccessor) fire).offgrid$getBurnOdds(overlay.getState());
+            if (odds > 0 && random.nextInt(chance) < odds) {
+                remove(server, pos, overlay, true);
+            }
         }
     }
 
