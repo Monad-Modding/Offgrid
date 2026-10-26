@@ -30,7 +30,7 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
     private static final String[] SCONCE_WALLS = {"supplementaries:sconce_wall", "supplementaries:sconce_wall_soul", "supplementaries:sconce_wall_green", "supplementaries:sconce_wall_ender", "supplementaries:sconce_wall_glow", "supplementaries:sconce_wall_nether_brass"};
     private static final String[] WEATHERING = {"", "exposed_", "weathered_", "oxidized_", "waxed_", "waxed_exposed_", "waxed_weathered_", "waxed_oxidized_"};
     private static final String[] HEADS = {"supplementaries:spider_head", "supplementaries:enderman_head", "caverns_and_chasms:deeper_head", "caverns_and_chasms:evendeeper_head", "caverns_and_chasms:peeper_head", "caverns_and_chasms:mime_head", "piglinproliferation:piglin_alchemist_head", "piglinproliferation:piglin_traveler_head", "piglinproliferation:piglin_brute_head", "piglinproliferation:zombified_piglin_head", "nirvana:reefer_head"};
-
+    private static final String[] METAL = {"andesite", "copper", "brass", "zinc", "industrial_iron"};
     public OffgridBlockTagProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registries) {
         super(output, registries);
     }
@@ -101,9 +101,11 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         /*this.tags(OffgridTags.CAN_BLOCKLOG, conventional("bars"), BlockTags.BARS, BlockTags.CHAINS);
         *///?} else {
         this.blocks(OffgridTags.CAN_BLOCKLOG, Blocks.IRON_BARS);
+        this.optional(OffgridTags.CAN_BLOCKLOG, metal("create:%_bars"));
+        this.optional(OffgridTags.CAN_BLOCKLOG, metal("createdeco:%_bars"));
+        this.optional(OffgridTags.CAN_BLOCKLOG, metal("createdeco:%_bars_overlay"));  this.optional(OffgridTags.CAN_BLOCKLOG, "createdeco:iron_bars_overlay");
         //?}
         this.tags(OffgridTags.BLOCKLOGGABLE, BlockTags.SLABS, BlockTags.STAIRS);
-        this.blocks(OffgridTags.BLOCKLOGGABLE, Blocks.SNOW);
         this.addIntegrationTags();
     }
 
@@ -118,6 +120,9 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         this.optional(OffgridTags.CAN_OFFSET, dyed("simulated:%_handle"));
         this.optional(OffgridTags.CAN_OFFSET, dyed("simulated:%_nameplate"));
 
+        this.optional(OffgridTags.CAN_OVERLAY, "another_furniture:service_bell");
+        this.optional(OffgridTags.CAN_OVERLAY, dyed("create:%_seat"));
+        this.optional(OffgridTags.CAN_OVERLAY, dyed("another_furniture:%_lamp"));
         this.optional(OffgridTags.CAN_OVERLAY, withWallTorches("caverns_and_chasms:cupric_torch", "nomansland:sconce_torch", "nomansland:sconce_soul_torch"));
         this.optional(OffgridTags.CAN_OVERLAY, withWallTorches("nomansland:extinguished_torch", "nomansland:extinguished_soul_torch", "nomansland:extinguished_sconce_torch", "nomansland:extinguished_sconce_soul_torch"));
         this.optional(OffgridTags.CAN_OVERLAY, "caverns_and_chasms:cupric_lantern", "upgrade_aquatic:tooth_lantern");
@@ -175,6 +180,14 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         String[] ids = new String[WEATHERING.length];
         for (int i = 0; i < WEATHERING.length; i++) {
             ids[i] = format.replace("%", WEATHERING[i]);
+        }
+        return ids;
+    }
+
+    private static String[] metal(String format) {
+        String[] ids = new String[METAL.length];
+        for (int i = 0; i < METAL.length; i++) {
+            ids[i] = format.replace("%", METAL[i]);
         }
         return ids;
     }
