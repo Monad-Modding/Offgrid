@@ -7,6 +7,70 @@
     "#minecraft:walls",
     "minecraft:iron_bars",
     {
+      "id": "create:andesite_bars",
+      "required": false
+    },
+    {
+      "id": "create:copper_bars",
+      "required": false
+    },
+    {
+      "id": "create:brass_bars",
+      "required": false
+    },
+    {
+      "id": "create:zinc_bars",
+      "required": false
+    },
+    {
+      "id": "create:industrial_iron_bars",
+      "required": false
+    },
+    {
+      "id": "createdeco:andesite_bars",
+      "required": false
+    },
+    {
+      "id": "createdeco:copper_bars",
+      "required": false
+    },
+    {
+      "id": "createdeco:brass_bars",
+      "required": false
+    },
+    {
+      "id": "createdeco:zinc_bars",
+      "required": false
+    },
+    {
+      "id": "createdeco:industrial_iron_bars",
+      "required": false
+    },
+    {
+      "id": "createdeco:andesite_bars_overlay",
+      "required": false
+    },
+    {
+      "id": "createdeco:copper_bars_overlay",
+      "required": false
+    },
+    {
+      "id": "createdeco:brass_bars_overlay",
+      "required": false
+    },
+    {
+      "id": "createdeco:zinc_bars_overlay",
+      "required": false
+    },
+    {
+      "id": "createdeco:industrial_iron_bars_overlay",
+      "required": false
+    },
+    {
+      "id": "createdeco:iron_bars_overlay",
+      "required": false
+    },
+    {
       "id": "farmersdelight:rope",
       "required": false
     }
