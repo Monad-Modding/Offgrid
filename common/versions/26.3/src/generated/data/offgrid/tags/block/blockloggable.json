@@ -1,7 +1,6 @@
 {
   "values": [
     "#minecraft:slabs",
-    "#minecraft:stairs",
-    "minecraft:snow"
+    "#minecraft:stairs"
   ]
 }
