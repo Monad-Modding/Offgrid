@@ -44,6 +44,9 @@ dependencies {
     integration("clutternomore")?.let { modCompileOnly("maven.modrinth:clutternomore:$it") { isTransitive = false } }
     integration("gallery")?.let { modCompileOnly("maven.modrinth:gallery:$it") { isTransitive = false } }
     integration("create")?.let { modCompileOnly("maven.modrinth:create:$it") { isTransitive = false } }
+    integration("quark")?.let { modCompileOnly("maven.modrinth:quark:$it") { isTransitive = false } }
+    integration("zeta")?.let { modCompileOnly("maven.modrinth:zeta:$it") { isTransitive = false } }
+    integration("additionalplacements")?.let { modCompileOnly("maven.modrinth:additional-placements:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { modCompileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("embeddium")?.let { modCompileOnly("maven.modrinth:embeddium:$it") { isTransitive = false } }
 }

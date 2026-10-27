@@ -1,3 +1,4 @@
+- Added support for Quark and Additional Placement mixed slabs
 - Added leash knot support to overlayed fences
 - Fixed crash with Lithium
 - Fixed mixed slabs making incorrect placement sounds
