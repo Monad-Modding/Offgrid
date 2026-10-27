@@ -4,6 +4,7 @@ import dev.tazer.offgrid.registry.OffgridBlocks;
 import dev.tazer.offgrid.world.MovingBlockData;
 import dev.tazer.offgrid.world.OffgridIndex;
 import dev.tazer.offgrid.world.Players;
+import dev.tazer.offgrid.world.Scope;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
@@ -27,6 +28,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.UnaryOperator;
 
 public final class MixedSlabs {
 
@@ -36,12 +39,29 @@ public final class MixedSlabs {
             {Shapes.box(0.0, 0.0, 0.0, 1.0, 0.5, 1.0), Shapes.box(0.0, 0.5, 0.0, 1.0, 1.0, 1.0)},
             {Shapes.box(0.0, 0.0, 0.0, 1.0, 1.0, 0.5), Shapes.box(0.0, 0.0, 0.5, 1.0, 1.0, 1.0)}};
     private static final List<SlabFamily> FAMILIES = new ArrayList<>(List.of(new HorizontalSlabs()));
+    private static final List<UnaryOperator<Block>> PARENTS = new ArrayList<>();
 
     private MixedSlabs() {
     }
 
     public static void addFamily(SlabFamily family) {
         FAMILIES.add(family);
+    }
+
+    public static void addParent(UnaryOperator<Block> parent) {
+        PARENTS.add(parent);
+    }
+
+    public static Block parentOf(Block block) {
+        Block parent = block;
+        for (UnaryOperator<Block> resolver : PARENTS) {
+            parent = resolver.apply(parent);
+        }
+        return parent;
+    }
+
+    private static boolean sameMaterial(Block first, Block second) {
+        return first == second || parentOf(first) == parentOf(second);
     }
 
     @Nullable
@@ -56,7 +76,7 @@ public final class MixedSlabs {
         SlabFamily family = familyOf(existing);
         if (family == null || !(context.getItemInHand().getItem() instanceof BlockItem item)) return false;
         Block held = item.getBlock();
-        if (held == existing.getBlock() || !family.isMember(held) || held.defaultBlockState().hasBlockEntity()) return false;
+        if (sameMaterial(held, existing.getBlock()) || !family.isMember(held) || held.defaultBlockState().hasBlockEntity()) return false;
         return family.entersEmptyHalf(existing, context);
     }
 
@@ -64,7 +84,7 @@ public final class MixedSlabs {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         BlockState existing = level.getBlockState(pos);
-        if (placing.hasBlockEntity() || placing.getBlock() == existing.getBlock()) return false;
+        if (placing.hasBlockEntity() || sameMaterial(placing.getBlock(), existing.getBlock())) return false;
         SlabFamily family = familyOf(existing);
         SlabFamily.Halves halves = family == null ? null : family.combine(existing, placing);
         if (halves == null) return false;
@@ -72,7 +92,17 @@ public final class MixedSlabs {
         if (level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) {
             entity.setHalves(halves.first(), halves.second());
         }
+        AtomicReference<BlockState> placed = Scope.get(Scope.PLACED_HALF);
+        if (placed != null) {
+            placed.set(placing);
+        }
         return true;
+    }
+
+    @Nullable
+    public static BlockState placedHalf() {
+        AtomicReference<BlockState> placed = Scope.get(Scope.PLACED_HALF);
+        return placed == null ? null : placed.get();
     }
 
     public static boolean mergesInto(Level level, BlockPos from, BlockState moving, BlockPos to, BlockState fixed, Direction direction) {

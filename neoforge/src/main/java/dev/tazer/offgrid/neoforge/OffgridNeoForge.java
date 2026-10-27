@@ -7,6 +7,8 @@ import dev.tazer.offgrid.compat.Integrations;
 import dev.tazer.offgrid.network.OffgridNetwork;
 import dev.tazer.offgrid.network.PacketType;
 import dev.tazer.offgrid.registry.OffgridBlocks;
+import dev.tazer.offgrid.slab.MixedSlabs;
+import dev.tazer.offgrid.world.Covers;
 import dev.tazer.offgrid.world.OffgridChunk;
 import dev.tazer.offgrid.world.OffgridEvents;
 import net.minecraft.core.registries.Registries;
@@ -29,6 +31,13 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
+//? if <26 {
+import dev.tazer.offgrid.neoforge.compat.quark.QuarkVerticalSlabs;
+//?}
+//? if <26.2 {
+import dev.tazer.offgrid.neoforge.compat.additionalplacements.AdditionalPlacementsSlabs;
+import dev.tazer.offgrid.neoforge.compat.snowrealmagic.SnowRealMagicCover;
+//?}
 
 @Mod(Offgrid.MOD_ID)
 public final class OffgridNeoForge {
@@ -46,6 +55,20 @@ public final class OffgridNeoForge {
         ATTACHMENTS.register(modBus);
         OffgridConfig.get();
         Integrations.init();
+        //? if <26 {
+        if (Integrations.isLoaded(Integrations.QUARK)) {
+            MixedSlabs.addFamily(new QuarkVerticalSlabs());
+        }
+        //?}
+        //? if <26.2 {
+        if (Integrations.isLoaded(Integrations.ADDITIONAL_PLACEMENTS)) {
+            MixedSlabs.addParent(AdditionalPlacementsSlabs::parentOf);
+            MixedSlabs.addFamily(new AdditionalPlacementsSlabs());
+        }
+        if (Integrations.isLoaded(Integrations.SNOW_REAL_MAGIC)) {
+            Covers.addCover(new SnowRealMagicCover());
+        }
+        //?}
         modBus.addListener(OffgridNeoForge::onPayloads);
         modBus.addListener(OffgridNeoForge::onRegister);
         NeoForge.EVENT_BUS.addListener(OffgridNeoForge::onLevelTick);

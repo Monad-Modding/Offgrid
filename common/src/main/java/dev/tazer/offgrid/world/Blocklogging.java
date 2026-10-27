@@ -91,14 +91,19 @@ public final class Blocklogging {
 
     @Nullable
     public static Blocklog of(BlockState state, BlockState host, Vec3 offset) {
-        if (!canBlocklog(state) || !isBlockloggable(host) || !allowsOffset(state, offset)) return null;
-        Blocklog cut = CACHE.computeIfAbsent(new Key(state, host, offset), key -> compute(key.state(), key.host(), key.offset()));
+        if (!allowsOffset(state, offset)) return null;
+        if (Layers.isLayer(state)) {
+            if (!Layers.isHost(host)) return null;
+        } else if (!canBlocklog(state) || !isBlockloggable(host)) {
+            return null;
+        }
+        Blocklog cut = CACHE.computeIfAbsent(new Key(state, host, offset), key -> Layers.isLayer(key.state()) ? computeLayer(key.state(), key.host()) : compute(key.state(), key.host(), key.offset()));
         return cut == INVALID ? null : cut;
     }
 
     @Nullable
     public static Blocklog at(BlockGetter getter, BlockPos host, BlockState state, Vec3 offset) {
-        if (!canBlocklog(state) || !allowsOffset(state, offset)) return null;
+        if (!canBlocklog(state) && !Layers.isLayer(state) || !allowsOffset(state, offset)) return null;
         return of(state, hostState(getter, host), offset);
     }
 
@@ -108,8 +113,8 @@ public final class Blocklogging {
     }
 
     public static BlockState hostState(BlockGetter getter, BlockPos host) {
-        if (getter instanceof Level level) return Cells.realState(level, host);
-        return OverlayContext.outside(() -> getter.getBlockState(host));
+        if (getter instanceof Level level) return Covers.raw(level, host, Cells.realState(level, host));
+        return OverlayContext.outside(() -> Covers.raw(getter, host, getter.getBlockState(host)));
     }
 
     @Nullable
@@ -190,6 +195,17 @@ public final class Blocklogging {
             open.add(box.move(-offset.x, -offset.y, -offset.z));
         }
         return new Blocklog(cutOutline, cut(collision, capped(hostShape)), cut(support, hostShape), List.copyOf(open));
+    }
+
+    private static Blocklog computeLayer(BlockState state, BlockState host) {
+        VoxelShape hostOutline = host.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());
+        VoxelShape outline = state.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());
+        if (outline.isEmpty() || Block.isShapeFullBlock(hostOutline) || outline.min(Direction.Axis.Y) > Support.EPSILON) return INVALID;
+        VoxelShape cutOutline = cut(outline, hostOutline);
+        if (cutOutline.isEmpty()) return INVALID;
+        VoxelShape collision = state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());
+        VoxelShape support = state.getBlockSupportShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO);
+        return new Blocklog(cutOutline, collision, cut(support, hostOutline), new Layers.HostOutline(hostOutline.toAabbs()));
     }
 
     private static VoxelShape capped(VoxelShape host) {

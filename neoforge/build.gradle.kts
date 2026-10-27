@@ -35,11 +35,16 @@ dependencies {
         "additionalRuntimeClasspath"("folk.sisby:kaleido-config:${setting("kaleido")}")
     }
     integration("clutternomore")?.let { compileOnly("maven.modrinth:clutternomore:$it") { isTransitive = false } }
+    integration("snowrealmagic")?.let { compileOnly("maven.modrinth:snow-real-magic:$it") { isTransitive = false } }
+    integration("kiwi")?.let { compileOnly("maven.modrinth:kiwi:$it") { isTransitive = false } }
     integration("sable")?.let { compileOnly("dev.ryanhcode.sable:sable-neoforge-$mcVersion:$it") { isTransitive = false } }
     integration("sable_companion")?.let { compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-$mcVersion:$it") { isTransitive = false } }
     integration("sodium")?.let { compileOnly("net.caffeinemc:sodium-neoforge-mod:$it") { isTransitive = false } }
     integration("gallery")?.let { compileOnly("maven.modrinth:gallery:$it") { isTransitive = false } }
     integration("create")?.let { compileOnly("maven.modrinth:create:$it") { isTransitive = false } }
+    integration("quark")?.let { compileOnly("maven.modrinth:quark:$it") { isTransitive = false } }
+    integration("zeta")?.let { compileOnly("maven.modrinth:zeta:$it") { isTransitive = false } }
+    integration("additionalplacements")?.let { compileOnly("maven.modrinth:additional-placements:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { compileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("lithium")?.let { compileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }
 }

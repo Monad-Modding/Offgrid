@@ -32,10 +32,12 @@ public final class HorizontalSlabs implements SlabFamily {
     @Override
     @Nullable
     public Halves combine(BlockState existing, BlockState placing) {
-        if (!this.isSingle(existing) || !(placing.getBlock() instanceof SlabBlock)) return null;
+        Block parent = MixedSlabs.parentOf(placing.getBlock());
+        if (!this.isSingle(existing) || !(parent instanceof SlabBlock)) return null;
+        BlockState slab = placing.getBlock() == parent ? placing : parent.defaultBlockState();
         boolean bottom = existing.getValue(SlabBlock.TYPE) == SlabType.BOTTOM;
         BlockState kept = MixedSlabs.dry(existing);
-        BlockState added = MixedSlabs.dry(placing.setValue(SlabBlock.TYPE, bottom ? SlabType.TOP : SlabType.BOTTOM));
+        BlockState added = MixedSlabs.dry(slab.setValue(SlabBlock.TYPE, bottom ? SlabType.TOP : SlabType.BOTTOM));
         return bottom ? new Halves(kept, added, Direction.Axis.Y) : new Halves(added, kept, Direction.Axis.Y);
     }
 

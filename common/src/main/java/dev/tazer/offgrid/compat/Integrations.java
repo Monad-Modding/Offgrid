@@ -10,6 +10,9 @@ public final class Integrations {
 
     public static final String CLUTTER_NO_MORE = "clutternomore";
     public static final String SABLE = "sable";
+    public static final String QUARK = "quark";
+    public static final String ADDITIONAL_PLACEMENTS = "additionalplacements";
+    public static final String SNOW_REAL_MAGIC = "snowrealmagic";
 
     private Integrations() {
     }

@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import dev.tazer.offgrid.world.Cell;
 import dev.tazer.offgrid.world.Cells;
 import dev.tazer.offgrid.world.Connections;
+import dev.tazer.offgrid.world.Layers;
 import dev.tazer.offgrid.world.OffgridIndex;
 import dev.tazer.offgrid.world.Offsets;
 import dev.tazer.offgrid.world.Overlay;
@@ -15,6 +16,7 @@ import dev.tazer.offgrid.world.Placement;
 import dev.tazer.offgrid.world.Signals;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -89,6 +91,11 @@ public abstract class BlockStateBaseMixin {
         return Connections.forShape(this.asState(), level, pos, neighbourPos, neighbour);
     }
     //?}
+
+    @ModifyReturnValue(method = "canBeReplaced(Lnet/minecraft/world/item/context/BlockPlaceContext;)Z", at = @At("RETURN"))
+    private boolean offgrid$cutThroughLayer(boolean original, BlockPlaceContext context) {
+        return original || Layers.yields(this.asState(), context);
+    }
 
     @ModifyReturnValue(method = "canSurvive", at = @At("RETURN"))
     private boolean offgrid$offgridSurvival(boolean original, LevelReader level, BlockPos pos) {

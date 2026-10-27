@@ -5,7 +5,12 @@ import dev.tazer.offgrid.OffgridConfig;
 import dev.tazer.offgrid.command.OffgridCommand;
 import dev.tazer.offgrid.compat.Integrations;
 import dev.tazer.offgrid.forge.client.OffgridForgeClient;
+import dev.tazer.offgrid.forge.compat.additionalplacements.AdditionalPlacementsSlabs;
+import dev.tazer.offgrid.forge.compat.quark.QuarkVerticalSlabs;
+import dev.tazer.offgrid.forge.compat.snowrealmagic.SnowRealMagicCover;
 import dev.tazer.offgrid.registry.OffgridBlocks;
+import dev.tazer.offgrid.slab.MixedSlabs;
+import dev.tazer.offgrid.world.Covers;
 import dev.tazer.offgrid.world.OffgridChunk;
 import dev.tazer.offgrid.world.OffgridEvents;
 import net.minecraft.core.registries.Registries;
@@ -43,6 +48,16 @@ public final class OffgridForge {
         ForgeNetwork.register();
         OffgridConfig.get();
         Integrations.init();
+        if (Integrations.isLoaded(Integrations.QUARK)) {
+            MixedSlabs.addFamily(new QuarkVerticalSlabs());
+        }
+        if (Integrations.isLoaded(Integrations.ADDITIONAL_PLACEMENTS)) {
+            MixedSlabs.addParent(AdditionalPlacementsSlabs::parentOf);
+            MixedSlabs.addFamily(new AdditionalPlacementsSlabs());
+        }
+        if (Integrations.isLoaded(Integrations.SNOW_REAL_MAGIC)) {
+            Covers.addCover(new SnowRealMagicCover());
+        }
         modBus.addListener(OffgridForge::onRegister);
         modBus.addListener(OffgridForge::onCapabilities);
         MinecraftForge.EVENT_BUS.addGenericListener(LevelChunk.class, OffgridForge::onAttachChunk);

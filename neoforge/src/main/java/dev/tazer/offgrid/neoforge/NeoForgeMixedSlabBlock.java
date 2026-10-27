@@ -60,8 +60,10 @@ public final class NeoForgeMixedSlabBlock extends MixedSlabBlock {
 
     @Override
     public SoundType getSoundType(BlockState state, LevelReader level, BlockPos pos, @Nullable Entity entity) {
-        BlockState half;
-        if (entity instanceof Player player && !pos.equals(player.getOnPosLegacy())) {
+        BlockState half = MixedSlabs.placedHalf();
+        if (half != null) {
+            return half.getSoundType(level, pos, entity);
+        } else if (entity instanceof Player player && !pos.equals(player.getOnPosLegacy())) {
             half = targetedHalf(state, level, pos, player);
         } else if (entity != null) {
             half = under(state, level, pos, entity.position());

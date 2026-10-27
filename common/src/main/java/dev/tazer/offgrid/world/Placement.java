@@ -42,7 +42,7 @@ public final class Placement {
     public static InteractionResult place(BlockItem item, BlockPlaceContext context, Function<BlockPlaceContext, InteractionResult> vanilla) {
         BlockState placing = item.getBlock().defaultBlockState();
         if (Scope.get(Scope.PLAN) != null || context.getItemInHand().getItem() != item) return vanilla.apply(context);
-        if (!Overlays.canOffset(placing) && !Blocklogging.canBlocklog(placing)) return OverlayContext.outside(() -> placeBeneath(item, context, vanilla));
+        if (!Overlays.canOffset(placing) && !Blocklogging.canBlocklog(placing) && !Layers.isLayer(placing)) return OverlayContext.outside(() -> placeBeneath(item, context, vanilla));
         Decision decision = decide(item, context);
         return switch (decision.kind()) {
             case VANILLA -> vanilla.apply(context);
@@ -55,8 +55,12 @@ public final class Placement {
     private static Decision decide(BlockItem item, BlockPlaceContext context) {
         Level level = context.getLevel();
         boolean replacing = context.replacingClickedOnBlock();
-        if (replacing && !Blocklogging.isBlockloggable(Cells.realState(level, context.getClickedPos()))) return Decision.VANILLA_DECISION;
+        if (replacing && !Blocklogging.isBlockloggable(Covers.raw(level, context.getClickedPos(), Cells.realState(level, context.getClickedPos())))) return Decision.VANILLA_DECISION;
         OffgridSettings settings = OffgridSettings.of(level);
+        if (settings.allowsLayering() && Layers.isLayer(item.getBlock().defaultBlockState())) {
+            Decision layer = OverlayContext.outside(() -> planLayer(item, context));
+            if (layer != null) return layer;
+        }
         if (settings.allowsBlocklogging() && Blocklogging.canBlocklog(item.getBlock().defaultBlockState())) {
             Decision blocklog = OverlayContext.outside(() -> planBlocklog(item, context));
             if (blocklog != null) return blocklog;
@@ -75,14 +79,31 @@ public final class Placement {
     }
 
     @Nullable
+    private static Decision planLayer(BlockItem item, BlockPlaceContext context) {
+        Level level = context.getLevel();
+        if (context.getClickedFace() != Direction.UP || context.replacingClickedOnBlock()) return null;
+        BlockPos cell = context.getClickedPos();
+        if (!level.hasChunkAt(cell)) return null;
+        BlockState real = Cells.realState(level, cell);
+        if (Covers.snow(level, cell, real) > 0) return null;
+        BlockState host = Covers.raw(level, cell, real);
+        if (!Layers.isHost(host) || Layers.layerIn(level, cell) != null || Cells.overlays(level, cell).size() >= Overlays.MAX_PER_CELL) return null;
+        BlockPlaceContext inside = new OverlayPlaceContext(context, cell);
+        Overlay probe = new Overlay(-1, Blocks.AIR.defaultBlockState(), Vec3.ZERO, null);
+        BlockState placed = OverlayContext.call(level, cell, probe, () -> ((BlockItemAccessor) item).offgrid$getPlacementState(inside));
+        if (placed == null || !Layers.isLayer(placed) || Blocklogging.of(placed, host) == null || Overlays.obstructed(level, cell, placed, Vec3.ZERO, null)) return null;
+        return new Decision(Kind.OVERLAY, cell, Vec3.ZERO, placed);
+    }
+
+    @Nullable
     private static Decision planBlocklog(BlockItem item, BlockPlaceContext context) {
         Level level = context.getLevel();
         Direction face = context.getClickedFace();
         Vec3 click = context.getClickLocation();
         BlockPos cell = BlockPos.containing(click.x + face.getStepX() * Support.EPSILON, click.y + face.getStepY() * Support.EPSILON, click.z + face.getStepZ() * Support.EPSILON);
         if (!level.hasChunkAt(cell)) return null;
-        BlockState host = Cells.realState(level, cell);
-        if (!Blocklogging.isBlockloggable(host) || Cells.overlays(level, cell).size() >= Overlays.MAX_PER_CELL) return null;
+        BlockState host = Covers.raw(level, cell, Cells.realState(level, cell));
+        if (!Blocklogging.isBlockloggable(host) || Layers.isLayer(host) || Cells.overlays(level, cell).size() >= Overlays.MAX_PER_CELL) return null;
         BlockPlaceContext inside = new OverlayPlaceContext(context, cell);
         Overlay probe = new Overlay(-1, Blocks.AIR.defaultBlockState(), Vec3.ZERO, null);
         BlockState placed = OverlayContext.call(level, cell, probe, () -> ((BlockItemAccessor) item).offgrid$getPlacementState(inside));
@@ -200,6 +221,10 @@ public final class Placement {
             Cells.sync(serverLevel, cell);
         }
         return result;
+    }
+
+    public static int clientId() {
+        return nextClientId--;
     }
 
     @Nullable

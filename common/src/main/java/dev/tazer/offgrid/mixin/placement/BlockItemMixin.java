@@ -2,6 +2,7 @@ package dev.tazer.offgrid.mixin.placement;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import dev.tazer.offgrid.world.Layers;
 import dev.tazer.offgrid.world.Placement;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
@@ -13,6 +14,7 @@ public abstract class BlockItemMixin {
 
     @WrapMethod(method = "place")
     private InteractionResult offgrid$placeOffgrid(BlockPlaceContext context, Operation<InteractionResult> original) {
-        return Placement.place((BlockItem) (Object) this, context, original::call);
+        BlockItem item = (BlockItem) (Object) this;
+        return Layers.preserving(item, context, () -> Placement.place(item, context, original::call));
     }
 }

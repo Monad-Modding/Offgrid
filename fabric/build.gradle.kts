@@ -10,6 +10,8 @@ dependencies {
     implementation("folk.sisby:kaleido-config:${setting("kaleido")}")
     include("folk.sisby:kaleido-config:${setting("kaleido")}")
     integration("clutternomore")?.let { compileOnly("maven.modrinth:clutternomore:$it") { isTransitive = false } }
+    integration("snowrealmagic")?.let { compileOnly("maven.modrinth:snow-real-magic:$it") { isTransitive = false } }
+    integration("kiwi")?.let { compileOnly("maven.modrinth:kiwi:$it") { isTransitive = false } }
     integration("sodium")?.let { compileOnly("net.caffeinemc:sodium-fabric:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { compileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("lithium")?.let { compileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }

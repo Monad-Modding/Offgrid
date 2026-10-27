@@ -42,6 +42,7 @@ public final class OverlayTicker {
             runScheduledTicks(level, index);
         }
         runEvents(level, index);
+        runUncovers(level, index);
         runPromotions(level, index);
         runRevalidations(level, index);
         Interactions.tickDestruction(level);
@@ -217,6 +218,19 @@ public final class OverlayTicker {
             BlockPos pos = BlockPos.of(packed);
             if (level.hasChunkAt(pos)) {
                 Overlays.revalidateOffset(level, pos);
+            }
+        }
+    }
+
+    private static void runUncovers(ServerLevel level, OffgridIndex index) {
+        LongLinkedOpenHashSet uncovers = index.getTasks().getUncovers();
+        if (uncovers.isEmpty()) return;
+        long[] pending = uncovers.toLongArray();
+        uncovers.clear();
+        for (long packed : pending) {
+            BlockPos pos = BlockPos.of(packed);
+            if (level.hasChunkAt(pos)) {
+                Covers.uncover(level, pos);
             }
         }
     }

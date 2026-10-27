@@ -13,6 +13,8 @@ import org.jetbrains.annotations.Nullable;
 
 public final class Raycasts {
 
+    private static final double EPSILON = 1.0E-6;
+
     private Raycasts() {
     }
 
@@ -31,20 +33,20 @@ public final class Raycasts {
         if (index == null || index.isEmpty()) return original;
         BlockHitResult best = original;
         double nearest = original == null ? Double.MAX_VALUE : original.getLocation().distanceToSqr(from);
-        best = test(level, index, pos, from, to, best, nearest);
+        best = test(level, index, pos, pos, from, to, best, nearest);
         for (Direction direction : Direction.values()) {
             BlockPos neighbour = pos.relative(direction);
             if (index.getCell(neighbour) == null) {
                 continue;
             }
             double distance = best == null ? Double.MAX_VALUE : best.getLocation().distanceToSqr(from);
-            best = test(level, index, neighbour, from, to, best, distance);
+            best = test(level, index, pos, neighbour, from, to, best, distance);
         }
         return best;
     }
 
     @Nullable
-    private static BlockHitResult test(Level level, OffgridIndex index, BlockPos pos, Vec3 from, Vec3 to, @Nullable BlockHitResult best, double nearest) {
+    private static BlockHitResult test(Level level, OffgridIndex index, BlockPos visiting, BlockPos pos, Vec3 from, Vec3 to, @Nullable BlockHitResult best, double nearest) {
         Cell cell = index.getCell(pos);
         if (cell == null) return best;
         BlockHitResult result = best;
@@ -53,7 +55,7 @@ public final class Raycasts {
             BlockState state = Cells.realState(level, pos);
             VoxelShape shape = state.getShape(level, pos, CollisionContext.empty());
             BlockHitResult hit = shape.isEmpty() ? null : shape.clip(from, to, pos);
-            if (hit != null) {
+            if (hit != null && reachedFrom(visiting, pos, hit.getLocation(), from, to)) {
                 double distance = hit.getLocation().distanceToSqr(from);
                 if (distance < closest) {
                     closest = distance;
@@ -67,7 +69,7 @@ public final class Raycasts {
                 continue;
             }
             BlockHitResult hit = shape.clip(from, to, pos);
-            if (hit == null) {
+            if (hit == null || !reachedFrom(visiting, pos, hit.getLocation(), from, to)) {
                 continue;
             }
             double distance = hit.getLocation().distanceToSqr(from);
@@ -77,5 +79,12 @@ public final class Raycasts {
             }
         }
         return result;
+    }
+
+    private static boolean reachedFrom(BlockPos visiting, BlockPos cell, Vec3 hit, Vec3 from, Vec3 to) {
+        if (hit.x >= visiting.getX() - EPSILON && hit.x <= visiting.getX() + 1 + EPSILON && hit.y >= visiting.getY() - EPSILON && hit.y <= visiting.getY() + 1 + EPSILON && hit.z >= visiting.getZ() - EPSILON && hit.z <= visiting.getZ() + 1 + EPSILON) return true;
+        Vec3 inside = hit.add(to.subtract(from).normalize().scale(EPSILON));
+        BlockPos containing = BlockPos.containing(inside);
+        return containing.distManhattan(cell) > 1;
     }
 }
