@@ -127,7 +127,6 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         this.optional(OffgridTags.CAN_OFFSET, dyed("simulated:%_handle"));
         this.optional(OffgridTags.CAN_OFFSET, dyed("simulated:%_nameplate"));
 
-        this.optional(OffgridTags.CAN_OVERLAY, "simulated:linked_typewriter");
         this.optional(OffgridTags.CAN_OVERLAY, "another_furniture:service_bell");
         this.optional(OffgridTags.CAN_OVERLAY, dyed("create:%_seat"));
         this.optional(OffgridTags.CAN_OVERLAY, dyed("another_furniture:%_lamp"));
