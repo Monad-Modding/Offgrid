@@ -1,6 +1,11 @@
 package dev.tazer.offgrid.client;
 
+import dev.tazer.offgrid.world.Layers;
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,17 +23,53 @@ public final class QuadClipper {
     private static final int FLOATS = 5;
     private static final float EPSILON = 1.0E-5F;
     private static final double MIN_AREA = 1.0E-8;
+    private static final float FACE_EPSILON = 1.0E-3F;
 
     private QuadClipper() {
     }
 
     public static List<BakedQuad> clip(List<BakedQuad> quads, List<AABB> open) {
         if (quads.isEmpty()) return quads;
+        if (open instanceof Layers.HostOutline host) return underHost(quads, host);
         List<BakedQuad> clipped = new ArrayList<>(quads.size());
         for (BakedQuad quad : quads) {
             clip(quad, open, clipped);
         }
         return clipped;
+    }
+
+    private static List<BakedQuad> underHost(List<BakedQuad> quads, List<AABB> host) {
+        List<BakedQuad> kept = new ArrayList<>(quads.size());
+        for (BakedQuad quad : quads) {
+            float[] corners = read(quad);
+            int axis = direction(quad).getAxis().ordinal();
+            float plane = corners[axis];
+            boolean flat = true;
+            for (int vertex = 1; vertex < 4; vertex++) {
+                flat &= Math.abs(corners[vertex * FLOATS + axis] - plane) < FACE_EPSILON;
+            }
+            VoxelShape covered = flat ? coveredFaces(host, axis, plane) : Shapes.empty();
+            if (covered.isEmpty()) {
+                kept.add(quad);
+                continue;
+            }
+            clip(quad, Shapes.join(Shapes.block(), covered, BooleanOp.ONLY_FIRST).toAabbs(), kept);
+        }
+        return kept;
+    }
+
+    private static VoxelShape coveredFaces(List<AABB> host, int axis, float plane) {
+        VoxelShape covered = Shapes.empty();
+        for (AABB box : host) {
+            if (Math.abs(min(box, axis) - plane) < FACE_EPSILON || Math.abs(max(box, axis) - plane) < FACE_EPSILON) {
+                covered = Shapes.or(covered, Shapes.create(switch (axis) {
+                    case 0 -> new AABB(plane - FACE_EPSILON, box.minY, box.minZ, plane + FACE_EPSILON, box.maxY, box.maxZ);
+                    case 1 -> new AABB(box.minX, plane - FACE_EPSILON, box.minZ, box.maxX, plane + FACE_EPSILON, box.maxZ);
+                    default -> new AABB(box.minX, box.minY, plane - FACE_EPSILON, box.maxX, box.maxY, plane + FACE_EPSILON);
+                }));
+            }
+        }
+        return covered;
     }
 
     private static void clip(BakedQuad quad, List<AABB> open, List<BakedQuad> out) {
@@ -148,6 +189,10 @@ public final class QuadClipper {
         return corners;
     }
 
+    private static Direction direction(BakedQuad quad) {
+        return quad.direction();
+    }
+
     private static BakedQuad build(BakedQuad quad, float[] polygon, int first, int second, int third, int fourth) {
         return new BakedQuad(position(polygon, first), position(polygon, second), position(polygon, third), position(polygon, fourth), uv(polygon, first), uv(polygon, second), uv(polygon, third), uv(polygon, fourth), quad.direction(), quad.materialInfo());
     }
@@ -176,6 +221,10 @@ public final class QuadClipper {
             corners[offset + 4] = Float.intBitsToFloat(vertices[source + 5]);
         }
         return corners;
+    }
+
+    private static Direction direction(BakedQuad quad) {
+        return quad.getDirection();
     }
 
     private static BakedQuad build(BakedQuad quad, float[] polygon, int first, int second, int third, int fourth) {

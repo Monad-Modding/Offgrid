@@ -38,7 +38,7 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
     @Override
     protected void addTags(HolderLookup.Provider registries) {
         this.blocks(OffgridTags.CAN_OVERLAY, Blocks.TORCH, Blocks.WALL_TORCH, Blocks.SOUL_TORCH, Blocks.SOUL_WALL_TORCH, Blocks.REDSTONE_TORCH, Blocks.REDSTONE_WALL_TORCH);
-        this.blocks(OffgridTags.CAN_OVERLAY, Blocks.LANTERN, Blocks.SOUL_LANTERN, Blocks.END_ROD, Blocks.MOSS_CARPET);
+        this.blocks(OffgridTags.CAN_OVERLAY, Blocks.LANTERN, Blocks.SOUL_LANTERN, Blocks.END_ROD, Blocks.MOSS_CARPET, Blocks.SNOW);
         //? if >=1.21 {
         this.tags(OffgridTags.CAN_OVERLAY, conventional("skulls"), conventional("buds"), conventional("clusters"));
         //?} else {
@@ -104,6 +104,11 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         //?}
         this.tags(OffgridTags.BLOCKLOGGABLE, BlockTags.SLABS, BlockTags.STAIRS);
         this.blocks(OffgridTags.BLOCKLOGGABLE, Blocks.SNOW);
+        this.tags(OffgridTags.LAYERS, BlockTags.WOOL_CARPETS);
+        this.blocks(OffgridTags.LAYERS, Blocks.MOSS_CARPET, Blocks.SNOW);
+        //? if >=1.21.4 {
+        /*this.blocks(OffgridTags.LAYERS, Blocks.PALE_MOSS_CARPET);
+        *///?}
         this.addIntegrationTags();
     }
 

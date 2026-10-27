@@ -18,6 +18,9 @@ public final class OffgridConfig extends ReflectiveConfig {
     @SerializedName("blocklogging")
     public final TrackedValue<Boolean> blocklogging = this.value(true);
 
+    @SerializedName("layering")
+    public final TrackedValue<Boolean> layering = this.value(true);
+
     @SerializedName("surface_attaching")
     public final TrackedValue<Boolean> surfaceAttaching = this.value(true);
 

@@ -26,6 +26,7 @@ public final class Scope {
     public static final Slot<Boolean> RESOLVING_SHAPE = new Slot<>(Boolean.FALSE);
     public static final Slot<Boolean> HIGHLIGHTING = new Slot<>(Boolean.FALSE);
     public static final Slot<AtomicReference<BlockState>> PLACED_HALF = new Slot<>(null);
+    public static final Slot<List<Layers.Replaced>> REPLACED_LAYERS = new Slot<>(null);
     private static final ThreadLocal<Scope> CURRENT = ThreadLocal.withInitial(Scope::new);
 
     private final Object[] values = new Object[Slot.ALL.size()];

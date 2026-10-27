@@ -35,6 +35,8 @@ dependencies {
         "additionalRuntimeClasspath"("folk.sisby:kaleido-config:${setting("kaleido")}")
     }
     integration("clutternomore")?.let { compileOnly("maven.modrinth:clutternomore:$it") { isTransitive = false } }
+    integration("snowrealmagic")?.let { compileOnly("maven.modrinth:snow-real-magic:$it") { isTransitive = false } }
+    integration("kiwi")?.let { compileOnly("maven.modrinth:kiwi:$it") { isTransitive = false } }
     integration("sable")?.let { compileOnly("dev.ryanhcode.sable:sable-neoforge-$mcVersion:$it") { isTransitive = false } }
     integration("sable_companion")?.let { compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-$mcVersion:$it") { isTransitive = false } }
     integration("sodium")?.let { compileOnly("net.caffeinemc:sodium-neoforge-mod:$it") { isTransitive = false } }

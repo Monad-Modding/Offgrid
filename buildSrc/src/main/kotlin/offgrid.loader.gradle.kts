@@ -121,7 +121,7 @@ publishMods {
         if (platform == "fabric") {
             requires("fabric-api")
         }
-        optionalMods.forEach { optional(it.slug) }
+        optionalMods.forEach { optional(it.curseforgeSlug) }
     }
 }
 

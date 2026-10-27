@@ -67,6 +67,7 @@
     "world.PistonMovingBlockEntityMixin",
     "world.PistonStructureResolverMixin",
     "world.ServerLevelMixin",
+    "world.ServerLevelPrecipitationMixin",
     "world.StructureTemplateMixin"
   ],
   "client": [

@@ -100,7 +100,7 @@ public final class Overlays {
             int dz = cell.getZ() - host.getZ();
             boolean self = dx == 0 && dy == 0 && dz == 0;
             if (level.hasChunkAt(cell) && !(self && replacingHost)) {
-                BlockState occupant = Cells.realState(level, cell);
+                BlockState occupant = Covers.raw(level, cell, Cells.realState(level, cell));
                 if (!occupant.isAir() && !occupant.canBeReplaced()) {
                     VoxelShape occupantShape = occupant.getShape(level, cell, CollisionContext.empty());
                     if (!occupantShape.isEmpty() && Shapes.joinIsNotEmpty(shape, occupantShape.move(dx, dy, dz), BooleanOp.AND)) return true;
@@ -294,7 +294,9 @@ public final class Overlays {
         OffgridIndex index = OffgridIndex.of(level);
         if (index == null || index.isEmpty()) return;
         Cell cell = index.getCell(pos);
-        if (cell != null) {
+        if (cell != null && Covers.isCovered(newState) && !cell.isEmpty()) {
+            Covers.queue(level, pos);
+        } else if (cell != null) {
             if (cell.offset() != null && !keepsOffset(level, pos, oldState, newState, cell.offset())) {
                 Cells.update(level, pos, existing -> existing.withOffset(null));
             }
@@ -316,6 +318,7 @@ public final class Overlays {
     private static boolean keepsOffset(ServerLevel level, BlockPos pos, BlockState oldState, BlockState newState, Vec3 offset) {
         if (newState.is(oldState.getBlock())) return true;
         if (isRemoval(newState)) return false;
+        if (Covers.isCovered(oldState)) return true;
         if (oldState.isAir()) return canOffset(newState) && offsetHolds(level, pos, newState, offset);
         if (oldState.canBeReplaced()) return false;
         return canOffset(newState);

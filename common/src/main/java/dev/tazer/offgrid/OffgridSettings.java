@@ -6,14 +6,14 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
-public record OffgridSettings(boolean offsetting, boolean overlaying, boolean blocklogging, boolean surfaceAttaching, boolean anyFacePaintings) {
+public record OffgridSettings(boolean offsetting, boolean overlaying, boolean blocklogging, boolean surfaceAttaching, boolean anyFacePaintings, boolean layering) {
 
     @Nullable
     private static volatile OffgridSettings received;
 
     public static OffgridSettings local() {
         OffgridConfig config = OffgridConfig.get();
-        return new OffgridSettings(config.offsetting.value(), config.overlaying.value(), config.blocklogging.value(), config.surfaceAttaching.value(), config.anyFacePaintings.value());
+        return new OffgridSettings(config.offsetting.value(), config.overlaying.value(), config.blocklogging.value(), config.surfaceAttaching.value(), config.anyFacePaintings.value(), config.layering.value());
     }
 
     public static OffgridSettings of(Level level) {
@@ -30,7 +30,7 @@ public record OffgridSettings(boolean offsetting, boolean overlaying, boolean bl
     }
 
     public static OffgridSettings read(FriendlyByteBuf buf) {
-        return new OffgridSettings(buf.readBoolean(), buf.readBoolean(), buf.readBoolean(), buf.readBoolean(), buf.readBoolean());
+        return new OffgridSettings(buf.readBoolean(), buf.readBoolean(), buf.readBoolean(), buf.readBoolean(), buf.readBoolean(), buf.readBoolean());
     }
 
     public static void write(FriendlyByteBuf buf, OffgridSettings settings) {
@@ -39,6 +39,7 @@ public record OffgridSettings(boolean offsetting, boolean overlaying, boolean bl
         buf.writeBoolean(settings.blocklogging);
         buf.writeBoolean(settings.surfaceAttaching);
         buf.writeBoolean(settings.anyFacePaintings);
+        buf.writeBoolean(settings.layering);
     }
 
     public boolean allowsOverlaying() {
@@ -47,5 +48,9 @@ public record OffgridSettings(boolean offsetting, boolean overlaying, boolean bl
 
     public boolean allowsBlocklogging() {
         return this.allowsOverlaying() && this.blocklogging;
+    }
+
+    public boolean allowsLayering() {
+        return this.allowsOverlaying() && this.layering;
     }
 }

@@ -118,8 +118,13 @@ public final class Cells {
         }
         if (!(level instanceof ServerLevel serverLevel)) {
             clientListener.accept(level, pos);
-        } else if (notify) {
-            sync(serverLevel, pos, after, broken);
+        } else {
+            if (notify) {
+                sync(serverLevel, pos, after, broken);
+            }
+            if (!after.isEmpty()) {
+                Covers.queue(serverLevel, pos);
+            }
         }
         return true;
     }

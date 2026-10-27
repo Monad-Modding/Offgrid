@@ -85,13 +85,14 @@ fun pruneMixinConfig(config: File, classesDirs: Iterable<File>, refmap: String?)
     config.writeText(JsonOutput.prettyPrint(JsonOutput.toJson(json)) + "\n")
 }
 
-data class OptionalMod(val id: String, val slug: String, val minimum: String, val below: String, val clientOnly: Boolean)
+data class OptionalMod(val id: String, val slug: String, val curseforgeSlug: String, val minimum: String, val below: String, val clientOnly: Boolean)
 
 val Project.optionalMods: List<OptionalMod>
     get() = versionedOrNull("optional.$platform")?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.map { entry ->
         val fields = entry.split(Regex("\\s+"))
-        require(fields.size == 4 || fields.size == 5 && fields[4] == "client") { "Optional mod entry '$entry' must be '<mod id> <slug> <minimum> <below> [client]'" }
-        OptionalMod(fields[0], fields[1], fields[2], fields[3], fields.size == 5)
+        require(fields.size == 4 || fields.size == 5 && fields[4] == "client") { "Optional mod entry '$entry' must be '<mod id> <slug>[/<curseforge slug>] <minimum> <below> [client]'" }
+        val slugs = fields[1].split("/")
+        OptionalMod(fields[0], slugs[0], slugs.getOrElse(1) { slugs[0] }, fields[2], fields[3], fields.size == 5)
     } ?: emptyList()
 
 fun Project.optionalDependencies(modId: String): String = optionalMods.joinToString("") { mod ->

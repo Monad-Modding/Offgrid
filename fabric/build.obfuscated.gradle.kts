@@ -14,6 +14,8 @@ dependencies {
     implementation("folk.sisby:kaleido-config:${setting("kaleido")}")
     include("folk.sisby:kaleido-config:${setting("kaleido")}")
     integration("clutternomore")?.let { modCompileOnly("maven.modrinth:clutternomore:$it") { isTransitive = false } }
+    integration("snowrealmagic")?.let { modCompileOnly("maven.modrinth:snow-real-magic:$it") { isTransitive = false } }
+    integration("kiwi")?.let { modCompileOnly("maven.modrinth:kiwi:$it") { isTransitive = false } }
     integration("sodium")?.let { modCompileOnly("maven.modrinth:sodium:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { modCompileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("lithium")?.let { modCompileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }

@@ -4,6 +4,7 @@ import dev.tazer.offgrid.OffgridConfig;
 import dev.tazer.offgrid.command.OffgridCommand;
 import dev.tazer.offgrid.compat.Integrations;
 import dev.tazer.offgrid.registry.OffgridBlocks;
+import dev.tazer.offgrid.world.Covers;
 import dev.tazer.offgrid.world.OffgridEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -13,6 +14,9 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+//? if <26.2 {
+import dev.tazer.offgrid.fabric.compat.snowrealmagic.SnowRealMagicCover;
+//?}
 
 public final class OffgridFabric implements ModInitializer {
 
@@ -23,6 +27,11 @@ public final class OffgridFabric implements ModInitializer {
         FabricNetwork.register();
         OffgridConfig.get();
         Integrations.init();
+        //? if <26.2 {
+        if (Integrations.isLoaded(Integrations.SNOW_REAL_MAGIC)) {
+            Covers.addCover(new SnowRealMagicCover());
+        }
+        //?}
         CommandRegistrationCallback.EVENT.register((dispatcher, registries, selection) -> dispatcher.register(OffgridCommand.build()));
         ServerTickEvents.END_WORLD_TICK.register(OffgridEvents::onServerLevelTick);
         //? if >=26 {
