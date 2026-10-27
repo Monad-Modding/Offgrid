@@ -41,6 +41,10 @@
     "minecraft:waxed_oxidized_copper_lantern",
     "#offgrid:can_blocklog",
     {
+      "id": "simulated:linked_typewriter",
+      "required": false
+    },
+    {
       "id": "another_furniture:service_bell",
       "required": false
     },
