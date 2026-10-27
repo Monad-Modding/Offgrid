@@ -4,6 +4,7 @@ import dev.tazer.offgrid.registry.OffgridBlocks;
 import dev.tazer.offgrid.world.MovingBlockData;
 import dev.tazer.offgrid.world.OffgridIndex;
 import dev.tazer.offgrid.world.Players;
+import dev.tazer.offgrid.world.Scope;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
@@ -27,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class MixedSlabs {
 
@@ -72,7 +74,17 @@ public final class MixedSlabs {
         if (level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) {
             entity.setHalves(halves.first(), halves.second());
         }
+        AtomicReference<BlockState> placed = Scope.get(Scope.PLACED_HALF);
+        if (placed != null) {
+            placed.set(placing);
+        }
         return true;
+    }
+
+    @Nullable
+    public static BlockState placedHalf() {
+        AtomicReference<BlockState> placed = Scope.get(Scope.PLACED_HALF);
+        return placed == null ? null : placed.get();
     }
 
     public static boolean mergesInto(Level level, BlockPos from, BlockState moving, BlockPos to, BlockState fixed, Direction direction) {

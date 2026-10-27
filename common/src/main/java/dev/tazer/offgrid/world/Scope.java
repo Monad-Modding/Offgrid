@@ -3,12 +3,14 @@ package dev.tazer.offgrid.world;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 public final class Scope {
@@ -23,6 +25,7 @@ public final class Scope {
     public static final Slot<Boolean> SUPPRESSED_OFFSETS = new Slot<>(Boolean.FALSE);
     public static final Slot<Boolean> RESOLVING_SHAPE = new Slot<>(Boolean.FALSE);
     public static final Slot<Boolean> HIGHLIGHTING = new Slot<>(Boolean.FALSE);
+    public static final Slot<AtomicReference<BlockState>> PLACED_HALF = new Slot<>(null);
     private static final ThreadLocal<Scope> CURRENT = ThreadLocal.withInitial(Scope::new);
 
     private final Object[] values = new Object[Slot.ALL.size()];
