@@ -103,7 +103,8 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         this.blocks(OffgridTags.CAN_BLOCKLOG, Blocks.IRON_BARS);
         this.optional(OffgridTags.CAN_BLOCKLOG, metal("create:%_bars"));
         this.optional(OffgridTags.CAN_BLOCKLOG, metal("createdeco:%_bars"));
-        this.optional(OffgridTags.CAN_BLOCKLOG, metal("createdeco:%_bars_overlay"));  this.optional(OffgridTags.CAN_BLOCKLOG, "createdeco:iron_bars_overlay");
+        this.optional(OffgridTags.CAN_BLOCKLOG, metal("createdeco:%_bars_overlay"));
+        this.optional(OffgridTags.CAN_BLOCKLOG, "createdeco:iron_bars_overlay");
         //?}
         this.tags(OffgridTags.BLOCKLOGGABLE, BlockTags.SLABS, BlockTags.STAIRS);
         this.blocks(OffgridTags.BLOCKLOGGABLE, Blocks.SNOW);
