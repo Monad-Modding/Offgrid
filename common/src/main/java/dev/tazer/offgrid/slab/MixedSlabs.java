@@ -5,6 +5,7 @@ import dev.tazer.offgrid.world.MovingBlockData;
 import dev.tazer.offgrid.world.OffgridIndex;
 import dev.tazer.offgrid.world.Players;
 import dev.tazer.offgrid.world.Scope;
+import dev.tazer.offgrid.world.SubLevelSpace;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
@@ -15,6 +16,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ChangeOverTimeBlock;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.PushReaction;
@@ -190,14 +192,32 @@ public final class MixedSlabs {
     }
 
     public static boolean targetsSecond(Entity viewer, BlockPos pos, Direction.Axis axis) {
-        Vec3 eye = viewer.getEyePosition();
+        Level level = viewer.level();
+        Vec3 worldEye = viewer.getEyePosition();
         double reach = viewer instanceof Player player ? Players.reach(player) : 6.0;
-        Vec3 end = eye.add(viewer.getViewVector(1.0F).scale(reach + REACH_MARGIN));
+        Vec3 eye = SubLevelSpace.toLocal(level, pos, worldEye);
+        Vec3 end = SubLevelSpace.toLocal(level, pos, worldEye.add(viewer.getViewVector(1.0F).scale(reach + REACH_MARGIN)));
         Optional<Vec3> hit = new AABB(pos).clip(eye, end);
         Vec3 point = hit.orElse(eye);
         double along = axis.choose(point.x - pos.getX(), point.y - pos.getY(), point.z - pos.getZ());
         if (Math.abs(along - 0.5) < 1.0E-4) return axis.choose(eye.x - pos.getX(), eye.y - pos.getY(), eye.z - pos.getZ()) > 0.5;
         return along > 0.5;
+    }
+
+    public static void rotate(Level level, BlockPos pos, Direction.Axis original, Rotation rotation) {
+        if (rotation == Rotation.NONE) return;
+        BlockState state = level.getBlockState(pos);
+        MixedSlabBlockEntity entity = entity(level, pos);
+        if (entity == null || !(state.getBlock() instanceof MixedSlabBlock)) return;
+        Direction turned = rotation.rotate(Direction.get(Direction.AxisDirection.POSITIVE, original));
+        BlockState first = entity.getFirst().rotate(rotation);
+        BlockState second = entity.getSecond().rotate(rotation);
+        boolean swap = turned.getAxisDirection() == Direction.AxisDirection.NEGATIVE;
+        BlockState turnedState = state.setValue(MixedSlabBlock.AXIS, turned.getAxis());
+        if (turnedState != state) {
+            level.setBlock(pos, turnedState, Block.UPDATE_CLIENTS);
+        }
+        entity.setHalves(swap ? second : first, swap ? first : second);
     }
 
     public static boolean targetsSecond(HitResult target, BlockPos pos, Direction.Axis axis) {

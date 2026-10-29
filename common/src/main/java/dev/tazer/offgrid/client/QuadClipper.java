@@ -6,6 +6,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,12 +31,175 @@ public final class QuadClipper {
 
     public static List<BakedQuad> clip(List<BakedQuad> quads, List<AABB> open) {
         if (quads.isEmpty()) return quads;
+        if (open instanceof HostFaces faces) return underFaces(quads, faces);
         if (open instanceof Layers.HostOutline host) return underHost(quads, host);
         List<BakedQuad> clipped = new ArrayList<>(quads.size());
         for (BakedQuad quad : quads) {
             clip(quad, open, clipped);
         }
         return clipped;
+    }
+
+    @Nullable
+    public static HostFaces.Face face(BakedQuad quad) {
+        float[] corners = read(quad);
+        int axis = direction(quad).getAxis().ordinal();
+        float plane = corners[axis];
+        float[] points = new float[12];
+        for (int vertex = 0; vertex < 4; vertex++) {
+            for (int component = 0; component < 3; component++) {
+                float value = corners[vertex * FLOATS + component];
+                if (component == axis && Math.abs(value - plane) >= FACE_EPSILON) return null;
+                points[vertex * 3 + component] = component == axis ? plane : value;
+            }
+        }
+        int first = axis == 0 ? 1 : 0;
+        int second = axis == 2 ? 1 : 2;
+        float area = signedArea(points, 3, 4, first, second);
+        if (Math.abs(area) < MIN_AREA) return null;
+        return new HostFaces.Face(axis, plane, points, Math.signum(area));
+    }
+
+    private static List<BakedQuad> underFaces(List<BakedQuad> quads, HostFaces host) {
+        List<BakedQuad> kept = new ArrayList<>(quads.size());
+        for (BakedQuad quad : quads) {
+            float[] corners = read(quad);
+            int axis = direction(quad).getAxis().ordinal();
+            float plane = corners[axis];
+            boolean flat = true;
+            for (int vertex = 1; vertex < 4; vertex++) {
+                flat &= Math.abs(corners[vertex * FLOATS + axis] - plane) < FACE_EPSILON;
+            }
+            if (!flat) {
+                kept.add(quad);
+                continue;
+            }
+            List<float[]> pieces = new ArrayList<>();
+            pieces.add(corners);
+            boolean cut = false;
+            for (HostFaces.Face face : host.getFaces()) {
+                if (face.axis() != axis || Math.abs(face.plane() - plane) >= FACE_EPSILON) {
+                    continue;
+                }
+                List<float[]> remaining = subtract(pieces, face);
+                if (remaining != pieces) {
+                    pieces = remaining;
+                    cut = true;
+                }
+                if (pieces.isEmpty()) break;
+            }
+            if (!cut) {
+                kept.add(quad);
+                continue;
+            }
+            for (float[] piece : pieces) {
+                int count = piece.length / FLOATS;
+                if (count >= 3 && area(piece, count) > MIN_AREA) {
+                    emit(quad, piece, count, kept);
+                }
+            }
+        }
+        return kept;
+    }
+
+    private static List<float[]> subtract(List<float[]> pieces, HostFaces.Face face) {
+        int first = face.axis() == 0 ? 1 : 0;
+        int second = face.axis() == 2 ? 1 : 2;
+        float[] points = face.points();
+        List<float[]> result = new ArrayList<>(pieces.size() + 4);
+        boolean changed = false;
+        for (float[] piece : pieces) {
+            if (!overlaps(piece, points, first, second)) {
+                result.add(piece);
+                continue;
+            }
+            changed = true;
+            float[] remaining = piece;
+            for (int edge = 0; edge < 4 && remaining != null; edge++) {
+                int next = (edge + 1) % 4;
+                float ax = points[edge * 3 + first];
+                float ay = points[edge * 3 + second];
+                float bx = points[next * 3 + first];
+                float by = points[next * 3 + second];
+                if (Math.abs(bx - ax) < EPSILON && Math.abs(by - ay) < EPSILON) {
+                    continue;
+                }
+                float[] outside = clipHalf(remaining, first, second, ax, ay, bx, by, -face.winding());
+                if (outside != null) {
+                    result.add(outside);
+                }
+                remaining = clipHalf(remaining, first, second, ax, ay, bx, by, face.winding());
+            }
+        }
+        return changed ? result : pieces;
+    }
+
+    private static boolean overlaps(float[] piece, float[] points, int first, int second) {
+        float minX = Float.MAX_VALUE;
+        float minY = Float.MAX_VALUE;
+        float maxX = -Float.MAX_VALUE;
+        float maxY = -Float.MAX_VALUE;
+        for (int vertex = 0; vertex < 4; vertex++) {
+            minX = Math.min(minX, points[vertex * 3 + first]);
+            maxX = Math.max(maxX, points[vertex * 3 + first]);
+            minY = Math.min(minY, points[vertex * 3 + second]);
+            maxY = Math.max(maxY, points[vertex * 3 + second]);
+        }
+        int count = piece.length / FLOATS;
+        float pieceMinX = Float.MAX_VALUE;
+        float pieceMinY = Float.MAX_VALUE;
+        float pieceMaxX = -Float.MAX_VALUE;
+        float pieceMaxY = -Float.MAX_VALUE;
+        for (int vertex = 0; vertex < count; vertex++) {
+            pieceMinX = Math.min(pieceMinX, piece[vertex * FLOATS + first]);
+            pieceMaxX = Math.max(pieceMaxX, piece[vertex * FLOATS + first]);
+            pieceMinY = Math.min(pieceMinY, piece[vertex * FLOATS + second]);
+            pieceMaxY = Math.max(pieceMaxY, piece[vertex * FLOATS + second]);
+        }
+        return pieceMinX < maxX - EPSILON && pieceMaxX > minX + EPSILON && pieceMinY < maxY - EPSILON && pieceMaxY > minY + EPSILON;
+    }
+
+    @Nullable
+    private static float[] clipHalf(float[] polygon, int first, int second, float ax, float ay, float bx, float by, float side) {
+        int count = polygon.length / FLOATS;
+        float[] out = new float[(count + 1) * FLOATS];
+        int written = 0;
+        for (int index = 0; index < count; index++) {
+            int current = index * FLOATS;
+            int next = ((index + 1) % count) * FLOATS;
+            float a = side * edgeDistance(polygon[current + first], polygon[current + second], ax, ay, bx, by);
+            float b = side * edgeDistance(polygon[next + first], polygon[next + second], ax, ay, bx, by);
+            boolean aInside = a >= -EPSILON;
+            boolean bInside = b >= -EPSILON;
+            if (aInside) {
+                System.arraycopy(polygon, current, out, written * FLOATS, FLOATS);
+                written++;
+            }
+            if (aInside != bInside && Math.abs(a - b) > 0.0F) {
+                float t = a / (a - b);
+                for (int component = 0; component < FLOATS; component++) {
+                    out[written * FLOATS + component] = polygon[current + component] + (polygon[next + component] - polygon[current + component]) * t;
+                }
+                written++;
+            }
+        }
+        if (written < 3) return null;
+        float[] trimmed = new float[written * FLOATS];
+        System.arraycopy(out, 0, trimmed, 0, trimmed.length);
+        return area(trimmed, written) > MIN_AREA ? trimmed : null;
+    }
+
+    private static float edgeDistance(float x, float y, float ax, float ay, float bx, float by) {
+        return (bx - ax) * (y - ay) - (by - ay) * (x - ax);
+    }
+
+    private static float signedArea(float[] points, int stride, int count, int first, int second) {
+        float sum = 0.0F;
+        for (int index = 0; index < count; index++) {
+            int next = (index + 1) % count;
+            sum += points[index * stride + first] * points[next * stride + second] - points[next * stride + first] * points[index * stride + second];
+        }
+        return sum * 0.5F;
     }
 
     private static List<BakedQuad> underHost(List<BakedQuad> quads, List<AABB> host) {

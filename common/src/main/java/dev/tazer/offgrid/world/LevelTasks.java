@@ -13,6 +13,7 @@ public final class LevelTasks {
     private final LongLinkedOpenHashSet promotions = new LongLinkedOpenHashSet();
     private final LongLinkedOpenHashSet revalidations = new LongLinkedOpenHashSet();
     private final LongLinkedOpenHashSet uncovers = new LongLinkedOpenHashSet();
+    private final LongLinkedOpenHashSet undersides = new LongLinkedOpenHashSet();
     private final PriorityQueue<PendingTick> ticks = new PriorityQueue<>(Comparator.comparingLong(PendingTick::trigger));
     private final ArrayDeque<PendingEvent> events = new ArrayDeque<>();
 
@@ -28,6 +29,10 @@ public final class LevelTasks {
         return this.uncovers;
     }
 
+    public LongLinkedOpenHashSet getUndersides() {
+        return this.undersides;
+    }
+
     public PriorityQueue<PendingTick> getTicks() {
         return this.ticks;
     }
@@ -40,6 +45,7 @@ public final class LevelTasks {
         this.promotions.clear();
         this.revalidations.clear();
         this.uncovers.clear();
+        this.undersides.clear();
         this.ticks.clear();
         this.events.clear();
     }

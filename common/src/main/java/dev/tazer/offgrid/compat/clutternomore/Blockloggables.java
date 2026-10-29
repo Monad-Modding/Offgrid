@@ -12,4 +12,8 @@ public final class Blockloggables {
     public static boolean isBlockloggable(BlockState state) {
         return state.getBlock() instanceof VerticalSlabBlock || state.getBlock() instanceof StepBlock;
     }
+
+    public static boolean isStepped(BlockState state) {
+        return state.getBlock() instanceof StepBlock;
+    }
 }

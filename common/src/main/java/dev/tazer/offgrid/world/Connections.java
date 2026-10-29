@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 public final class Connections {
@@ -158,19 +159,24 @@ public final class Connections {
     private static void settle(ServerLevel level, BlockPos pos) {
         if (!level.hasChunkAt(pos)) return;
         BlockState host = Blocklogging.hostState(level, pos);
-        for (Overlay overlay : Cells.overlays(level, pos)) {
+        for (Overlay overlay : List.copyOf(Cells.overlays(level, pos))) {
             BlockState current = overlay.getState();
             if (!isConnector(current) || Blocklogging.at(level, pos, overlay) == null) {
                 continue;
             }
             BlockState natural = OverlayContext.call(level, pos, overlay, () -> Block.updateFromNeighbourShapes(current, level, pos));
             BlockState fitted = Blocklogging.fit(natural, host, current);
+            if (fitted == null && Blocklogging.runAxis(natural, host) != null) {
+                Overlays.destroy(level, pos, overlay);
+                enqueueAround(pos);
+                continue;
+            }
             if (fitted != null && fitted != current && Overlays.applyState(level, pos, overlay, fitted, Block.UPDATE_CLIENTS)) {
                 enqueueAround(pos);
             }
         }
         BlockState real = Cells.realState(level, pos);
-        if (!isConnector(real) || !involves(level, pos)) return;
+        if (!isConnector(real)) return;
         BlockState natural = OverlayContext.outside(() -> Block.updateFromNeighbourShapes(real, level, pos));
         if (natural != real && !natural.isAir()) {
             level.setBlock(pos, natural, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);

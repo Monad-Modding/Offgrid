@@ -276,7 +276,8 @@ public final class Placement {
             return overlay != null && Overlays.survives(level, pos, state, overlay.getOffset(), overlay, null);
         }
         Vec3 offset = Offsets.of(level, pos, state);
-        return offset != null && Overlays.offsetHolds(level, pos, state, offset);
+        if (offset != null) return Overlays.offsetHolds(level, pos, state, offset);
+        return Overlays.canOffset(state) && OffgridSettings.of(level).offsetting() && Overlays.offsetHolds(level, pos, state, Vec3.ZERO);
     }
 
     private static boolean supportsFace(Level level, BlockPos support, Direction face) {

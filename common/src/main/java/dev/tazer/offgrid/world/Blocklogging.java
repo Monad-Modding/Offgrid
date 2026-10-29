@@ -9,6 +9,8 @@ import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CrossCollisionBlock;
+import net.minecraft.world.level.block.FenceBlock;
+import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -38,12 +40,31 @@ public final class Blocklogging {
     private static final Blocklog INVALID = new Blocklog(Shapes.empty(), Shapes.empty(), Shapes.empty(), List.of());
     private static final Map<Key, Blocklog> CACHE = new ConcurrentHashMap<>();
     private static final List<Predicate<BlockState>> HOSTS = new CopyOnWriteArrayList<>();
+    private static final List<Predicate<BlockState>> STEPPED = new CopyOnWriteArrayList<>();
 
     private Blocklogging() {
     }
 
     public static void addBlockloggable(Predicate<BlockState> host) {
         HOSTS.add(host);
+    }
+
+    public static void addStepped(Predicate<BlockState> host) {
+        STEPPED.add(host);
+    }
+
+    @Nullable
+    public static Direction.Axis runAxis(BlockState state, BlockState host) {
+        if (!(state.getBlock() instanceof FenceBlock) && !(state.getBlock() instanceof WallBlock) || !host.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) return null;
+        if (host.getBlock() instanceof StairBlock) return host.getValue(BlockStateProperties.HORIZONTAL_FACING).getAxis();
+        for (Predicate<BlockState> stepped : STEPPED) {
+            if (stepped.test(host)) return host.getValue(BlockStateProperties.HORIZONTAL_FACING).getAxis();
+        }
+        return null;
+    }
+
+    private static boolean runsAlong(BlockState state, Direction.Axis axis) {
+        return Connections.connectsToward(state, Direction.fromAxisAndDirection(axis, Direction.AxisDirection.POSITIVE)) || Connections.connectsToward(state, Direction.fromAxisAndDirection(axis, Direction.AxisDirection.NEGATIVE));
     }
 
     public static boolean canBlocklog(BlockState state) {
@@ -126,7 +147,7 @@ public final class Blocklogging {
     @Nullable
     public static BlockState fit(BlockState state, BlockState host, @Nullable BlockState preferred) {
         if (of(state, host) != null) return state;
-        if (!Connections.isConnector(state)) return null;
+        if (!Connections.isConnector(state) || runAxis(state, host) != null) return null;
         BlockState best = null;
         int bestKept = -1;
         int bestPreferred = -1;
@@ -187,7 +208,9 @@ public final class Blocklogging {
         VoxelShape outline = moved(state.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty()), offset);
         if (hostShape.isEmpty() || outline.isEmpty() || Block.isShapeFullBlock(hostShape) || !inside(outline.bounds())) return INVALID;
         VoxelShape cutOutline = Shapes.join(outline, hostShape, BooleanOp.ONLY_FIRST);
-        if (cutOutline.isEmpty() || thins(state, outline, hostShape, offset)) return INVALID;
+        if (cutOutline.isEmpty()) return INVALID;
+        Direction.Axis axis = runAxis(state, host);
+        if (axis != null ? !runsAlong(state, axis) : thins(state, outline, hostShape, offset)) return INVALID;
         VoxelShape collision = moved(state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty()), offset);
         VoxelShape support = moved(state.getBlockSupportShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO), offset);
         List<AABB> open = new ArrayList<>();

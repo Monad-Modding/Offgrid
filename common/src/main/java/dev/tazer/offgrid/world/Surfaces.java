@@ -95,6 +95,8 @@ public final class Surfaces {
         BlockPos placedPos = clicked.relative(face);
         AABB footprint = footprint(placed);
         List<Vec3> options = candidates(box, axis, depth);
+        Vec3 core = core(shape, face, hit, depth);
+        if (core != null && backed(level, clicked, surface, placedPos, footprint, core, axis, plane, face) && fits(level, placedPos, placed, core)) return core;
         addCore(options, shape, face, hit, depth);
         for (Vec3 candidate : options) {
             if (supportedAt(box, axis, footprint, candidate) && backed(level, clicked, surface, placedPos, footprint, candidate, axis, plane, face) && fits(level, placedPos, placed, candidate)) return candidate;
@@ -141,9 +143,10 @@ public final class Surfaces {
         AABB footprint = footprint(placed);
         List<Vec3> accepted = new ArrayList<>(3);
         List<Vec3> options = candidates(box, axis, depth);
+        Vec3 core = core(shape, face, hit, depth);
         addCore(options, shape, face, hit, depth);
         for (Vec3 candidate : options) {
-            if ((supportedAt(box, axis, footprint, candidate) || centredOn(box, axis, footprint, candidate)) && backed(level, clicked, surface, placedPos, footprint, candidate, axis, plane, face)) {
+            if ((supportedAt(box, axis, footprint, candidate) || centredOn(box, axis, footprint, candidate) || candidate.equals(core)) && backed(level, clicked, surface, placedPos, footprint, candidate, axis, plane, face)) {
                 accepted.add(candidate);
             }
         }

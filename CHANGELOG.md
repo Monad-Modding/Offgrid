@@ -1,1 +1,5 @@
-- Fixed crash with Lithium, again.
+- Improved blocklogging logic
+- Improved layer rendering
+- Improved support handling
+- Fixed some issues with Sable
+- Fixed a crash with snowfall

@@ -83,12 +83,12 @@ public abstract class BlockStateBaseMixin {
     //? if >=1.21.2 {
     /*@ModifyVariable(method = "updateShape", at = @At("HEAD"), argsOnly = true)
     private BlockState offgrid$seeCutNeighbour(BlockState neighbour, @Local(argsOnly = true) LevelReader level, @Local(argsOnly = true, ordinal = 0) BlockPos pos, @Local(argsOnly = true, ordinal = 1) BlockPos neighbourPos) {
-        return Connections.forShape(this.asState(), level, pos, neighbourPos, neighbour);
+        return Layers.forShape(this.asState(), level, pos, neighbourPos, Connections.forShape(this.asState(), level, pos, neighbourPos, neighbour));
     }
     *///?} else {
     @ModifyVariable(method = "updateShape", at = @At("HEAD"), argsOnly = true)
     private BlockState offgrid$seeCutNeighbour(BlockState neighbour, @Local(argsOnly = true) LevelAccessor level, @Local(argsOnly = true, ordinal = 0) BlockPos pos, @Local(argsOnly = true, ordinal = 1) BlockPos neighbourPos) {
-        return Connections.forShape(this.asState(), level, pos, neighbourPos, neighbour);
+        return Layers.forShape(this.asState(), level, pos, neighbourPos, Connections.forShape(this.asState(), level, pos, neighbourPos, neighbour));
     }
     //?}
 

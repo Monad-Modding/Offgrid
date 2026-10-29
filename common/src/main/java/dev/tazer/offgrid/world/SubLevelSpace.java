@@ -30,6 +30,14 @@ public final class SubLevelSpace {
         *///?}
     }
 
+    public static Vec3 toLocal(Level level, BlockPos pos, Vec3 point) {
+        //? if >=1.21 && <1.21.2 {
+        return isActive() ? SubLevels.toLocal(level, pos, point) : point;
+        //?} else {
+        /*return point;
+        *///?}
+    }
+
     public static double distanceSqr(Level level, BlockPos pos, Vec3 point) {
         Vec3 centre = Vec3.atCenterOf(pos);
         //? if >=1.21 && <1.21.2 {

@@ -7,13 +7,16 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
@@ -61,6 +64,42 @@ public final class Layers {
             if (isLayer(overlay.getState()) && Overlays.isZero(overlay.getOffset()) && Blocklogging.at(level, pos, overlay) != null) return overlay;
         }
         return null;
+    }
+
+    public static BlockState forShape(BlockState asking, BlockGetter getter, BlockPos pos, BlockPos neighbour, BlockState neighbourState) {
+        if (!asking.hasProperty(BlockStateProperties.SNOWY) || !neighbour.equals(pos.above())) return neighbourState;
+        BlockState layer = layerAt(getter, neighbour);
+        return layer != null ? layer : neighbourState;
+    }
+
+    @Nullable
+    private static BlockState layerAt(BlockGetter getter, BlockPos pos) {
+        OffgridIndex index = OffgridIndex.of(getter);
+        if (index == null || index.isEmpty()) return null;
+        Cell cell = index.getCell(pos);
+        if (cell == null || !cell.hasOverlays()) return null;
+        for (Overlay overlay : cell.overlays()) {
+            if (isLayer(overlay.getState()) && Overlays.isZero(overlay.getOffset()) && Blocklogging.at(getter, pos, overlay) != null) return overlay.getState();
+        }
+        return null;
+    }
+
+    public static void queueUnderside(ServerLevel level, BlockPos host) {
+        OffgridIndex index = OffgridIndex.of(level);
+        if (index != null) {
+            index.getTasks().getUndersides().add(host.below().asLong());
+        }
+    }
+
+    public static void settleUnderside(ServerLevel level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        if (!state.hasProperty(BlockStateProperties.SNOWY)) return;
+        BlockState updated = Block.updateFromNeighbourShapes(state, level, pos);
+        if (!updated.is(state.getBlock()) || !updated.hasProperty(BlockStateProperties.SNOWY)) return;
+        boolean snowy = updated.getValue(BlockStateProperties.SNOWY);
+        if (state.getValue(BlockStateProperties.SNOWY) != snowy) {
+            level.setBlock(pos, state.setValue(BlockStateProperties.SNOWY, snowy), Block.UPDATE_ALL);
+        }
     }
 
     public static InteractionResult preserving(BlockItem item, BlockPlaceContext context, Supplier<InteractionResult> place) {
@@ -132,7 +171,12 @@ public final class Layers {
         if (outline.isEmpty()) return false;
         VoxelShape columns = Shapes.empty();
         for (AABB box : outline.toAabbs()) {
-            columns = Shapes.or(columns, Shapes.box(Math.max(0.0, box.minX), 0.0, Math.max(0.0, box.minZ), Math.min(1.0, box.maxX), 1.0, Math.min(1.0, box.maxZ)));
+            double minX = Math.max(0.0, box.minX);
+            double minZ = Math.max(0.0, box.minZ);
+            double maxX = Math.min(1.0, box.maxX);
+            double maxZ = Math.min(1.0, box.maxZ);
+            if (minX >= maxX || minZ >= maxZ) continue;
+            columns = Shapes.or(columns, Shapes.box(minX, 0.0, minZ, maxX, 1.0, maxZ));
         }
         return Shapes.join(Shapes.block(), columns, BooleanOp.ONLY_FIRST).isEmpty();
     }

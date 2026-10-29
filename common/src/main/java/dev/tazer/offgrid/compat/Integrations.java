@@ -25,6 +25,7 @@ public final class Integrations {
         if (Services.PLATFORM.isModLoaded(CLUTTER_NO_MORE)) {
             MixedSlabs.addFamily(new VerticalSlabs());
             Blocklogging.addBlockloggable(Blockloggables::isBlockloggable);
+            Blocklogging.addStepped(Blockloggables::isStepped);
         }
     }
 }

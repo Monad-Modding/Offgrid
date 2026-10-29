@@ -2,6 +2,7 @@ package dev.tazer.offgrid.client;
 
 import dev.tazer.offgrid.world.Blocklogging;
 import dev.tazer.offgrid.world.Cell;
+import dev.tazer.offgrid.world.Layers;
 import dev.tazer.offgrid.world.OffgridChunk;
 import dev.tazer.offgrid.world.OffgridIndex;
 import dev.tazer.offgrid.world.Offsets;
@@ -84,7 +85,11 @@ public final class OverlayGeometry {
                 if (into == null) return true;
                 BlockPos host = BlockPos.of(entry.getLongKey());
                 Blocklogging.Blocklog cut = Blocklogging.at(getter, host, overlay);
-                into.add(new Entry(host, overlay, state, overlay.getOffset(), cut == null ? null : cut.open()));
+                List<AABB> open = cut == null ? null : cut.open();
+                if (open instanceof Layers.HostOutline) {
+                    open = HostFaces.of(Blocklogging.hostState(getter, host), host, open);
+                }
+                into.add(new Entry(host, overlay, state, overlay.getOffset(), open));
                 found = true;
             }
         }

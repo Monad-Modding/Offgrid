@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -137,6 +138,9 @@ public final class Overlays {
         if (Connections.isConnector(state)) {
             Connections.update(level, host);
         }
+        if (Layers.isLayer(state)) {
+            Layers.queueUnderside(level, host);
+        }
         return overlay;
     }
 
@@ -185,6 +189,9 @@ public final class Overlays {
             revalidate(serverLevel, host);
             if (Connections.isConnector(state)) {
                 Connections.update(serverLevel, host);
+            }
+            if (Layers.isLayer(state)) {
+                Layers.queueUnderside(serverLevel, host);
             }
         }
     }
@@ -265,6 +272,9 @@ public final class Overlays {
             overlay.materialize(level, host);
         }
         Cells.update(level, host, Cell::relit);
+        if (level instanceof ServerLevel serverLevel && (Layers.isLayer(oldState) || Layers.isLayer(newState))) {
+            Layers.queueUnderside(serverLevel, host);
+        }
         if (level instanceof ServerLevel serverLevel && (flags & Block.UPDATE_NEIGHBORS) != 0) {
             serverLevel.updateNeighborsAt(host, oldState.getBlock());
             if (newState.hasAnalogOutputSignal()) {
@@ -306,6 +316,9 @@ public final class Overlays {
         }
         validateNeighbours(level, pos);
         queueOffsetNeighbours(level, index, pos);
+        if (newState.hasProperty(BlockStateProperties.SNOWY) && !oldState.is(newState.getBlock())) {
+            index.getTasks().getUndersides().add(pos.asLong());
+        }
         FluidState fluid = newState.getFluidState();
         if (!fluid.isEmpty()) {
             flood(level, pos, fluid);
