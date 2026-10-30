@@ -25,6 +25,7 @@ public final class QuadClipper {
     private static final float EPSILON = 1.0E-5F;
     private static final double MIN_AREA = 1.0E-8;
     private static final float FACE_EPSILON = 1.0E-3F;
+    private static final float MERGE_DISTANCE = 1.0E-4F;
 
     private QuadClipper() {
     }
@@ -331,10 +332,28 @@ public final class QuadClipper {
     }
 
     private static void emit(BakedQuad quad, float[] polygon, int count, List<BakedQuad> out) {
-        for (int start = 1; start + 1 < count; start += 2) {
-            int third = start + 2 < count ? start + 2 : start + 1;
-            out.add(build(quad, polygon, 0, start, start + 1, third));
+        float[] distinct = new float[count * FLOATS];
+        int kept = 0;
+        for (int index = 0; index < count; index++) {
+            if (kept > 0 && samePosition(polygon, index * FLOATS, distinct, (kept - 1) * FLOATS)) continue;
+            System.arraycopy(polygon, index * FLOATS, distinct, kept * FLOATS, FLOATS);
+            kept++;
         }
+        while (kept > 1 && samePosition(distinct, (kept - 1) * FLOATS, distinct, 0)) {
+            kept--;
+        }
+        if (kept < 3) return;
+        for (int start = 1; start + 1 < kept; start += 2) {
+            int third = start + 2 < kept ? start + 2 : start + 1;
+            out.add(build(quad, distinct, 0, start, start + 1, third));
+        }
+    }
+
+    private static boolean samePosition(float[] first, int firstOffset, float[] second, int secondOffset) {
+        for (int component = 0; component < 3; component++) {
+            if (Math.abs(first[firstOffset + component] - second[secondOffset + component]) > MERGE_DISTANCE) return false;
+        }
+        return true;
     }
 
     //? if >=26 {

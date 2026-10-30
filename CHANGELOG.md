@@ -1,5 +1,1 @@
-- Improved blocklogging logic
-- Improved layer rendering
-- Improved support handling
-- Fixed some issues with Sable
-- Fixed a crash with snowfall
+- Fixed crash with Sodium when a translucent block has a layer
