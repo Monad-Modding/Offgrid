@@ -51,6 +51,7 @@ dependencies {
     integration("additionalplacements")?.let { modCompileOnly("maven.modrinth:additional-placements:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { modCompileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("embeddium")?.let { modCompileOnly("maven.modrinth:embeddium:$it") { isTransitive = false } }
+    integration("jade")?.let { modCompileOnly("maven.modrinth:jade:$it") { isTransitive = false } }
 }
 
 tasks.named<Jar>("jar") {

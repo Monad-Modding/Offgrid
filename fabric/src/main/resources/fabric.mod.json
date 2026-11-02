@@ -12,7 +12,8 @@
   "entrypoints": {
     "main": ["dev.tazer.offgrid.fabric.OffgridFabric"],
     "client": ["dev.tazer.offgrid.fabric.client.OffgridFabricClient"],
-    "fabric-datagen": ["dev.tazer.offgrid.fabric.data.OffgridDataGenerator"]
+    "fabric-datagen": ["dev.tazer.offgrid.fabric.data.OffgridDataGenerator"],
+    "jade": ["dev.tazer.offgrid.compat.jade.OffgridJadePlugin"]
   },
   "depends": {
     "fabricloader": ">=${fabric_loader}",

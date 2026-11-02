@@ -1,1 +1,2 @@
 - Fixed crash with Sodium when a translucent block has a layer
+- Added Jade integration

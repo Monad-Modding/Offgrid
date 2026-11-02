@@ -11,6 +11,7 @@ dependencies {
     integration("sodium")?.let { compileOnly("net.caffeinemc:sodium-fabric:$it") { isTransitive = false } }
     integration("resourcefullib", "fabric")?.let { compileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("lithium", "fabric")?.let { compileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }
+    integration("jade", "fabric")?.let { compileOnly("maven.modrinth:jade:$it") { isTransitive = false } }
 }
 
 loom {

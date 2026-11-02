@@ -47,4 +47,5 @@ dependencies {
     integration("additionalplacements")?.let { compileOnly("maven.modrinth:additional-placements:$it") { isTransitive = false } }
     integration("resourcefullib")?.let { compileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("lithium")?.let { compileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }
+    integration("jade")?.let { compileOnly("maven.modrinth:jade:$it") { isTransitive = false } }
 }
