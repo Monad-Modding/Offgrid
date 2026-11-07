@@ -72,10 +72,13 @@ public final class SurfaceMounts {
 
     private static boolean mountHanging(HangingEntity hanging, SurfaceMounted mounted, UseOnContext context) {
         mounted.offgrid$setSurfaceOffset(Vec3.ZERO);
-        if (hanging.survives()) return true;
         Vec3 offset = Surfaces.hangingOffsetFor(context.getLevel(), context.getClickedPos(), context.getClickedFace(), context.getClickLocation(), hanging.getBoundingBox(), hanging instanceof Painting);
-        mounted.offgrid$setSurfaceOffset(offset == null ? Vec3.ZERO : offset);
-        return offset != null;
+        if (offset != null && !Overlays.isZero(offset)) {
+            mounted.offgrid$setSurfaceOffset(offset);
+            if (hanging.survives()) return true;
+            mounted.offgrid$setSurfaceOffset(Vec3.ZERO);
+        }
+        return hanging.survives();
     }
 
     public static boolean isShifted(Entity entity) {

@@ -2,6 +2,7 @@ package dev.tazer.offgrid.mixin.entity;
 
 import dev.tazer.offgrid.world.FlatPaintings;
 import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.level.Level;
@@ -33,6 +34,11 @@ public abstract class PaintingMixin extends HangingEntity {
 
     protected PaintingMixin(EntityType<? extends HangingEntity> type, Level level) {
         super(type, level);
+    }
+
+    @Inject(method = "recreateFromPacket", at = @At("HEAD"))
+    private void offgrid$keepFlatTop(ClientboundAddEntityPacket packet, CallbackInfo ci) {
+        this.setYRot(packet.getYRot());
     }
 
     //? if >=1.21 {
