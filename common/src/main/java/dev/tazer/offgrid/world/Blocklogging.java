@@ -266,34 +266,22 @@ public final class Blocklogging {
         double[] xs = coordinates(boxes, Direction.Axis.X);
         double[] ys = coordinates(boxes, Direction.Axis.Y);
         double[] zs = coordinates(boxes, Direction.Axis.Z);
-        List<AABB> inside = new ArrayList<>();
+        List<AABB> maximal = new ArrayList<>();
+        if (xs.length < 2 || ys.length < 2 || zs.length < 2) return maximal;
+        Occupancy occupancy = new Occupancy(boxes, xs, ys, zs);
         for (int x0 = 0; x0 < xs.length; x0++) {
             for (int x1 = x0 + 1; x1 < xs.length; x1++) {
                 for (int y0 = 0; y0 < ys.length; y0++) {
                     for (int y1 = y0 + 1; y1 < ys.length; y1++) {
                         for (int z0 = 0; z0 < zs.length; z0++) {
                             for (int z1 = z0 + 1; z1 < zs.length; z1++) {
-                                AABB box = new AABB(xs[x0], ys[y0], zs[z0], xs[x1], ys[y1], zs[z1]);
-                                if (!Shapes.joinIsNotEmpty(Shapes.create(box), shape, BooleanOp.ONLY_FIRST)) {
-                                    inside.add(box);
+                                if (occupancy.isFull(x0, x1, y0, y1, z0, z1) && !occupancy.canGrow(x0, x1, y0, y1, z0, z1)) {
+                                    maximal.add(new AABB(xs[x0], ys[y0], zs[z0], xs[x1], ys[y1], zs[z1]));
                                 }
                             }
                         }
                     }
                 }
-            }
-        }
-        List<AABB> maximal = new ArrayList<>();
-        for (AABB box : inside) {
-            boolean contained = false;
-            for (AABB other : inside) {
-                if (other != box && contains(other, box)) {
-                    contained = true;
-                    break;
-                }
-            }
-            if (!contained) {
-                maximal.add(box);
             }
         }
         return maximal;
@@ -313,9 +301,6 @@ public final class Blocklogging {
         return sorted;
     }
 
-    private static boolean contains(AABB outer, AABB inner) {
-        return outer.minX <= inner.minX && outer.minY <= inner.minY && outer.minZ <= inner.minZ && outer.maxX >= inner.maxX && outer.maxY >= inner.maxY && outer.maxZ >= inner.maxZ && !outer.equals(inner);
-    }
 
     private static boolean thins(VoxelShape shape, VoxelShape host, BiPredicate<AABB, Direction.Axis> lengthwise) {
         for (AABB box : maximalBoxes(shape)) {
@@ -340,5 +325,59 @@ public final class Blocklogging {
     }
 
     private record Key(BlockState state, BlockState host, Vec3 offset) {
+    }
+
+    private static final class Occupancy {
+
+        private final int sizeY;
+        private final int sizeZ;
+        private final int lastX;
+        private final int lastY;
+        private final int lastZ;
+        private final int[] sums;
+
+        private Occupancy(List<AABB> boxes, double[] xs, double[] ys, double[] zs) {
+            this.sizeY = ys.length;
+            this.sizeZ = zs.length;
+            this.lastX = xs.length - 1;
+            this.lastY = ys.length - 1;
+            this.lastZ = zs.length - 1;
+            this.sums = new int[xs.length * ys.length * zs.length];
+            for (int x = 1; x < xs.length; x++) {
+                double centreX = (xs[x - 1] + xs[x]) * 0.5;
+                for (int y = 1; y < ys.length; y++) {
+                    double centreY = (ys[y - 1] + ys[y]) * 0.5;
+                    for (int z = 1; z < zs.length; z++) {
+                        double centreZ = (zs[z - 1] + zs[z]) * 0.5;
+                        int filled = 0;
+                        for (AABB box : boxes) {
+                            if (centreX > box.minX && centreX < box.maxX && centreY > box.minY && centreY < box.maxY && centreZ > box.minZ && centreZ < box.maxZ) {
+                                filled = 1;
+                                break;
+                            }
+                        }
+                        this.sums[this.index(x, y, z)] = filled + this.sums[this.index(x - 1, y, z)] + this.sums[this.index(x, y - 1, z)] + this.sums[this.index(x, y, z - 1)] - this.sums[this.index(x - 1, y - 1, z)] - this.sums[this.index(x - 1, y, z - 1)] - this.sums[this.index(x, y - 1, z - 1)] + this.sums[this.index(x - 1, y - 1, z - 1)];
+                    }
+                }
+            }
+        }
+
+        private int index(int x, int y, int z) {
+            return (x * this.sizeY + y) * this.sizeZ + z;
+        }
+
+        private boolean isFull(int x0, int x1, int y0, int y1, int z0, int z1) {
+            int count = this.sums[this.index(x1, y1, z1)] - this.sums[this.index(x0, y1, z1)] - this.sums[this.index(x1, y0, z1)] - this.sums[this.index(x1, y1, z0)] + this.sums[this.index(x0, y0, z1)] + this.sums[this.index(x0, y1, z0)] + this.sums[this.index(x1, y0, z0)] - this.sums[this.index(x0, y0, z0)];
+            return count == (x1 - x0) * (y1 - y0) * (z1 - z0);
+        }
+
+        private boolean canGrow(int x0, int x1, int y0, int y1, int z0, int z1) {
+            if (x0 > 0 && this.isFull(x0 - 1, x0, y0, y1, z0, z1)) return true;
+            if (x1 < this.lastX && this.isFull(x1, x1 + 1, y0, y1, z0, z1)) return true;
+            if (y0 > 0 && this.isFull(x0, x1, y0 - 1, y0, z0, z1)) return true;
+            if (y1 < this.lastY && this.isFull(x0, x1, y1, y1 + 1, z0, z1)) return true;
+            if (z0 > 0 && this.isFull(x0, x1, y0, y1, z0 - 1, z0)) return true;
+            return z1 < this.lastZ && this.isFull(x0, x1, y0, y1, z1, z1 + 1);
+        }
     }
 }

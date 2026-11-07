@@ -1,9 +1,12 @@
 package dev.tazer.offgrid.mixin.world;
 
+import dev.tazer.offgrid.slab.MixedSlabs;
+import dev.tazer.offgrid.world.BlockEntities;
 import dev.tazer.offgrid.world.Connections;
 import dev.tazer.offgrid.world.OffgridIndex;
 import dev.tazer.offgrid.world.OffgridIndexHolder;
 import dev.tazer.offgrid.world.OverlayContext;
+import dev.tazer.offgrid.world.OverlayFocus;
 import dev.tazer.offgrid.world.Overlays;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -38,6 +41,11 @@ public abstract class LevelMixin implements OffgridIndexHolder {
         BlockState viewed = Connections.viewedAt((Level) (Object) this, pos);
         if (viewed != null) {
             cir.setReturnValue(viewed);
+            return;
+        }
+        BlockState half = MixedSlabs.viewedHalf(pos);
+        if (half != null) {
+            cir.setReturnValue(half);
         }
     }
 
@@ -68,6 +76,20 @@ public abstract class LevelMixin implements OffgridIndexHolder {
         OverlayContext.Frame frame = OverlayContext.at(level, pos);
         if (frame != null && frame.getOverlay() != null) {
             cir.setReturnValue(frame.getOverlay().materialize(level, frame.getHost()));
+            return;
+        }
+        BlockEntity viewed = BlockEntities.viewedAt(pos);
+        if (viewed != null) {
+            cir.setReturnValue(viewed);
+        }
+    }
+
+    @Inject(method = "getBlockEntity", at = @At("RETURN"), cancellable = true)
+    private void offgrid$focusedOverlayBlockEntity(BlockPos pos, CallbackInfoReturnable<BlockEntity> cir) {
+        if (cir.getReturnValue() != null) return;
+        BlockEntity focused = OverlayFocus.blockEntityAt((Level) (Object) this, pos);
+        if (focused != null) {
+            cir.setReturnValue(focused);
         }
     }
 

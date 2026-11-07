@@ -48,4 +48,9 @@ dependencies {
     integration("resourcefullib")?.let { compileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("lithium")?.let { compileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }
     integration("jade")?.let { compileOnly("maven.modrinth:jade:$it") { isTransitive = false } }
+    integration("scalablelux")?.let { compileOnly("maven.modrinth:scalablelux:$it") { isTransitive = false } }
+    integration("moonrise")?.let { compileOnly("maven.modrinth:moonrise-opt:$it") { isTransitive = false } }
+    integration("iris")?.let { compileOnly("maven.modrinth:iris:$it") { isTransitive = false } }
+    integration("immersiveportals")?.let { compileOnly("maven.modrinth:immersive-portals-neoforge:$it") { isTransitive = false } }
+    integration("connectiblechains")?.let { compileOnly("maven.modrinth:reconnectible-chains:$it") { isTransitive = false } }
 }

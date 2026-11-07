@@ -1,5 +1,6 @@
 package dev.tazer.offgrid.world;
 
+import dev.tazer.offgrid.compat.portals.ImmersivePortals;
 import dev.tazer.offgrid.network.CellData;
 import dev.tazer.offgrid.network.CellSync;
 import dev.tazer.offgrid.network.ChunkSync;
@@ -143,7 +144,8 @@ public final class Cells {
 
     public static void sendTo(ServerPlayer player, ServerLevel level, BlockPos pos) {
         Cell cell = get(level, pos);
-        OffgridNetwork.sendToPlayer(player, OffgridNetwork.CELL, new CellSync(snapshot(level, pos.asLong(), cell == null ? Cell.EMPTY : cell), NONE));
+        CellSync packet = new CellSync(snapshot(level, pos.asLong(), cell == null ? Cell.EMPTY : cell), NONE);
+        ImmersivePortals.sending(level, player, () -> OffgridNetwork.sendToPlayer(player, OffgridNetwork.CELL, packet));
     }
 
     private static void sync(ServerLevel level, BlockPos pos, Cell cell, int[] broken) {
@@ -175,17 +177,18 @@ public final class Cells {
     public static void sendChunk(ServerPlayer player, ServerLevel level, LevelChunk chunk) {
         ChunkSync packet = snapshot(level, chunk);
         if (packet != null) {
-            OffgridNetwork.sendToPlayer(player, OffgridNetwork.CHUNK, packet);
+            ImmersivePortals.sending(level, player, () -> OffgridNetwork.sendToPlayer(player, OffgridNetwork.CHUNK, packet));
         }
     }
 
     public static <T> void sendTracking(ServerLevel level, BlockPos pos, PacketType<T> type, T packet) {
         for (ServerPlayer player : playersTracking(level, pos)) {
-            OffgridNetwork.sendToPlayer(player, type, packet);
+            ImmersivePortals.sending(level, player, () -> OffgridNetwork.sendToPlayer(player, type, packet));
         }
     }
 
     public static List<ServerPlayer> playersTracking(ServerLevel level, BlockPos pos) {
+        if (ImmersivePortals.isLoaded()) return ImmersivePortals.viewers(level, pos);
         //? if >=26 {
         /*return level.getChunkSource().chunkMap.getPlayers(ChunkPos.containing(pos), false);
         *///?} else {

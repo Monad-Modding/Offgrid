@@ -54,6 +54,20 @@ public final class OverlayShapes {
         return cut != null ? cut.collision() : collision(overlay);
     }
 
+    public static VoxelShape collision(BlockGetter getter, BlockPos host, Overlay overlay, CollisionContext context) {
+        Blocklogging.Blocklog cut = Blocklogging.at(getter, host, overlay);
+        if (cut != null) return cut.collision();
+        if (context == CollisionContext.empty() || !(getter instanceof Level level)) return collision(overlay);
+        Vec3 offset = overlay.getOffset();
+        VoxelShape shape;
+        try {
+            shape = OverlayContext.call(level, host, overlay, () -> overlay.getState().getCollisionShape(level, host, context));
+        } catch (RuntimeException exception) {
+            return collision(overlay);
+        }
+        return shape.isEmpty() ? shape : shape.move(offset.x, offset.y, offset.z);
+    }
+
     public static VoxelShape collision(Overlay overlay) {
         Vec3 offset = overlay.getOffset();
         VoxelShape shape = overlay.getState().getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());

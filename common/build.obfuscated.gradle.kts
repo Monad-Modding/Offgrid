@@ -16,6 +16,9 @@ dependencies {
     integration("resourcefullib", "fabric")?.let { modCompileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("lithium", "fabric")?.let { modCompileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }
     integration("jade", "fabric")?.let { modCompileOnly("maven.modrinth:jade:$it") { isTransitive = false } }
+    integration("iris", "fabric")?.let { modCompileOnly("maven.modrinth:iris:$it") { isTransitive = false } }
+    integration("connectiblechains", "fabric")?.let { modCompileOnly("maven.modrinth:reconnectible-chains:$it") { isTransitive = false } }
+    integration("immersiveportals", "fabric")?.let { if (mcAtLeast("1.21")) modCompileOnly("maven.modrinth:immersiveportals:$it") { isTransitive = false } else modCompileOnly(nestedJars("maven.modrinth:immersiveportals:$it", "imm_ptl_core-*.jar")) }
     integration("create", "fabric")?.let { modCompileOnly("maven.modrinth:create-fabric:$it") { isTransitive = false } } ?: integration("create", "neoforge")?.let { compileOnly("maven.modrinth:create:$it") { isTransitive = false } }
     integration("sable")?.let { compileOnly("dev.ryanhcode.sable:sable-common-$mcVersion:$it") { isTransitive = false } }
     integration("sable_companion")?.let { compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-$mcVersion:$it") { isTransitive = false } }

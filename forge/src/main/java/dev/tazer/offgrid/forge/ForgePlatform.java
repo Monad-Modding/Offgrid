@@ -1,5 +1,6 @@
 package dev.tazer.offgrid.forge;
 
+import dev.tazer.offgrid.compat.portals.ImmersivePortals;
 import dev.tazer.offgrid.network.PacketType;
 import dev.tazer.offgrid.platform.Platform;
 import dev.tazer.offgrid.slab.MixedSlabBlock;
@@ -15,6 +16,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,6 +78,10 @@ public final class ForgePlatform implements Platform {
 
     @Override
     public <T> void sendToPlayer(ServerPlayer player, PacketType<T> type, T packet) {
+        if (ImmersivePortals.isLoaded()) {
+            player.connection.send(ForgeNetwork.CHANNEL.toVanillaPacket(packet, NetworkDirection.PLAY_TO_CLIENT));
+            return;
+        }
         ForgeNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }
 }

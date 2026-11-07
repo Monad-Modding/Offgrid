@@ -2,6 +2,7 @@ package dev.tazer.offgrid.mixin.server;
 
 import dev.tazer.offgrid.world.Cells;
 import dev.tazer.offgrid.world.Interactions;
+import dev.tazer.offgrid.world.OverlayFocus;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
@@ -35,6 +36,13 @@ public abstract class ServerGamePacketListenerImplMixin {
         //?}
         if (handled) {
             ci.cancel();
+        }
+    }
+
+    @Inject(method = "handleUseItemOn", at = @At("HEAD"))
+    private void offgrid$dropOverlayFocus(ServerboundUseItemOnPacket packet, CallbackInfo ci) {
+        if (this.player.serverLevel().getServer().isSameThread()) {
+            OverlayFocus.clear(this.player.serverLevel(), this.player);
         }
     }
 

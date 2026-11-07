@@ -1,6 +1,7 @@
 package dev.tazer.offgrid.world;
 
 import dev.tazer.offgrid.OffgridTags;
+import dev.tazer.offgrid.compat.portals.ImmersivePortals;
 import dev.tazer.offgrid.mixin.access.FireBlockAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -465,10 +466,12 @@ public final class Overlays {
         ClientboundBlockUpdatePacket update = new ClientboundBlockUpdatePacket(level, pos);
         Packet<ClientGamePacketListener> data = blockEntity == null ? null : blockEntity.getUpdatePacket();
         for (ServerPlayer player : Cells.playersTracking(level, pos)) {
-            player.connection.send(update);
-            if (data != null) {
-                player.connection.send(data);
-            }
+            ImmersivePortals.sending(level, player, () -> {
+                player.connection.send(update);
+                if (data != null) {
+                    player.connection.send(data);
+                }
+            });
         }
     }
 }

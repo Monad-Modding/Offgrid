@@ -1,6 +1,7 @@
 //? if <1.21 {
 /*package dev.tazer.offgrid.mixin.server;
 
+import dev.tazer.offgrid.platform.condition.IfModAbsent;
 import dev.tazer.offgrid.world.OffgridEvents;
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket;
 import net.minecraft.server.level.ChunkMap;
@@ -15,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+@IfModAbsent("imm_ptl_core")
 @Mixin(ChunkMap.class)
 public abstract class ChunkMapMixin {
 

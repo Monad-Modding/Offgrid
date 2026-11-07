@@ -21,6 +21,7 @@ public abstract class ConditionalMixinPlugin implements IMixinConfigPlugin {
     private static final String MOD_PRESENT_LIST = Type.getDescriptor(IfModPresent.List.class);
     private static final String MOD_ABSENT = Type.getDescriptor(IfModAbsent.class);
     private static final String MOD_ABSENT_LIST = Type.getDescriptor(IfModAbsent.List.class);
+    private static final String ANY_MOD_PRESENT = Type.getDescriptor(IfAnyModPresent.class);
     private static final String DEV_ENVIRONMENT = Type.getDescriptor(IfDevEnvironment.class);
 
     private Set<String> modIds = Set.of();
@@ -69,6 +70,7 @@ public abstract class ConditionalMixinPlugin implements IMixinConfigPlugin {
                     if (!this.isPresent(inner, mixinClassName)) return false;
                 }
             }
+            if (annotation.desc.equals(ANY_MOD_PRESENT) && !this.isAnyPresent(annotation, mixinClassName)) return false;
             if (annotation.desc.equals(MOD_ABSENT) && !this.isAbsent(annotation, mixinClassName)) return false;
             if (annotation.desc.equals(MOD_ABSENT_LIST)) {
                 for (AnnotationNode inner : value(annotation, List.<AnnotationNode>of())) {
@@ -82,6 +84,15 @@ public abstract class ConditionalMixinPlugin implements IMixinConfigPlugin {
     private boolean isPresent(AnnotationNode annotation, String mixinClassName) {
         if (this.hasMod(annotation)) return true;
         LOGGER.debug("Skipping mixin {}; mod '{}' is not present", mixinClassName, value(annotation, ""));
+        return false;
+    }
+
+    private boolean isAnyPresent(AnnotationNode annotation, String mixinClassName) {
+        List<String> candidates = value(annotation, List.<String>of());
+        for (String modId : candidates) {
+            if (this.modIds.contains(modId)) return true;
+        }
+        LOGGER.debug("Skipping mixin {}; none of {} are present", mixinClassName, candidates);
         return false;
     }
 

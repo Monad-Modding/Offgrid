@@ -7,6 +7,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import org.jetbrains.annotations.Nullable;
 //? if >=26 {
 /*import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
@@ -19,10 +20,13 @@ import net.minecraft.client.resources.model.BakedModel;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class HostFaces extends AbstractList<AABB> {
 
     private static final Direction[] SIDES = {null, Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
+    private static final Map<BlockState, Cached> CACHE = new ConcurrentHashMap<>();
 
     private final List<Face> faces;
     private final List<AABB> bounds;
@@ -38,9 +42,23 @@ public final class HostFaces extends AbstractList<AABB> {
 
     public static List<AABB> of(BlockState host, BlockPos pos, List<AABB> fallback) {
         if (host.getRenderShape() != RenderShape.MODEL) return fallback;
-        List<Face> faces = new ArrayList<>();
         //? if >=26 {
         /*BlockStateModel model = Minecraft.getInstance().getModelManager().getBlockStateModelSet().get(host);
+        *///?} else {
+        BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModel(host);
+        //?}
+        Cached cached = CACHE.get(host);
+        if (cached == null || cached.model() != model) {
+            cached = new Cached(model, compute(host, pos, model));
+            CACHE.put(host, cached);
+        }
+        return cached.faces() == null ? fallback : cached.faces();
+    }
+
+    //? if >=26 {
+    /*@Nullable
+    private static HostFaces compute(BlockState host, BlockPos pos, BlockStateModel model) {
+        List<Face> faces = new ArrayList<>();
         List<BlockStateModelPart> parts = new ArrayList<>();
         model.collectParts(RandomSource.create(host.getSeed(pos)), parts);
         for (BlockStateModelPart part : parts) {
@@ -48,17 +66,21 @@ public final class HostFaces extends AbstractList<AABB> {
                 add(faces, part.getQuads(side));
             }
         }
-        *///?} else {
-        BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModel(host);
+        return faces.isEmpty() ? null : new HostFaces(faces);
+    }
+    *///?} else {
+    @Nullable
+    private static HostFaces compute(BlockState host, BlockPos pos, BakedModel model) {
+        List<Face> faces = new ArrayList<>();
         RandomSource random = RandomSource.create();
         long seed = host.getSeed(pos);
         for (Direction side : SIDES) {
             random.setSeed(seed);
             add(faces, model.getQuads(host, side, random));
         }
-        //?}
-        return faces.isEmpty() ? fallback : new HostFaces(faces);
+        return faces.isEmpty() ? null : new HostFaces(faces);
     }
+    //?}
 
     private static void add(List<Face> faces, List<BakedQuad> quads) {
         for (BakedQuad quad : quads) {
@@ -81,6 +103,9 @@ public final class HostFaces extends AbstractList<AABB> {
     @Override
     public int size() {
         return this.bounds.size();
+    }
+
+    private record Cached(Object model, @Nullable HostFaces faces) {
     }
 
     public record Face(int axis, float plane, float[] points, float winding) {

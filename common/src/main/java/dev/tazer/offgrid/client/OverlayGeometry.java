@@ -1,5 +1,6 @@
 package dev.tazer.offgrid.client;
 
+import dev.tazer.offgrid.world.BlockEntities;
 import dev.tazer.offgrid.world.Blocklogging;
 import dev.tazer.offgrid.world.Cell;
 import dev.tazer.offgrid.world.Layers;
@@ -98,14 +99,15 @@ public final class OverlayGeometry {
 
     //? if >=26 {
     /*public static void render(BlockAndTintGetter region, BlockPos origin, Function<ChunkSectionLayer, VertexConsumer> buffers) {
-        render(region, origin, collect(region, origin), output(buffers));
+        render(region, origin, collect(region, origin), buffers);
     }
 
-    public static void render(BlockAndTintGetter region, BlockPos origin, BlockQuadOutput output) {
-        render(region, origin, collect(region, origin), output);
+    public static void render(BlockAndTintGetter region, BlockPos origin, List<Entry> entries, Function<ChunkSectionLayer, VertexConsumer> buffers) {
+        OverlayShaderTags tags = OverlayShaderTags.create();
+        render(region, origin, entries, output(buffers, tags), tags);
     }
 
-    public static void render(BlockAndTintGetter region, BlockPos origin, List<Entry> entries, BlockQuadOutput output) {
+    private static void render(BlockAndTintGetter region, BlockPos origin, List<Entry> entries, BlockQuadOutput output, OverlayShaderTags tags) {
         if (entries.isEmpty()) return;
         Minecraft minecraft = Minecraft.getInstance();
         ModelBlockRenderer loose = new ModelBlockRenderer(minecraft.options.ambientOcclusion().get(), false, minecraft.getBlockColors());
@@ -113,13 +115,15 @@ public final class OverlayGeometry {
         BlockStateModelSet models = minecraft.getModelManager().getBlockStateModelSet();
         Offsets.suppress(() -> {
             for (Entry entry : entries) {
-                (entry.culls() ? culled : loose).tesselateBlock(output, entry.x(origin), entry.y(origin), entry.z(origin), region, entry.host(), entry.state(), entry.model(models.get(entry.state())), entry.state().getSeed(entry.host()));
+                tags.enter(entry);
+                entry.view(() -> (entry.culls() ? culled : loose).tesselateBlock(output, entry.x(origin), entry.y(origin), entry.z(origin), region, entry.host(), entry.state(), entry.model(models.get(entry.state())), entry.state().getSeed(entry.host())));
+                tags.exit();
             }
         });
     }
 
-    public static BlockQuadOutput output(Function<ChunkSectionLayer, VertexConsumer> buffers) {
-        return (x, y, z, quad, instance) -> buffers.apply(quad.materialInfo().layer()).putBlockBakedQuad(x, y, z, quad, instance);
+    private static BlockQuadOutput output(Function<ChunkSectionLayer, VertexConsumer> buffers, OverlayShaderTags tags) {
+        return (x, y, z, quad, instance) -> tags.tag(buffers.apply(quad.materialInfo().layer())).putBlockBakedQuad(x, y, z, quad, instance);
     }
     *///?} else {
     public static void render(BlockAndTintGetter region, BlockPos origin, Function<RenderType, VertexConsumer> buffers) {
@@ -128,16 +132,21 @@ public final class OverlayGeometry {
         BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
         PoseStack poseStack = new PoseStack();
         RandomSource random = RandomSource.create();
+        OverlayShaderTags tags = OverlayShaderTags.create();
         Offsets.suppress(() -> {
             for (Entry entry : entries) {
                 poseStack.pushPose();
                 poseStack.translate(entry.x(origin), entry.y(origin), entry.z(origin));
-                VertexConsumer buffer = buffers.apply(ItemBlockRenderTypes.getChunkRenderType(entry.state()));
-                if (entry.open() == null) {
-                    dispatcher.renderBatched(entry.state(), entry.host(), region, poseStack, buffer, entry.culls(), random);
-                } else {
-                    dispatcher.getModelRenderer().tesselateBlock(region, entry.model(dispatcher.getBlockModel(entry.state())), entry.state(), entry.host(), poseStack, buffer, entry.culls(), random, entry.state().getSeed(entry.host()), OverlayTexture.NO_OVERLAY);
-                }
+                tags.enter(entry);
+                VertexConsumer buffer = tags.tag(buffers.apply(ItemBlockRenderTypes.getChunkRenderType(entry.state())));
+                entry.view(() -> {
+                    if (entry.open() == null) {
+                        dispatcher.renderBatched(entry.state(), entry.host(), region, poseStack, buffer, entry.culls(), random);
+                    } else {
+                        dispatcher.getModelRenderer().tesselateBlock(region, entry.model(dispatcher.getBlockModel(entry.state())), entry.state(), entry.host(), poseStack, buffer, entry.culls(), random, entry.state().getSeed(entry.host()), OverlayTexture.NO_OVERLAY);
+                    }
+                });
+                tags.exit();
                 poseStack.popPose();
             }
         });
@@ -148,6 +157,10 @@ public final class OverlayGeometry {
 
         public boolean culls() {
             return Overlays.isZero(this.offset);
+        }
+
+        public void view(Runnable action) {
+            BlockEntities.viewing(this.overlay.getBlockEntity(), action);
         }
 
         //? if >=26 {

@@ -52,6 +52,9 @@ dependencies {
     integration("resourcefullib")?.let { modCompileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("embeddium")?.let { modCompileOnly("maven.modrinth:embeddium:$it") { isTransitive = false } }
     integration("jade")?.let { modCompileOnly("maven.modrinth:jade:$it") { isTransitive = false } }
+    integration("starlight")?.let { modCompileOnly("maven.modrinth:starlight-forge:$it") { isTransitive = false } }
+    integration("oculus")?.let { modCompileOnly("maven.modrinth:oculus:$it") { isTransitive = false } }
+    integration("immersiveportals")?.let { modCompileOnly("maven.modrinth:immersive-portals-neoforge:$it") { isTransitive = false } }
 }
 
 tasks.named<Jar>("jar") {

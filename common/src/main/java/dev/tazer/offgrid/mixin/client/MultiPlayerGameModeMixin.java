@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import dev.tazer.offgrid.client.ClientInteractions;
 import dev.tazer.offgrid.client.OverlayBreaking;
+import dev.tazer.offgrid.world.OverlayFocus;
 import dev.tazer.offgrid.world.OverlayHitResult;
 import dev.tazer.offgrid.world.Transaction;
 import net.minecraft.client.Minecraft;
@@ -35,6 +36,9 @@ public abstract class MultiPlayerGameModeMixin {
 
     @Inject(method = "startDestroyBlock", at = @At("HEAD"), cancellable = true)
     private void offgrid$startOverlayDestroy(BlockPos pos, Direction face, CallbackInfoReturnable<Boolean> cir) {
+        if (this.minecraft.level != null && this.minecraft.player != null) {
+            OverlayFocus.clear(this.minecraft.level, this.minecraft.player);
+        }
         if (this.minecraft.hitResult instanceof OverlayHitResult hit && hit.getBlockPos().equals(pos)) {
             cir.setReturnValue(OverlayBreaking.start(hit));
         } else {
@@ -75,6 +79,8 @@ public abstract class MultiPlayerGameModeMixin {
     private void offgrid$useOverlay(LocalPlayer player, InteractionHand hand, BlockHitResult hit, CallbackInfoReturnable<InteractionResult> cir) {
         if (hit instanceof OverlayHitResult overlayHit) {
             cir.setReturnValue(ClientInteractions.use((MultiPlayerGameMode) (Object) this, player, hand, overlayHit));
+        } else if (this.minecraft.level != null) {
+            OverlayFocus.clear(this.minecraft.level, player);
         }
     }
 }

@@ -1,5 +1,6 @@
 package dev.tazer.offgrid.client;
 
+import dev.tazer.offgrid.mixin.client.MultiPlayerGameModeAccessor;
 import dev.tazer.offgrid.network.BreakOverlay;
 import dev.tazer.offgrid.network.OffgridNetwork;
 import dev.tazer.offgrid.world.Cells;
@@ -19,7 +20,6 @@ public final class OverlayBreaking {
     @Nullable
     private static OverlayHitResult target;
     private static float progress;
-    private static int delay;
 
     private OverlayBreaking() {
     }
@@ -53,7 +53,7 @@ public final class OverlayBreaking {
         if (player.getAbilities().instabuild) {
             send(host, overlay, BreakOverlay.Phase.FINISH);
             destroy(minecraft, level, host, overlay);
-            delay = DESTROY_DELAY;
+            ((MultiPlayerGameModeAccessor) minecraft.gameMode).offgrid$setDestroyDelay(DESTROY_DELAY);
             return true;
         }
         if (isTarget(host, overlay.getId())) return true;
@@ -76,9 +76,11 @@ public final class OverlayBreaking {
         Minecraft minecraft = Minecraft.getInstance();
         LocalPlayer player = minecraft.player;
         ClientLevel level = minecraft.level;
-        if (player == null || level == null) return false;
+        if (player == null || level == null || minecraft.gameMode == null) return false;
+        MultiPlayerGameModeAccessor gameMode = (MultiPlayerGameModeAccessor) minecraft.gameMode;
+        int delay = gameMode.offgrid$getDestroyDelay();
         if (delay > 0) {
-            delay--;
+            gameMode.offgrid$setDestroyDelay(delay - 1);
             return true;
         }
         if (player.getAbilities().instabuild) return start(hit);
@@ -97,7 +99,7 @@ public final class OverlayBreaking {
             destroy(minecraft, level, host, overlay);
             target = null;
             progress = 0.0F;
-            delay = DESTROY_DELAY;
+            gameMode.offgrid$setDestroyDelay(DESTROY_DELAY);
         }
         return true;
     }

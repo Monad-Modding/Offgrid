@@ -108,7 +108,7 @@ publishMods {
         if (platform == "fabric") {
             requires("fabric-api")
         }
-        optionalMods.forEach { optional(it.slug) }
+        optionalMods.forEach { mod -> mod.slug?.let { optional(it) } }
     }
 
     curseforge {
@@ -121,7 +121,7 @@ publishMods {
         if (platform == "fabric") {
             requires("fabric-api")
         }
-        optionalMods.forEach { optional(it.curseforgeSlug) }
+        optionalMods.forEach { mod -> mod.curseforgeSlug?.let { optional(it) } }
     }
 }
 

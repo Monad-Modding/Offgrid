@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.Level;
@@ -41,7 +42,7 @@ public final class Placement {
 
     public static InteractionResult place(BlockItem item, BlockPlaceContext context, Function<BlockPlaceContext, InteractionResult> vanilla) {
         BlockState placing = item.getBlock().defaultBlockState();
-        if (Scope.get(Scope.PLAN) != null || context.getItemInHand().getItem() != item) return vanilla.apply(context);
+        if (Scope.get(Scope.PLAN) != null || !placesHeld(item, context)) return vanilla.apply(context);
         if (!Overlays.canOffset(placing) && !Blocklogging.canBlocklog(placing) && !Layers.isLayer(placing)) return OverlayContext.outside(() -> placeBeneath(item, context, vanilla));
         Decision decision = decide(item, context);
         return switch (decision.kind()) {
@@ -50,6 +51,11 @@ public final class Placement {
             case OFFSET -> placeOffset(context, decision, vanilla);
             case OVERLAY -> placeOverlay(context, decision, vanilla);
         };
+    }
+
+    private static boolean placesHeld(BlockItem item, BlockPlaceContext context) {
+        Item held = context.getItemInHand().getItem();
+        return held == item || !(held instanceof BlockItem);
     }
 
     private static Decision decide(BlockItem item, BlockPlaceContext context) {
@@ -217,6 +223,9 @@ public final class Placement {
         BlockPlaceContext inside = new OverlayPlaceContext(context, cell);
         InteractionResult result = within(plan, () -> OverlayContext.call(level, cell, blank, () -> vanilla.apply(inside)));
         if (!plan.isCommitted()) return result.consumesAction() ? fail(context) : result;
+        if (context.getPlayer() != null) {
+            OverlayFocus.focus(level, context.getPlayer(), cell, blank);
+        }
         if (level instanceof ServerLevel serverLevel && blank.getBlockEntity() != null && Cells.contains(level, cell, blank)) {
             Cells.sync(serverLevel, cell);
         }

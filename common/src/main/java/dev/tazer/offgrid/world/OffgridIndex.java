@@ -18,6 +18,7 @@ public final class OffgridIndex {
     private final Long2ObjectOpenHashMap<MovingCellEntry> movingCells = new Long2ObjectOpenHashMap<>();
 
     private volatile Long2ObjectMap<OffgridChunk> chunks = Long2ObjectMaps.emptyMap();
+    private volatile Long2ObjectMap<OverlayFocus.Focus> focuses = Long2ObjectMaps.emptyMap();
 
     @Nullable
     public static OffgridIndex of(@Nullable BlockGetter getter) {
@@ -111,8 +112,17 @@ public final class OffgridIndex {
         this.chunks = next.isEmpty() ? Long2ObjectMaps.emptyMap() : Long2ObjectMaps.unmodifiable(next);
     }
 
+    public Long2ObjectMap<OverlayFocus.Focus> getFocuses() {
+        return this.focuses;
+    }
+
+    public synchronized void setFocuses(Long2ObjectMap<OverlayFocus.Focus> focuses) {
+        this.focuses = focuses.isEmpty() ? Long2ObjectMaps.emptyMap() : Long2ObjectMaps.unmodifiable(focuses);
+    }
+
     public synchronized void clear() {
         this.chunks = Long2ObjectMaps.emptyMap();
+        this.focuses = Long2ObjectMaps.emptyMap();
         this.tasks.clear();
     }
 

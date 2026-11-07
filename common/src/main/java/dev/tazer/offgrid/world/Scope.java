@@ -1,8 +1,10 @@
 package dev.tazer.offgrid.world;
 
+import dev.tazer.offgrid.slab.MixedSlabs;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
@@ -20,6 +22,7 @@ public final class Scope {
     public static final Slot<Vec3> EFFECT_OFFSET = new Slot<>(Vec3.ZERO);
     public static final Slot<Placement.Plan> PLAN = new Slot<>(null);
     public static final Slot<UseOnContext> PLACING = new Slot<>(null);
+    public static final Slot<Boolean> MOUNTING = new Slot<>(Boolean.FALSE);
     public static final Slot<Connections.Viewer> VIEWER = new Slot<>(null);
     public static final Slot<Boolean> READING_SOURCE = new Slot<>(Boolean.FALSE);
     public static final Slot<Boolean> SUPPRESSED_OFFSETS = new Slot<>(Boolean.FALSE);
@@ -27,6 +30,8 @@ public final class Scope {
     public static final Slot<Boolean> HIGHLIGHTING = new Slot<>(Boolean.FALSE);
     public static final Slot<AtomicReference<BlockState>> PLACED_HALF = new Slot<>(null);
     public static final Slot<List<Layers.Replaced>> REPLACED_LAYERS = new Slot<>(null);
+    public static final Slot<BlockEntity> VIEWED_ENTITY = new Slot<>(null);
+    public static final Slot<MixedSlabs.HalfView> VIEWED_HALF = new Slot<>(null);
     private static final ThreadLocal<Scope> CURRENT = ThreadLocal.withInitial(Scope::new);
 
     private final Object[] values = new Object[Slot.ALL.size()];

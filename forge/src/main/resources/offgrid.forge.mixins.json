@@ -8,7 +8,9 @@
     "FireBlockMixin",
     "compat.additionalplacements.VerticalSlabBlockMixin",
     "compat.gallery.GalleryEventsMixin",
-    "compat.quark.VerticalSlabBlockMixin"
+    "compat.quark.VerticalSlabBlockMixin",
+    "compat.starlight.BlockStarLightEngineMixin",
+    "compat.starlight.StarLightEngineMixin"
   ],
   "client": [
     "BlockRenderDispatcherMixin",

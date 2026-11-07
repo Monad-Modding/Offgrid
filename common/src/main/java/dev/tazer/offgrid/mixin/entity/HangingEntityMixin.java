@@ -7,6 +7,7 @@ import dev.tazer.offgrid.world.SurfaceMounted;
 import dev.tazer.offgrid.world.SurfaceMounts;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.decoration.HangingEntity;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,6 +16,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+//? if >=26 {
+/*import net.minecraft.world.entity.decoration.painting.Painting;
+*///?} else {
+import net.minecraft.world.entity.decoration.Painting;
+//?}
 //? if >=1.21 {
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.world.entity.EntityType;
@@ -23,13 +29,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 //?} else {
-/*import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.decoration.Painting;
+/*import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.DiodeBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 *///?}
 
 @Mixin(HangingEntity.class)
@@ -84,6 +92,10 @@ public abstract class HangingEntityMixin extends BlockAttachedEntity {
     @Inject(method = "survives", at = @At("HEAD"), cancellable = true)
     private void offgrid$surviveOnSurface(CallbackInfoReturnable<Boolean> cir) {
         HangingEntity self = (HangingEntity) (Object) this;
+        UseOnContext placing = SurfaceMounts.placingContext();
+        if (placing != null && !SurfaceMounts.isMounting() && self.getPos().equals(placing.getClickedPos().relative(placing.getClickedFace()))) {
+            SurfaceMounts.mount(self, placing);
+        }
         if (SurfaceMounts.isShifted(self)) {
             cir.setReturnValue(SurfaceMounts.survives(self));
         }
@@ -136,6 +148,14 @@ public abstract class HangingEntityMixin extends BlockAttachedEntity {
     }
     *///?}
 
+    //? if <1.21 {
+    /*@WrapOperation(method = "setPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;containing(DDD)Lnet/minecraft/core/BlockPos;"))
+    private BlockPos offgrid$unshiftedPos(double x, double y, double z, Operation<BlockPos> original) {
+        Vec3 offset = ((SurfaceMounted) this).offgrid$getSurfaceOffset();
+        return original.call(x - offset.x, y - offset.y, z - offset.z);
+    }
+
+    *///?}
     @Inject(method = "rotate", at = @At("HEAD"))
     private void offgrid$rotateSurfaceOffset(Rotation rotation, CallbackInfoReturnable<Float> cir) {
         if ((Object) this instanceof SurfaceMounted mounted && !Overlays.isZero(mounted.offgrid$getSurfaceOffset())) {

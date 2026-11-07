@@ -25,6 +25,11 @@ fun Project.versionedOrNull(key: String): String? = findProperty("$mcVersion.$ke
 
 fun Project.integration(key: String, loader: String = platform): String? = versionedOrNull("$key.$loader") ?: versionedOrNull(key)
 
+fun Project.nestedJars(notation: String, pattern: String): org.gradle.api.file.FileCollection {
+    val outer = configurations.detachedConfiguration(dependencies.create(notation)).apply { isTransitive = false }
+    return files(provider { outer.files.flatMap { jar -> zipTree(jar).matching { include("META-INF/jars/$pattern") }.files } })
+}
+
 val Project.javaVersion: Int
     get() = versioned("java").toInt()
 
@@ -85,14 +90,28 @@ fun pruneMixinConfig(config: File, classesDirs: Iterable<File>, refmap: String?)
     config.writeText(JsonOutput.prettyPrint(JsonOutput.toJson(json)) + "\n")
 }
 
-data class OptionalMod(val id: String, val slug: String, val curseforgeSlug: String, val minimum: String, val below: String, val clientOnly: Boolean)
+data class OptionalMod(val id: String, val slug: String?, val curseforgeSlug: String?, val minimum: String, val below: String, val clientOnly: Boolean)
 
 val Project.optionalMods: List<OptionalMod>
     get() = versionedOrNull("optional.$platform")?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.map { entry ->
-        val fields = entry.split(Regex("\\s+"))
-        require(fields.size == 4 || fields.size == 5 && fields[4] == "client") { "Optional mod entry '$entry' must be '<mod id> <slug>[/<curseforge slug>] <minimum> <below> [client]'" }
-        val slugs = fields[1].split("/")
-        OptionalMod(fields[0], slugs[0], slugs.getOrElse(1) { slugs[0] }, fields[2], fields[3], fields.size == 5)
+        val words = entry.split(Regex("\\s+"))
+        val clientOnly = words.last() == "client"
+        val fields = if (clientOnly) words.dropLast(1) else words
+        val usage = "Optional mod entry '$entry' must be '<mod id>[/-] <minimum> <below> [client]', '-/<mod id> <minimum> <below> [client]' or '<mod id> <slug>[/<curseforge slug>] <minimum> <below> [client]', with '-' for a site the mod is not on"
+        when (fields.size) {
+            3 -> {
+                val sites = fields[0].split("/")
+                require(sites.size == 1 || sites.size == 2 && (sites[0] == "-") != (sites[1] == "-")) { usage }
+                val id = sites.first { it != "-" }
+                OptionalMod(id, id.takeIf { sites[0] != "-" }, id.takeIf { sites.getOrElse(1) { id } != "-" }, fields[1], fields[2], clientOnly)
+            }
+            4 -> {
+                val slugs = fields[1].split("/")
+                val curseforge = slugs.getOrElse(1) { slugs[0] }
+                OptionalMod(fields[0], slugs[0].takeIf { it != "-" }, curseforge.takeIf { it != "-" }, fields[2], fields[3], clientOnly)
+            }
+            else -> throw IllegalArgumentException(usage)
+        }
     } ?: emptyList()
 
 fun Project.optionalDependencies(modId: String): String = optionalMods.joinToString("") { mod ->

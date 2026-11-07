@@ -12,7 +12,7 @@ public final class HorizontalSlabs implements SlabFamily {
 
     @Override
     public boolean isSingle(BlockState state) {
-        return state.getBlock() instanceof SlabBlock && !state.hasBlockEntity() && state.hasProperty(SlabBlock.TYPE) && state.getValue(SlabBlock.TYPE) != SlabType.DOUBLE;
+        return state.getBlock() instanceof SlabBlock && state.hasProperty(SlabBlock.TYPE) && state.getValue(SlabBlock.TYPE) != SlabType.DOUBLE;
     }
 
     @Override

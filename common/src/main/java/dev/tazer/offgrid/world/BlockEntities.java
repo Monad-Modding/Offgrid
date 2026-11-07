@@ -18,6 +18,28 @@ public final class BlockEntities {
     }
 
     @Nullable
+    public static BlockEntity viewedAt(BlockPos pos) {
+        BlockEntity viewed = Scope.get(Scope.VIEWED_ENTITY);
+        return viewed != null && viewed.getBlockPos().equals(pos) ? viewed : null;
+    }
+
+    @Nullable
+    public static BlockEntity viewedAt(int x, int y, int z) {
+        BlockEntity viewed = Scope.get(Scope.VIEWED_ENTITY);
+        if (viewed == null) return null;
+        BlockPos pos = viewed.getBlockPos();
+        return pos.getX() == x && pos.getY() == y && pos.getZ() == z ? viewed : null;
+    }
+
+    public static void viewing(@Nullable BlockEntity blockEntity, Runnable action) {
+        if (blockEntity == null) {
+            action.run();
+            return;
+        }
+        Scope.run(Scope.VIEWED_ENTITY, blockEntity, action);
+    }
+
+    @Nullable
     public static CompoundTag saveAt(Level level, BlockPos pos) {
         BlockEntity blockEntity = level.getBlockEntity(pos);
         return blockEntity == null ? null : save(blockEntity, level.registryAccess());

@@ -1,12 +1,14 @@
 //? if <26 {
 package dev.tazer.offgrid.mixin.client.render;
 
+import dev.tazer.offgrid.world.BlockEntities;
 import dev.tazer.offgrid.world.Connections;
 import dev.tazer.offgrid.world.OffgridIndex;
 import dev.tazer.offgrid.world.OffgridIndexHolder;
 import net.minecraft.client.renderer.chunk.RenderChunkRegion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -32,6 +34,14 @@ public abstract class RenderChunkRegionMixin implements OffgridIndexHolder {
     @Inject(method = "getBlockState", at = @At("HEAD"), cancellable = true)
     private void offgrid$viewLoggedConnector(BlockPos pos, CallbackInfoReturnable<BlockState> cir) {
         BlockState viewed = Connections.viewedAt((RenderChunkRegion) (Object) this, pos);
+        if (viewed != null) {
+            cir.setReturnValue(viewed);
+        }
+    }
+
+    @Inject(method = "getBlockEntity", at = @At("HEAD"), cancellable = true)
+    private void offgrid$viewOverlayBlockEntity(BlockPos pos, CallbackInfoReturnable<BlockEntity> cir) {
+        BlockEntity viewed = BlockEntities.viewedAt(pos);
         if (viewed != null) {
             cir.setReturnValue(viewed);
         }

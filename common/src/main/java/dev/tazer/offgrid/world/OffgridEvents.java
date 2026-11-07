@@ -14,10 +14,12 @@ public final class OffgridEvents {
 
     public static void onServerLevelTick(ServerLevel level) {
         OverlayTicker.tickServer(level);
+        OverlayFocus.tick(level);
     }
 
     public static void onClientLevelTick(Level level) {
         OverlayTicker.tickClient(level);
+        OverlayFocus.tick(level);
     }
 
     public static void onChunkLoad(Level level, LevelChunk chunk) {

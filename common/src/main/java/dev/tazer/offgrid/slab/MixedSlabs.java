@@ -1,6 +1,7 @@
 package dev.tazer.offgrid.slab;
 
 import dev.tazer.offgrid.registry.OffgridBlocks;
+import dev.tazer.offgrid.world.BlockEntities;
 import dev.tazer.offgrid.world.MovingBlockData;
 import dev.tazer.offgrid.world.OffgridIndex;
 import dev.tazer.offgrid.world.Players;
@@ -8,15 +9,18 @@ import dev.tazer.offgrid.world.Scope;
 import dev.tazer.offgrid.world.SubLevelSpace;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ChangeOverTimeBlock;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.PushReaction;
@@ -78,7 +82,7 @@ public final class MixedSlabs {
         SlabFamily family = familyOf(existing);
         if (family == null || !(context.getItemInHand().getItem() instanceof BlockItem item)) return false;
         Block held = item.getBlock();
-        if (sameMaterial(held, existing.getBlock()) || !family.isMember(held) || held.defaultBlockState().hasBlockEntity()) return false;
+        if (sameMaterial(held, existing.getBlock()) || !family.isMember(held)) return false;
         return family.entersEmptyHalf(existing, context);
     }
 
@@ -86,19 +90,56 @@ public final class MixedSlabs {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
         BlockState existing = level.getBlockState(pos);
-        if (placing.hasBlockEntity() || sameMaterial(placing.getBlock(), existing.getBlock())) return false;
+        if (sameMaterial(placing.getBlock(), existing.getBlock())) return false;
         SlabFamily family = familyOf(existing);
         SlabFamily.Halves halves = family == null ? null : family.combine(existing, placing);
         if (halves == null) return false;
+        CompoundTag kept = existing.hasBlockEntity() ? BlockEntities.saveAt(level, pos) : null;
         if (!level.setBlock(pos, mixedState(halves.axis(), halves.first(), halves.second()), Block.UPDATE_ALL_IMMEDIATE)) return false;
         if (level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) {
+            boolean placedSecond = halves.first().equals(dry(existing));
             entity.setHalves(halves.first(), halves.second());
+            entity.setHalfEntityTag(!placedSecond, kept);
+            BlockEntity created = entity.getHalfEntity(placedSecond);
+            if (created != null) {
+                initialise(context, pos, placedSecond ? halves.second() : halves.first(), created);
+                entity.setChanged();
+                level.sendBlockUpdated(pos, level.getBlockState(pos), level.getBlockState(pos), Block.UPDATE_ALL_IMMEDIATE);
+            }
         }
         AtomicReference<BlockState> placed = Scope.get(Scope.PLACED_HALF);
         if (placed != null) {
             placed.set(placing);
         }
         return true;
+    }
+
+    private static void initialise(BlockPlaceContext context, BlockPos pos, BlockState half, BlockEntity created) {
+        Level level = context.getLevel();
+        ItemStack stack = context.getItemInHand();
+        viewingHalf(level, pos, half, created, () -> {
+            BlockItem.updateCustomBlockEntityTag(level, context.getPlayer(), pos, stack);
+            //? if >=1.20.5 {
+            created.applyComponentsFromItemStack(stack);
+            //?}
+            half.getBlock().setPlacedBy(level, pos, half, context.getPlayer(), stack);
+        });
+    }
+
+    public static void viewingHalf(BlockGetter level, BlockPos pos, BlockState half, @Nullable BlockEntity blockEntity, Runnable action) {
+        BlockEntities.viewing(blockEntity, () -> Scope.run(Scope.VIEWED_HALF, new HalfView(pos.immutable(), half), action));
+    }
+
+    @Nullable
+    public static BlockState viewedHalf(BlockPos pos) {
+        HalfView view = Scope.get(Scope.VIEWED_HALF);
+        return view != null && view.pos().equals(pos) ? view.state() : null;
+    }
+
+    @Nullable
+    public static BlockEntity halfEntity(BlockGetter level, BlockPos pos, boolean second) {
+        MixedSlabBlockEntity entity = entity(level, pos);
+        return entity == null ? null : entity.getHalfEntity(second);
     }
 
     @Nullable
@@ -115,7 +156,7 @@ public final class MixedSlabs {
     @Nullable
     public static Merge merge(BlockState moving, BlockState fixed, Direction direction) {
         SlabFamily family = familyOf(fixed);
-        if (family == null || !family.isSingle(moving)) return null;
+        if (family == null || !family.isSingle(moving) || moving.hasBlockEntity() || fixed.hasBlockEntity()) return null;
         Direction side = family.side(moving);
         if (side != family.side(fixed).getOpposite() || side == direction) return null;
         SlabFamily.Halves halves = family.combine(fixed, moving);
@@ -175,7 +216,7 @@ public final class MixedSlabs {
     public static PushReaction pushReaction(BlockGetter level, BlockPos pos, PushReaction original) {
         MixedSlabBlockEntity entity = entity(level, pos);
         if (entity == null) return original;
-        if (isImmovable(entity.getFirst(), level, pos) || isImmovable(entity.getSecond(), level, pos)) return PushReaction.BLOCK;
+        if (isImmovable(entity.getFirst(), level, pos) || isImmovable(entity.getSecond(), level, pos) || entity.getFirst().hasBlockEntity() || entity.getSecond().hasBlockEntity()) return PushReaction.BLOCK;
         return original;
     }
 
@@ -217,6 +258,9 @@ public final class MixedSlabs {
         if (turnedState != state) {
             level.setBlock(pos, turnedState, Block.UPDATE_CLIENTS);
         }
+        if (swap) {
+            entity.swapHalfEntities();
+        }
         entity.setHalves(swap ? second : first, swap ? first : second);
     }
 
@@ -231,6 +275,9 @@ public final class MixedSlabs {
     public static boolean containsSecond(Vec3 point, BlockPos pos, Direction.Axis axis) {
         if (axis == Direction.Axis.Y) return true;
         return axis.choose(point.x - pos.getX(), point.y - pos.getY(), point.z - pos.getZ()) > 0.5;
+    }
+
+    public record HalfView(BlockPos pos, BlockState state) {
     }
 
     public record Merge(BlockState state, BlockState first, BlockState second, MovingBlockData.Stationary stationary) {

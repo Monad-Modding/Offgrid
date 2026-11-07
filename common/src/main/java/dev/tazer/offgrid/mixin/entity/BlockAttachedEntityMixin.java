@@ -1,9 +1,12 @@
 //? if >=1.21 {
 package dev.tazer.offgrid.mixin.entity;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.tazer.offgrid.world.Overlays;
 import dev.tazer.offgrid.world.SurfaceMounted;
 import dev.tazer.offgrid.world.SurfaceMounts;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.decoration.BlockAttachedEntity;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,6 +41,12 @@ public abstract class BlockAttachedEntityMixin implements SurfaceMounted {
     public void offgrid$setSurfaceOffset(Vec3 offset) {
         this.offgrid$surfaceOffset = offset;
         this.recalculateBoundingBox();
+    }
+
+    @WrapOperation(method = "setPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;containing(DDD)Lnet/minecraft/core/BlockPos;"))
+    private BlockPos offgrid$unshiftedPos(double x, double y, double z, Operation<BlockPos> original) {
+        Vec3 offset = this.offgrid$getSurfaceOffset();
+        return original.call(x - offset.x, y - offset.y, z - offset.z);
     }
 
     //? if >=1.21.6 {

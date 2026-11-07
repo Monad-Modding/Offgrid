@@ -6,7 +6,9 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.tazer.offgrid.world.Cells;
 import dev.tazer.offgrid.world.EffectOffset;
 import dev.tazer.offgrid.world.OverlayContext;
+import dev.tazer.offgrid.world.OverlayFocus;
 import dev.tazer.offgrid.world.OverlayTicker;
+import dev.tazer.offgrid.world.Scope;
 import dev.tazer.offgrid.world.Transaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -52,7 +54,12 @@ public abstract class ServerLevelMixin {
     private void offgrid$syncOverlay(BlockPos pos, BlockState oldState, BlockState newState, int flags, CallbackInfo ci) {
         ServerLevel level = (ServerLevel) (Object) this;
         OverlayContext.Frame frame = OverlayContext.at(level, pos);
-        if (frame == null || frame.getOverlay() == null) return;
+        if (frame == null || frame.getOverlay() == null) {
+            if (OverlayFocus.isFocused(level, pos) && Scope.get(Scope.FRAME) == null) {
+                Cells.sync(level, pos);
+            }
+            return;
+        }
         if (Cells.contains(level, frame.getHost(), frame.getOverlay())) {
             Cells.sync(level, frame.getHost());
         }
@@ -65,7 +72,11 @@ public abstract class ServerLevelMixin {
     *///?} else {
     private void offgrid$overlayDestroyEffects(@Nullable Player source, int type, BlockPos pos, int data, CallbackInfo ci) {
     //?}
+        //? if >=26.3 {
+        /*if (type != LevelEvent.PARTICLES_AND_SOUND_DESTROY_BLOCK && type != LevelEvent.PARTICLES_DESTROY_BLOCK) return;
+        *///?} else {
         if (type != LevelEvent.PARTICLES_DESTROY_BLOCK) return;
+        //?}
         OverlayContext.Frame frame = OverlayContext.at((ServerLevel) (Object) this, pos);
         if (frame != null && frame.getOverlay() != null) {
             frame.requestDestroyEffects();

@@ -10,6 +10,7 @@ import dev.tazer.offgrid.world.Overlays;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -38,11 +39,28 @@ public record PrintedOverlay(BlockPos pos, BlockState state, Vec3 offset, @Nulla
         return List.copyOf(overlays);
     }
 
-    public boolean isPrintable(Level level) {
-        if (!level.isLoaded(this.pos)) return false;
+    @Nullable
+    public static Vec3 offsetAt(@Nullable BlockGetter schematic, BlockPos pos) {
+        Cell cell = Cells.get(schematic, pos);
+        return cell == null || cell.offset() == null || Overlays.isZero(cell.offset()) ? null : cell.offset();
+    }
+
+    public static void printOffset(ServerLevel level, BlockPos pos, BlockState printed, Vec3 offset) {
+        if (!level.isLoaded(pos)) return;
+        BlockState placed = level.getBlockState(pos);
+        if (!placed.is(printed.getBlock()) || !Overlays.canOffset(placed) || !Overlays.offsetHolds(level, pos, placed, offset)) return;
+        Cells.update(level, pos, cell -> cell.withOffset(offset));
+    }
+
+    public boolean isPlaced(Level level) {
         for (Overlay existing : Cells.overlays(level, this.pos)) {
-            if (existing.isSamePlacement(this.state, this.offset)) return false;
+            if (existing.isSamePlacement(this.state, this.offset)) return true;
         }
+        return false;
+    }
+
+    public boolean isPrintable(Level level) {
+        if (!level.isLoaded(this.pos) || this.isPlaced(level)) return false;
         return Overlays.survives(level, this.pos, this.state, this.offset, null, null) && !Overlays.obstructed(level, this.pos, this.state, this.offset, null);
     }
 }

@@ -3,6 +3,7 @@ package dev.tazer.offgrid.neoforge.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.tazer.offgrid.client.OverlayGeometry;
+import dev.tazer.offgrid.client.OverlayShaderTags;
 import dev.tazer.offgrid.world.Connections;
 import dev.tazer.offgrid.world.Offsets;
 import dev.tazer.offgrid.world.OverlayContext;
@@ -47,18 +48,23 @@ public final class NeoForgeOverlayGeometry {
         BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
         PoseStack poseStack = context.getPoseStack();
         RandomSource random = RandomSource.create();
+        OverlayShaderTags tags = OverlayShaderTags.create();
         Offsets.suppress(() -> {
             for (Prepared item : prepared) {
                 OverlayGeometry.Entry entry = item.entry();
                 BlockState state = entry.state();
                 long seed = state.getSeed(entry.host());
                 random.setSeed(seed);
-                for (RenderType type : item.model().getRenderTypes(state, random, item.data())) {
-                    poseStack.pushPose();
-                    poseStack.translate(entry.x(origin), entry.y(origin), entry.z(origin));
-                    dispatcher.getModelRenderer().tesselateBlock(context.getRegion(), item.model(), state, entry.host(), poseStack, context.getOrCreateChunkBuffer(type), entry.culls(), random, seed, OverlayTexture.NO_OVERLAY, item.data(), type);
-                    poseStack.popPose();
-                }
+                tags.enter(entry);
+                entry.view(() -> {
+                    for (RenderType type : item.model().getRenderTypes(state, random, item.data())) {
+                        poseStack.pushPose();
+                        poseStack.translate(entry.x(origin), entry.y(origin), entry.z(origin));
+                        dispatcher.getModelRenderer().tesselateBlock(context.getRegion(), item.model(), state, entry.host(), poseStack, tags.tag(context.getOrCreateChunkBuffer(type)), entry.culls(), random, seed, OverlayTexture.NO_OVERLAY, item.data(), type);
+                        poseStack.popPose();
+                    }
+                });
+                tags.exit();
             }
         });
     }

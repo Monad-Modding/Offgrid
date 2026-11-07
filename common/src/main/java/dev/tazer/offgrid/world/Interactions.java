@@ -1,5 +1,6 @@
 package dev.tazer.offgrid.world;
 
+import dev.tazer.offgrid.compat.portals.ImmersivePortals;
 import dev.tazer.offgrid.mixin.access.ServerGamePacketListenerImplAccessor;
 import dev.tazer.offgrid.network.BreakOverlay;
 import dev.tazer.offgrid.network.OffgridNetwork;
@@ -61,6 +62,7 @@ public final class Interactions {
             /*SwingAnimation animation = stack.getInteractAnimation();
             *///?}
             InteractionResult result = OverlayContext.call(level, host, overlay, () -> player.gameMode.useItemOn(player, level, stack, packet.hand(), hit));
+            OverlayFocus.focus(level, player, host, overlay);
             //? if >=1.21 {
             if (result.consumesAction()) {
                 CriteriaTriggers.ANY_BLOCK_USE.trigger(player, host, stack.copy());
@@ -90,6 +92,7 @@ public final class Interactions {
         Overlay overlay = Cells.find(level, host, packet.id());
         switch (packet.phase()) {
             case START -> {
+                OverlayFocus.clear(level, player);
                 if (!withinReach(player, host)) return;
                 if (overlay == null || !level.mayInteract(player, host)) {
                     resync(player, level, host);
@@ -131,7 +134,12 @@ public final class Interactions {
         OverlayContext.Frame frame = OverlayContext.at(player.serverLevel(), sign.getBlockPos());
         if (frame == null || frame.getOverlay() == null || frame.getOverlay().getBlockEntity() != sign) return false;
         SIGN_EDITS.put(player.getUUID(), new SignEdit(sign.getBlockPos().asLong(), frame.getOverlay().getId()));
-        OffgridNetwork.sendToPlayer(player, OffgridNetwork.OPEN_SIGN, new OpenOverlaySign(sign.getBlockPos().asLong(), frame.getOverlay().getId(), front));
+        OpenOverlaySign packet = new OpenOverlaySign(sign.getBlockPos().asLong(), frame.getOverlay().getId(), front);
+        if (frame.getLevel() instanceof ServerLevel signLevel) {
+            ImmersivePortals.sending(signLevel, player, () -> OffgridNetwork.sendToPlayer(player, OffgridNetwork.OPEN_SIGN, packet));
+        } else {
+            OffgridNetwork.sendToPlayer(player, OffgridNetwork.OPEN_SIGN, packet);
+        }
         return true;
     }
 
@@ -216,7 +224,7 @@ public final class Interactions {
                 continue;
             }
             if (SubLevelSpace.distanceSqr(level, host, viewer.position()) < DESTRUCTION_RANGE_SQR) {
-                OffgridNetwork.sendToPlayer(viewer, OffgridNetwork.DESTRUCTION, packet);
+                ImmersivePortals.sending(level, viewer, () -> OffgridNetwork.sendToPlayer(viewer, OffgridNetwork.DESTRUCTION, packet));
             }
         }
     }

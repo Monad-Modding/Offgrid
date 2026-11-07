@@ -26,10 +26,6 @@ public final class Support {
     }
 
     public static Direction direction(BlockState state) {
-        if (state.is(OffgridTags.FACING_ATTACHING)) {
-            if (state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) return state.getValue(BlockStateProperties.HORIZONTAL_FACING).getOpposite();
-            if (state.hasProperty(BlockStateProperties.FACING)) return state.getValue(BlockStateProperties.FACING).getOpposite();
-        }
         if (state.hasProperty(BlockStateProperties.ATTACH_FACE)) {
             return switch (state.getValue(BlockStateProperties.ATTACH_FACE)) {
                 case FLOOR -> Direction.DOWN;
@@ -38,6 +34,10 @@ public final class Support {
             };
         }
         if (state.hasProperty(BlockStateProperties.HANGING) && state.getValue(BlockStateProperties.HANGING)) return Direction.UP;
+        if (state.is(OffgridTags.FACING_ATTACHING)) {
+            if (state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) return state.getValue(BlockStateProperties.HORIZONTAL_FACING).getOpposite();
+            if (state.hasProperty(BlockStateProperties.FACING)) return state.getValue(BlockStateProperties.FACING).getOpposite();
+        }
         if (state.getBlock() instanceof CeilingHangingSignBlock) return Direction.UP;
         return Direction.DOWN;
     }

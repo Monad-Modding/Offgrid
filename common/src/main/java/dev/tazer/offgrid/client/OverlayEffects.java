@@ -21,6 +21,10 @@ public final class OverlayEffects {
     }
 
     public static void destroy(Level level, BlockPos host, Overlay overlay) {
+        destroy(level, host, overlay, true);
+    }
+
+    public static void destroy(Level level, BlockPos host, Overlay overlay, boolean sound) {
         BlockState state = overlay.getState();
         VoxelShape shape = OverlayShapes.of(level, host, overlay);
         BlockParticleOption particle = new BlockParticleOption(ParticleTypes.BLOCK, state);
@@ -44,9 +48,10 @@ public final class OverlayEffects {
                 }
             });
         }
+        if (!sound) return;
         Vec3 centre = OverlayShapes.centre(level, host, overlay);
-        SoundType sound = state.getSoundType();
-        level.playLocalSound(centre.x, centre.y, centre.z, sound.getBreakSound(), SoundSource.BLOCKS, (sound.getVolume() + 1.0F) / 2.0F, sound.getPitch() * 0.8F, false);
+        SoundType type = state.getSoundType();
+        level.playLocalSound(centre.x, centre.y, centre.z, type.getBreakSound(), SoundSource.BLOCKS, (type.getVolume() + 1.0F) / 2.0F, type.getPitch() * 0.8F, false);
     }
 
     public static void hit(Level level, BlockPos host, Overlay overlay, Direction face) {

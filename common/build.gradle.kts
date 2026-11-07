@@ -12,6 +12,8 @@ dependencies {
     integration("resourcefullib", "fabric")?.let { compileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("lithium", "fabric")?.let { compileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }
     integration("jade", "fabric")?.let { compileOnly("maven.modrinth:jade:$it") { isTransitive = false } }
+    integration("iris", "fabric")?.let { compileOnly("maven.modrinth:iris:$it") { isTransitive = false } }
+    integration("connectiblechains", "fabric")?.let { compileOnly("maven.modrinth:reconnectible-chains:$it") { isTransitive = false } }
 }
 
 loom {

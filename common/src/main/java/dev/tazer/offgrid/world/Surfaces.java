@@ -16,7 +16,10 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class Surfaces {
 
@@ -129,6 +132,170 @@ public final class Surfaces {
         return Vec3.ZERO;
     }
 
+    @Nullable
+    public static Vec3 hangingOffsetFor(Level level, BlockPos clicked, Direction face, Vec3 location, AABB painting, boolean whole) {
+        Vec3 hit = location.subtract(clicked.getX(), clicked.getY(), clicked.getZ());
+        Surface surface = surfaceAt(level, clicked, null, false);
+        AABB box = boxAt(surface.outline(), face, hit);
+        if (box == null) return null;
+        box = clipObstructed(surface.outline(), box, face);
+        Direction.Axis axis = face.getAxis();
+        Direction.Axis first = axis == Direction.Axis.X ? Direction.Axis.Y : Direction.Axis.X;
+        Direction.Axis second = axis == Direction.Axis.Z ? Direction.Axis.Y : Direction.Axis.Z;
+        int step = face.getAxisDirection().getStep();
+        double plane = plane(clicked, box, face);
+        double along = snap(plane - (step > 0 ? painting.min(axis) : painting.max(axis)));
+        Map<BlockPos, VoxelShape> regions = new HashMap<>();
+        List<Double> firstShifts = new ArrayList<>();
+        List<Double> secondShifts = new ArrayList<>();
+        firstShifts.add(0.0);
+        secondShifts.add(0.0);
+        double firstSize = painting.max(first) - painting.min(first);
+        double secondSize = painting.max(second) - painting.min(second);
+        int cellAxis = (int) Math.floor(plane - step * Support.EPSILON);
+        for (int firstCell = (int) Math.floor(painting.min(first) - firstSize); firstCell <= (int) Math.floor(painting.max(first) + firstSize); firstCell++) {
+            for (int secondCell = (int) Math.floor(painting.min(second) - secondSize); secondCell <= (int) Math.floor(painting.max(second) + secondSize); secondCell++) {
+                BlockPos cell = cellAt(axis, cellAxis, first, firstCell, second, secondCell);
+                if (!level.hasChunkAt(cell)) {
+                    continue;
+                }
+                for (AABB region : regionAt(level, regions, cell, face, plane).toAabbs()) {
+                    addShift(firstShifts, firstCell + region.minX - painting.min(first), firstSize);
+                    addShift(firstShifts, firstCell + region.maxX - painting.max(first), firstSize);
+                    addShift(secondShifts, secondCell + region.minZ - painting.min(second), secondSize);
+                    addShift(secondShifts, secondCell + region.maxZ - painting.max(second), secondSize);
+                }
+            }
+        }
+        List<Vec3> options = new ArrayList<>(firstShifts.size() * secondShifts.size());
+        for (double firstShift : firstShifts) {
+            for (double secondShift : secondShifts) {
+                options.add(compose(axis, along, first, firstShift, second, secondShift));
+            }
+        }
+        options.sort(Comparator.comparingDouble((Vec3 option) -> Math.abs(first.choose(option.x, option.y, option.z)) + Math.abs(second.choose(option.x, option.y, option.z))).thenComparingDouble(option -> first.choose(option.x, option.y, option.z)).thenComparingDouble(option -> second.choose(option.x, option.y, option.z)));
+        for (Vec3 option : options) {
+            AABB moved = painting.move(option);
+            if (whole ? covers(level, regions, face, plane, moved) : touches(level, regions, face, plane, moved)) return option;
+        }
+        return null;
+    }
+
+    public static boolean touches(Level level, Direction face, AABB box) {
+        int step = face.getAxisDirection().getStep();
+        double plane = step > 0 ? box.min(face.getAxis()) : box.max(face.getAxis());
+        return touches(level, new HashMap<>(), face, plane, box);
+    }
+
+    private static boolean touches(Level level, Map<BlockPos, VoxelShape> regions, Direction face, double plane, AABB box) {
+        Direction.Axis axis = face.getAxis();
+        Direction.Axis first = axis == Direction.Axis.X ? Direction.Axis.Y : Direction.Axis.X;
+        Direction.Axis second = axis == Direction.Axis.Z ? Direction.Axis.Y : Direction.Axis.Z;
+        int cellAxis = (int) Math.floor(plane - face.getAxisDirection().getStep() * Support.EPSILON);
+        for (int firstCell = (int) Math.floor(box.min(first) + Support.EPSILON); firstCell <= (int) Math.floor(box.max(first) - Support.EPSILON); firstCell++) {
+            for (int secondCell = (int) Math.floor(box.min(second) + Support.EPSILON); secondCell <= (int) Math.floor(box.max(second) - Support.EPSILON); secondCell++) {
+                BlockPos cell = cellAt(axis, cellAxis, first, firstCell, second, secondCell);
+                if (!level.hasChunkAt(cell)) {
+                    continue;
+                }
+                double minFirst = Math.max(box.min(first), firstCell) - firstCell + Support.EPSILON;
+                double maxFirst = Math.min(box.max(first), firstCell + 1) - firstCell - Support.EPSILON;
+                double minSecond = Math.max(box.min(second), secondCell) - secondCell + Support.EPSILON;
+                double maxSecond = Math.min(box.max(second), secondCell + 1) - secondCell - Support.EPSILON;
+                if (maxFirst <= minFirst || maxSecond <= minSecond) {
+                    continue;
+                }
+                VoxelShape area = Shapes.box(minFirst, 0.0, minSecond, maxFirst, 1.0, maxSecond);
+                if (Shapes.joinIsNotEmpty(area, regionAt(level, regions, cell, face, plane), BooleanOp.AND)) return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean covers(Level level, Direction face, AABB box) {
+        int step = face.getAxisDirection().getStep();
+        double plane = step > 0 ? box.min(face.getAxis()) : box.max(face.getAxis());
+        return covers(level, new HashMap<>(), face, plane, box);
+    }
+
+    private static boolean covers(Level level, Map<BlockPos, VoxelShape> regions, Direction face, double plane, AABB box) {
+        Direction.Axis axis = face.getAxis();
+        Direction.Axis first = axis == Direction.Axis.X ? Direction.Axis.Y : Direction.Axis.X;
+        Direction.Axis second = axis == Direction.Axis.Z ? Direction.Axis.Y : Direction.Axis.Z;
+        int cellAxis = (int) Math.floor(plane - face.getAxisDirection().getStep() * Support.EPSILON);
+        for (int firstCell = (int) Math.floor(box.min(first) + Support.EPSILON); firstCell <= (int) Math.floor(box.max(first) - Support.EPSILON); firstCell++) {
+            for (int secondCell = (int) Math.floor(box.min(second) + Support.EPSILON); secondCell <= (int) Math.floor(box.max(second) - Support.EPSILON); secondCell++) {
+                BlockPos cell = cellAt(axis, cellAxis, first, firstCell, second, secondCell);
+                if (!level.hasChunkAt(cell)) return false;
+                double minFirst = Math.max(box.min(first), firstCell) - firstCell + Support.EPSILON;
+                double maxFirst = Math.min(box.max(first), firstCell + 1) - firstCell - Support.EPSILON;
+                double minSecond = Math.max(box.min(second), secondCell) - secondCell + Support.EPSILON;
+                double maxSecond = Math.min(box.max(second), secondCell + 1) - secondCell - Support.EPSILON;
+                if (maxFirst <= minFirst || maxSecond <= minSecond) {
+                    continue;
+                }
+                VoxelShape needed = Shapes.box(minFirst, 0.0, minSecond, maxFirst, 1.0, maxSecond);
+                if (Shapes.joinIsNotEmpty(needed, regionAt(level, regions, cell, face, plane), BooleanOp.ONLY_FIRST)) return false;
+            }
+        }
+        return true;
+    }
+
+    private static VoxelShape regionAt(Level level, Map<BlockPos, VoxelShape> regions, BlockPos cell, Direction face, double plane) {
+        VoxelShape cached = regions.get(cell);
+        if (cached != null) return cached;
+        Direction.Axis axis = face.getAxis();
+        Direction.Axis first = axis == Direction.Axis.X ? Direction.Axis.Y : Direction.Axis.X;
+        Direction.Axis second = axis == Direction.Axis.Z ? Direction.Axis.Y : Direction.Axis.Z;
+        int step = face.getAxisDirection().getStep();
+        double at = plane - axis.choose(cell.getX(), cell.getY(), cell.getZ());
+        Surface surface = surfaceAt(level, cell, null, false);
+        VoxelShape faced = Shapes.empty();
+        for (AABB box : surface.outline().toAabbs()) {
+            if (Math.abs((step > 0 ? box.max(axis) : box.min(axis)) - at) <= Support.EPSILON) {
+                faced = Shapes.or(faced, flat(box, first, second));
+            }
+        }
+        VoxelShape region = faced;
+        if (!faced.isEmpty()) {
+            double inside = at - step * Support.EPSILON * 2.0;
+            VoxelShape held = Shapes.empty();
+            for (AABB box : surface.support().toAabbs()) {
+                if (box.min(axis) <= inside && inside <= box.max(axis)) {
+                    held = Shapes.or(held, flat(box, first, second));
+                }
+            }
+            for (Plate plate : surface.plates()) {
+                if (plate.face() != face) {
+                    continue;
+                }
+                for (AABB box : plate.shape().toAabbs()) {
+                    if (box.min(axis) <= inside && inside <= box.max(axis)) {
+                        held = Shapes.or(held, flat(box, first, second));
+                    }
+                }
+            }
+            region = Shapes.join(faced, held, BooleanOp.AND);
+        }
+        regions.put(cell, region);
+        return region;
+    }
+
+    private static void addShift(List<Double> shifts, double shift, double size) {
+        double snapped = snap(shift);
+        if (Math.abs(snapped) <= size + Support.EPSILON && !shifts.contains(snapped)) {
+            shifts.add(snapped);
+        }
+    }
+
+    private static BlockPos cellAt(Direction.Axis axis, int axisValue, Direction.Axis first, int firstValue, Direction.Axis second, int secondValue) {
+        int[] values = new int[3];
+        values[axis.ordinal()] = axisValue;
+        values[first.ordinal()] = firstValue;
+        values[second.ordinal()] = secondValue;
+        return new BlockPos(values[0], values[1], values[2]);
+    }
+
     public static List<Vec3> candidatesFor(Level level, BlockPos clicked, Direction face, Vec3 location, BlockState placed, Surface surface) {
         Vec3 hit = location.subtract(clicked.getX(), clicked.getY(), clicked.getZ());
         VoxelShape shape = surface.outline();
@@ -151,6 +318,37 @@ public final class Surfaces {
             }
         }
         return accepted;
+    }
+
+    @Nullable
+    public static Vec3 restingFor(Level level, BlockPos clicked, Direction face, Vec3 location, BlockState placed, Surface surface, Vec3 offset) {
+        Vec3 hit = location.subtract(clicked.getX(), clicked.getY(), clicked.getZ());
+        VoxelShape shape = surface.outline();
+        if (Block.isShapeFullBlock(shape)) return null;
+        AABB box = boxAt(shape, face, hit);
+        if (box == null) return null;
+        Direction.Axis axis = face.getAxis();
+        Vec3 candidate = switch (axis) {
+            case X -> new Vec3(depth(box, face), offset.y, offset.z);
+            case Y -> new Vec3(offset.x, depth(box, face), offset.z);
+            case Z -> new Vec3(offset.x, offset.y, depth(box, face));
+        };
+        AABB footprint = footprint(placed);
+        if (!restsOn(box, axis, footprint, candidate)) return null;
+        return backed(level, clicked, surface, clicked.relative(face), footprint, candidate, axis, plane(clicked, box, face), face) ? candidate : null;
+    }
+
+    private static boolean restsOn(AABB box, Direction.Axis axis, AABB footprint, Vec3 candidate) {
+        for (Direction.Axis lateral : Direction.Axis.values()) {
+            if (lateral == axis) {
+                continue;
+            }
+            double shift = lateral.choose(candidate.x, candidate.y, candidate.z);
+            boolean within = footprint.min(lateral) + shift >= box.min(lateral) - Support.EPSILON && footprint.max(lateral) + shift <= box.max(lateral) + Support.EPSILON;
+            boolean centred = Math.abs((footprint.min(lateral) + footprint.max(lateral)) / 2.0 + shift - (box.min(lateral) + box.max(lateral)) / 2.0) <= Support.EPSILON;
+            if (!within && !centred) return false;
+        }
+        return true;
     }
 
     private static boolean backed(Level level, BlockPos clicked, Surface surface, BlockPos placedPos, AABB footprint, Vec3 candidate, Direction.Axis axis, double plane, Direction face) {

@@ -7,18 +7,25 @@
   "mixins": [
     "ServerGamePacketListenerImplMixin",
     "ServerPlayerGameModeMixin",
-    "compat.lithium.ChunkAwareBlockCollisionSweeperMixin"
+    "compat.lithium.ChunkAwareBlockCollisionSweeperMixin",
+    "compat.moonrise.BlockStarLightEngineMixin",
+    "compat.moonrise.FabricHooksMixin",
+    "compat.starlight.BlockStarLightEngineMixin",
+    "compat.starlight.StarLightEngineMixin"
   ],
   "client": [
     "MinecraftPickMixin",
     "ModelBlockRendererMixin",
     "MultiPlayerGameModeMixin",
     "RebuildTaskMixin",
+    "RenderChunkRegionMixin",
     "SectionCompilerMixin",
+    "compat.indigo.AltModelBlockRendererImplMixin",
     "compat.sodium.BlockOcclusionCacheMixin",
     "compat.sodium.BlockRenderContextAccessor",
     "compat.sodium.BlockRendererMixin",
     "compat.sodium.ChunkBuilderMeshingTaskMixin",
+    "compat.sodium.LevelSliceBlockEntityMixin",
     "compat.sodium.WorldSliceMixin"
   ],
   "injectors": {

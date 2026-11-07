@@ -5,6 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CrossCollisionBlock;
 import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -62,6 +63,7 @@ public final class Connections {
     }
 
     public static BlockState forCulling(BlockState asking, BlockGetter getter, BlockPos neighbour, BlockState neighbourState) {
+        if (Offsets.at(getter, neighbour) != null) return Blocks.AIR.defaultBlockState();
         if (!isConnector(asking)) return neighbourState;
         BlockState logged = loggedAt(getter, neighbour);
         return logged != null ? logged : neighbourState;

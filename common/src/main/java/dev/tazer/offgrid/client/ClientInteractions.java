@@ -7,6 +7,7 @@ import dev.tazer.offgrid.network.UseOverlay;
 import dev.tazer.offgrid.world.Cells;
 import dev.tazer.offgrid.world.Overlay;
 import dev.tazer.offgrid.world.OverlayContext;
+import dev.tazer.offgrid.world.OverlayFocus;
 import dev.tazer.offgrid.world.OverlayHitResult;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -32,6 +33,7 @@ public final class ClientInteractions {
             int sequence = prediction.currentSequence();
             InteractionResult result = OverlayContext.call(level, host, overlay, () -> accessor.offgrid$performUseItemOn(localPlayer, hand, hit));
             OffgridNetwork.sendToServer(OffgridNetwork.USE, new UseOverlay(overlay.getId(), hand, hit, sequence));
+            OverlayFocus.focus(level, localPlayer, host, overlay);
             return result;
         }
     }

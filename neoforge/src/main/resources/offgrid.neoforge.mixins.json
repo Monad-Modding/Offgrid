@@ -7,12 +7,17 @@
   "mixins": [
     "compat.additionalplacements.VerticalSlabBlockMixin",
     "compat.gallery.GalleryEventsMixin",
-    "compat.quark.VerticalSlabBlockMixin"
+    "compat.moonrise.BlockStarLightEngineMixin",
+    "compat.moonrise.NeoForgeHooksMixin",
+    "compat.quark.VerticalSlabBlockMixin",
+    "compat.starlight.BlockStarLightEngineMixin",
+    "compat.starlight.StarLightEngineMixin"
   ],
   "client": [
     "BlockRenderDispatcherMixin",
     "ParticleEngineMixin",
-    "SectionCompilerMixin"
+    "SectionCompilerMixin",
+    "compat.sodium.LevelSliceBlockEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

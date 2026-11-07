@@ -10,9 +10,12 @@ import net.minecraft.client.renderer.block.BlockAndTintGetter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 *///?} else {
 import net.minecraft.world.level.BlockAndTintGetter;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.concurrent.atomic.AtomicInteger;
 //?}
 
 public final class MixedSlabColors {
@@ -43,14 +46,20 @@ public final class MixedSlabColors {
         public int colorInWorld(BlockState state, BlockAndTintGetter level, BlockPos pos) {
             BlockState half = MixedSlabs.half(level, pos, this.second);
             BlockTintSource source = half == null ? null : Minecraft.getInstance().getBlockColors().getTintSource(half, this.layer);
-            return source == null ? -1 : source.colorInWorld(half, level, pos);
+            if (source == null) return -1;
+            AtomicInteger color = new AtomicInteger(-1);
+            MixedSlabs.viewingHalf(level, pos, half, MixedSlabs.halfEntity(level, pos, this.second), () -> color.set(source.colorInWorld(half, level, pos)));
+            return color.get();
         }
 
         @Override
         public int colorAsTerrainParticle(BlockState state, BlockAndTintGetter level, BlockPos pos) {
             BlockState half = MixedSlabs.half(level, pos, this.second);
             BlockTintSource source = half == null ? null : Minecraft.getInstance().getBlockColors().getTintSource(half, this.layer);
-            return source == null ? -1 : source.colorAsTerrainParticle(half, level, pos);
+            if (source == null) return -1;
+            AtomicInteger color = new AtomicInteger(-1);
+            MixedSlabs.viewingHalf(level, pos, half, MixedSlabs.halfEntity(level, pos, this.second), () -> color.set(source.colorAsTerrainParticle(half, level, pos)));
+            return color.get();
         }
     }
     *///?} else {
@@ -59,7 +68,9 @@ public final class MixedSlabColors {
         boolean second = tintIndex >= SECOND_TINT_OFFSET;
         BlockState half = MixedSlabs.half(level, pos, second);
         if (half == null) return -1;
-        return Minecraft.getInstance().getBlockColors().getColor(half, level, pos, second ? tintIndex - SECOND_TINT_OFFSET : tintIndex);
+        AtomicInteger color = new AtomicInteger(-1);
+        MixedSlabs.viewingHalf(level, pos, half, MixedSlabs.halfEntity(level, pos, second), () -> color.set(Minecraft.getInstance().getBlockColors().getColor(half, level, pos, second ? tintIndex - SECOND_TINT_OFFSET : tintIndex)));
+        return color.get();
     }
     //?}
 }

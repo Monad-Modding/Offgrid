@@ -2,6 +2,7 @@ package dev.tazer.offgrid.fabric.client;
 
 import dev.tazer.offgrid.client.MixedSlabColors;
 import dev.tazer.offgrid.slab.MixedSlabBlockEntity;
+import dev.tazer.offgrid.slab.MixedSlabs;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
@@ -40,8 +41,8 @@ import java.util.function.Supplier;
     @Override
     public void emitQuads(QuadEmitter emitter, BlockAndTintGetter level, BlockPos pos, BlockState state, RandomSource random, Predicate<@Nullable Direction> cullTest) {
         if (!(level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) || !entity.isComplete()) return;
-        emitHalf(emitter, level, pos, entity.getFirst(), false, random, cullTest);
-        emitHalf(emitter, level, pos, entity.getSecond(), true, random, cullTest);
+        MixedSlabs.viewingHalf(level, pos, entity.getFirst(), entity.getHalfEntity(false), () -> emitHalf(emitter, level, pos, entity.getFirst(), false, random, cullTest));
+        MixedSlabs.viewingHalf(level, pos, entity.getSecond(), entity.getHalfEntity(true), () -> emitHalf(emitter, level, pos, entity.getSecond(), true, random, cullTest));
     }
 
     @Override
@@ -90,8 +91,8 @@ public final class FabricMixedSlabModel extends ForwardingBakedModel {
     @Override
     public void emitBlockQuads(BlockAndTintGetter view, BlockState state, BlockPos pos, Supplier<RandomSource> random, RenderContext context) {
         if (!(view.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) || !entity.isComplete()) return;
-        emitHalf(view, entity.getFirst(), false, pos, random, context);
-        emitHalf(view, entity.getSecond(), true, pos, random, context);
+        MixedSlabs.viewingHalf(view, pos, entity.getFirst(), entity.getHalfEntity(false), () -> emitHalf(view, entity.getFirst(), false, pos, random, context));
+        MixedSlabs.viewingHalf(view, pos, entity.getSecond(), entity.getHalfEntity(true), () -> emitHalf(view, entity.getSecond(), true, pos, random, context));
     }
 
     private static void emitHalf(BlockAndTintGetter view, BlockState half, boolean second, BlockPos pos, Supplier<RandomSource> random, RenderContext context) {

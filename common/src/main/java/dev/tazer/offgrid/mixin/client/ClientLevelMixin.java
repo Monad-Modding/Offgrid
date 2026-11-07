@@ -51,13 +51,19 @@ public abstract class ClientLevelMixin {
     *///?} else {
     private void offgrid$overlayDestroyEffects(@Nullable Player source, int type, BlockPos pos, int data, CallbackInfo ci) {
     //?}
+        //? if >=26.3 {
+        /*if (type != LevelEvent.PARTICLES_AND_SOUND_DESTROY_BLOCK && type != LevelEvent.PARTICLES_DESTROY_BLOCK) return;
+        boolean sound = type == LevelEvent.PARTICLES_AND_SOUND_DESTROY_BLOCK;
+        *///?} else {
         if (type != LevelEvent.PARTICLES_DESTROY_BLOCK) return;
+        boolean sound = true;
+        //?}
         ClientLevel level = (ClientLevel) (Object) this;
         OverlayContext.Frame frame = OverlayContext.at(level, pos);
         if (frame == null || frame.getOverlay() == null) return;
         Overlay overlay = frame.getOverlay();
         BlockPos host = frame.getHost();
-        OverlayContext.runOutside(() -> OverlayEffects.destroy(level, host, overlay));
+        OverlayContext.runOutside(() -> OverlayEffects.destroy(level, host, overlay, sound));
         ci.cancel();
     }
 

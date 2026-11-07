@@ -50,7 +50,10 @@ public final class OffsetSources {
             Vec3 expected = Support.snap(level, placed, link.state(), candidate, source, sourceState, support, link.self());
             if (matches(link, placed, expected, contact, support)) return true;
         }
-        return false;
+        Vec3 current = new Vec3(link.host().getX() - placed.getX() + link.offset().x, link.host().getY() - placed.getY() + link.offset().y, link.host().getZ() - placed.getZ() + link.offset().z);
+        Vec3 resting = Surfaces.restingFor(level, source, face, contact.location(), link.state(), surface, current);
+        if (resting == null) return false;
+        return matches(link, placed, resting, contact, support) || matches(link, placed, Support.snap(level, placed, link.state(), resting, source, sourceState, support, link.self()), contact, support);
     }
 
     private static boolean matches(Link link, BlockPos placed, Vec3 expected, Support.Contact contact, Direction support) {

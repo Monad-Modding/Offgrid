@@ -26,7 +26,7 @@ public abstract class SectionCompilerMixin {
 
     @WrapOperation(method = "compile(Lnet/minecraft/core/SectionPos;Lnet/minecraft/client/renderer/chunk/RenderSectionRegion;Lcom/mojang/blaze3d/vertex/VertexSorting;Lnet/minecraft/client/renderer/SectionBufferBuilderPack;)Lnet/minecraft/client/renderer/chunk/SectionCompiler$Results;", at = @At(value = "INVOKE", target = "Ljava/util/Map;entrySet()Ljava/util/Set;", ordinal = 0))
     private Set<Map.Entry<ChunkSectionLayer, BufferBuilder>> offgrid$compileOverlays(Map<ChunkSectionLayer, BufferBuilder> startedLayers, Operation<Set<Map.Entry<ChunkSectionLayer, BufferBuilder>>> original, @Local(argsOnly = true) SectionPos sectionPos, @Local(argsOnly = true) RenderSectionRegion region, @Local(argsOnly = true) SectionBufferBuilderPack pack) {
-        OverlayGeometry.render(region, sectionPos.origin(), OverlayGeometry.output(layer -> this.getOrBeginLayer(startedLayers, pack, layer)));
+        OverlayGeometry.render(region, sectionPos.origin(), layer -> this.getOrBeginLayer(startedLayers, pack, layer));
         return original.call(startedLayers);
     }
 }

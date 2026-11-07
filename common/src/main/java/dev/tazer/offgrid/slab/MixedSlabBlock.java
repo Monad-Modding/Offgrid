@@ -1,11 +1,13 @@
 package dev.tazer.offgrid.slab;
 
 import dev.tazer.offgrid.platform.Services;
+import dev.tazer.offgrid.world.BlockEntities;
 import dev.tazer.offgrid.world.MovingBlockData;
 import dev.tazer.offgrid.world.MovingBlockDataHolder;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
@@ -152,7 +154,11 @@ public class MixedSlabBlock extends BaseEntityBlock {
     public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
         BlockState half = targetedHalf(state, level, pos, player);
         if (half == null) return super.playerWillDestroy(level, pos, state, player);
+        //? if >=26.3 {
+        /*level.levelEvent(player, LevelEvent.PARTICLES_AND_SOUND_DESTROY_BLOCK, pos, Block.getId(half));
+        *///?} else {
         level.levelEvent(player, LevelEvent.PARTICLES_DESTROY_BLOCK, pos, Block.getId(half));
+        //?}
         level.gameEvent(GameEvent.BLOCK_DESTROY, pos, GameEvent.Context.of(player, half));
         return state;
     }
@@ -175,21 +181,34 @@ public class MixedSlabBlock extends BaseEntityBlock {
     *///?} else {
     public void playerDestroy(Level level, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
     //?}
-        BlockState half = blockEntity instanceof MixedSlabBlockEntity entity && entity.isComplete() ? entity.getHalf(MixedSlabs.targetsSecond(player, pos, state.getValue(AXIS))) : null;
+        MixedSlabBlockEntity entity = blockEntity instanceof MixedSlabBlockEntity mixed && mixed.isComplete() ? mixed : null;
+        boolean second = MixedSlabs.targetsSecond(player, pos, state.getValue(AXIS));
+        BlockState half = entity == null ? null : entity.getHalf(second);
         if (half == null) {
             super.playerDestroy(level, player, pos, state, blockEntity, tool);
             return;
         }
         player.awardStat(Stats.BLOCK_MINED.get(half.getBlock()));
         player.causeFoodExhaustion(0.005F);
-        Block.dropResources(half, level, pos, null, player, tool);
+        BlockEntity halfEntity = entity.getHalfEntity(second);
+        MixedSlabs.viewingHalf(level, pos, half, halfEntity, () -> Block.dropResources(half, level, pos, halfEntity, player, tool));
     }
 
     public static boolean breakHalf(Level level, BlockPos pos, BlockState state, Player player) {
         MixedSlabBlockEntity entity = MixedSlabs.entity(level, pos);
         if (entity == null) return false;
-        BlockState remaining = entity.getHalf(!MixedSlabs.targetsSecond(player, pos, state.getValue(AXIS)));
-        return remaining != null && level.setBlock(pos, remaining, level.isClientSide() ? Block.UPDATE_ALL_IMMEDIATE : Block.UPDATE_ALL);
+        boolean remainingSecond = !MixedSlabs.targetsSecond(player, pos, state.getValue(AXIS));
+        BlockState remaining = entity.getHalf(remainingSecond);
+        if (remaining == null) return false;
+        CompoundTag kept = entity.saveHalfEntity(remainingSecond);
+        if (!level.setBlock(pos, remaining, level.isClientSide() ? Block.UPDATE_ALL_IMMEDIATE : Block.UPDATE_ALL)) return false;
+        BlockEntity restored = kept == null ? null : level.getBlockEntity(pos);
+        if (restored != null) {
+            BlockEntities.load(restored, kept, level.registryAccess());
+            restored.setChanged();
+            level.sendBlockUpdated(pos, remaining, remaining, Block.UPDATE_ALL);
+        }
+        return true;
     }
 
     @Override
@@ -256,16 +275,23 @@ public class MixedSlabBlock extends BaseEntityBlock {
     @Override
     public List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
         BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
-        if (blockEntity instanceof MixedSlabBlockEntity entity && entity.isComplete()) return dropHalves(state, params, entity.getFirst(), entity.getSecond());
+        if (blockEntity instanceof MixedSlabBlockEntity entity && entity.isComplete()) return dropHalves(state, params, entity.getFirst(), entity.getSecond(), entity.getHalfEntity(false), entity.getHalfEntity(true), blockEntity);
         MovingBlockData moving = blockEntity instanceof MovingBlockDataHolder holder ? holder.offgrid$getMovingBlockData() : null;
         if (moving == null || !moving.hasHalves()) return List.of();
-        return dropHalves(state, params, moving.first(), moving.second());
+        return dropHalves(state, params, moving.first(), moving.second(), null, null, blockEntity);
     }
 
-    private static List<ItemStack> dropHalves(BlockState state, LootParams.Builder params, BlockState first, BlockState second) {
-        List<ItemStack> drops = new ArrayList<>(first.getDrops(params.withParameter(LootContextParams.BLOCK_STATE, first)));
-        drops.addAll(second.getDrops(params.withParameter(LootContextParams.BLOCK_STATE, second)));
+    private static List<ItemStack> dropHalves(BlockState state, LootParams.Builder params, BlockState first, BlockState second, @Nullable BlockEntity firstEntity, @Nullable BlockEntity secondEntity, @Nullable BlockEntity original) {
+        List<ItemStack> drops = new ArrayList<>(halfDrops(params, first, firstEntity));
+        drops.addAll(halfDrops(params, second, secondEntity));
         params.withParameter(LootContextParams.BLOCK_STATE, state);
+        params.withOptionalParameter(LootContextParams.BLOCK_ENTITY, original);
         return drops;
+    }
+
+    private static List<ItemStack> halfDrops(LootParams.Builder params, BlockState half, @Nullable BlockEntity halfEntity) {
+        params.withParameter(LootContextParams.BLOCK_STATE, half);
+        params.withOptionalParameter(LootContextParams.BLOCK_ENTITY, halfEntity);
+        return half.getDrops(params);
     }
 }

@@ -11,6 +11,8 @@ public final class NeoForgeMixedSlabBlockEntity extends MixedSlabBlockEntity {
 
     public static final ModelProperty<BlockState> FIRST = new ModelProperty<>();
     public static final ModelProperty<BlockState> SECOND = new ModelProperty<>();
+    public static final ModelProperty<ModelData> FIRST_DATA = new ModelProperty<>();
+    public static final ModelProperty<ModelData> SECOND_DATA = new ModelProperty<>();
 
     public NeoForgeMixedSlabBlockEntity(BlockPos pos, BlockState state) {
         super(pos, state);

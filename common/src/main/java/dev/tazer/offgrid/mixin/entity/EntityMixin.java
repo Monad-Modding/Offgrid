@@ -1,5 +1,7 @@
 package dev.tazer.offgrid.mixin.entity;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import dev.tazer.offgrid.slab.MixedSlabBlock;
 import dev.tazer.offgrid.slab.MixedSlabs;
 import dev.tazer.offgrid.world.Cell;
@@ -16,6 +18,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -71,9 +74,9 @@ public abstract class EntityMixin {
         Level level = this.level();
         OffgridIndex index = OffgridIndex.of(level);
         if (index == null || index.isEmpty()) return;
-        AABB box = this.getBoundingBox();
-        BlockPos min = BlockPos.containing(box.minX - 1.0E-7, box.minY - 1.0E-7, box.minZ - 1.0E-7);
-        BlockPos max = BlockPos.containing(box.maxX + 1.0E-7, box.maxY + 1.0E-7, box.maxZ + 1.0E-7);
+        AABB box = this.getBoundingBox().deflate(1.0E-7);
+        BlockPos min = BlockPos.containing(box.minX - 1.0, box.minY - 1.0, box.minZ - 1.0);
+        BlockPos max = BlockPos.containing(box.maxX + 1.0, box.maxY + 1.0, box.maxZ + 1.0);
         for (BlockPos cursor : BlockPos.betweenClosed(min, max)) {
             Cell cell = index.getCell(cursor);
             if (cell == null || !cell.hasOverlays()) {
@@ -81,13 +84,20 @@ public abstract class EntityMixin {
             }
             BlockPos host = cursor.immutable();
             for (Overlay overlay : cell.overlays()) {
-                VoxelShape shape = OverlayShapes.of(level, host, overlay);
-                if (shape.isEmpty() || !shape.bounds().move(host).intersects(box)) {
+                Vec3 offset = overlay.getOffset();
+                if (!new AABB(host).move(offset.x, offset.y, offset.z).intersects(box)) {
                     continue;
                 }
                 OverlayContext.run(level, host, overlay, () -> touch.accept(host, overlay));
             }
         }
+    }
+
+    @WrapOperation(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;", ordinal = 0))
+    private BlockState offgrid$standOnOverlay(Level level, BlockPos pos, Operation<BlockState> original) {
+        BlockState state = original.call(level, pos);
+        Overlay standing = this.offgrid$standingOn(pos);
+        return standing == null ? state : standing.getState();
     }
 
     @Inject(method = "startSeenByPlayer", at = @At("TAIL"))

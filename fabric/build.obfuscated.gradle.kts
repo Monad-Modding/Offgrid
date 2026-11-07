@@ -20,6 +20,12 @@ dependencies {
     integration("resourcefullib")?.let { modCompileOnly("maven.modrinth:resourceful-lib:$it") { isTransitive = false } }
     integration("lithium")?.let { modCompileOnly("maven.modrinth:lithium:$it") { isTransitive = false } }
     integration("jade")?.let { modCompileOnly("maven.modrinth:jade:$it") { isTransitive = false } }
+    integration("starlight")?.let { modCompileOnly("maven.modrinth:starlight:$it") { isTransitive = false } }
+    integration("scalablelux")?.let { modCompileOnly("maven.modrinth:scalablelux:$it") { isTransitive = false } }
+    integration("moonrise")?.let { modCompileOnly("maven.modrinth:moonrise-opt:$it") { isTransitive = false } }
+    integration("iris")?.let { modCompileOnly("maven.modrinth:iris:$it") { isTransitive = false } }
+    integration("connectiblechains")?.let { modCompileOnly("maven.modrinth:reconnectible-chains:$it") { isTransitive = false } }
+    integration("immersiveportals", "fabric")?.let { if (mcAtLeast("1.21")) modCompileOnly("maven.modrinth:immersiveportals:$it") { isTransitive = false } else modCompileOnly(nestedJars("maven.modrinth:immersiveportals:$it", "imm_ptl_core-*.jar")) }
     integration("create")?.let { modCompileOnly("maven.modrinth:create-fabric:$it") { isTransitive = false } } ?: integration("create", "neoforge")?.let { compileOnly("maven.modrinth:create:$it") { isTransitive = false } }
     integration("sable")?.let { modCompileOnly("dev.ryanhcode.sable:sable-fabric-$mcVersion:$it") { isTransitive = false } }
     integration("sable_companion")?.let { compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-$mcVersion:$it") { isTransitive = false } }

@@ -64,7 +64,7 @@ public final class OffgridNeoForgeClient {
         BlockPos origin = event.getSectionOrigin().immutable();
         List<OverlayGeometry.Entry> entries = OverlayGeometry.collect(event.getLevel(), origin);
         if (!entries.isEmpty()) {
-            event.addRenderer(context -> OverlayGeometry.render(context.getRegion(), origin, entries, OverlayGeometry.output(context::getOrCreateChunkBuffer)));
+            event.addRenderer(context -> OverlayGeometry.render(context.getRegion(), origin, entries, context::getOrCreateChunkBuffer));
         }
     }
     *///?} else {

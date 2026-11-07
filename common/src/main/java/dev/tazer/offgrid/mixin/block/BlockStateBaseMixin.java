@@ -2,6 +2,7 @@ package dev.tazer.offgrid.mixin.block;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
+import dev.tazer.offgrid.slab.MixedSlabs;
 import dev.tazer.offgrid.world.Cell;
 import dev.tazer.offgrid.world.Cells;
 import dev.tazer.offgrid.world.Connections;
@@ -63,7 +64,7 @@ public abstract class BlockStateBaseMixin {
             result = result.move(cell.offset().x, cell.offset().y, cell.offset().z);
         }
         for (Overlay overlay : cell.overlays()) {
-            VoxelShape collision = OverlayShapes.collision(level, pos, overlay);
+            VoxelShape collision = OverlayShapes.collision(level, pos, overlay, context);
             if (!collision.isEmpty()) {
                 result = Shapes.or(result, collision);
             }
@@ -94,7 +95,7 @@ public abstract class BlockStateBaseMixin {
 
     @ModifyReturnValue(method = "canBeReplaced(Lnet/minecraft/world/item/context/BlockPlaceContext;)Z", at = @At("RETURN"))
     private boolean offgrid$cutThroughLayer(boolean original, BlockPlaceContext context) {
-        return original || Layers.yields(this.asState(), context);
+        return original || Layers.yields(this.asState(), context) || MixedSlabs.canMergeInto(this.asState(), context);
     }
 
     @ModifyReturnValue(method = "canSurvive", at = @At("RETURN"))

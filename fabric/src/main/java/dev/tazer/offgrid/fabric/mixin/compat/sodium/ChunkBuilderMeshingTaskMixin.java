@@ -70,6 +70,8 @@ public abstract class ChunkBuilderMeshingTaskMixin {
 /*package dev.tazer.offgrid.fabric.mixin.compat.sodium;
 
 import dev.tazer.offgrid.client.OverlayGeometry;
+import dev.tazer.offgrid.compat.Integrations;
+import dev.tazer.offgrid.fabric.compat.iris.IrisBlockContext;
 import dev.tazer.offgrid.platform.condition.IfModPresent;
 import dev.tazer.offgrid.world.Offsets;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildContext;
@@ -111,12 +113,19 @@ public abstract class ChunkBuilderMeshingTaskMixin {
         BlockRenderContext context = new BlockRenderContext(slice);
         BlockRenderer renderer = buildContext.cache.getBlockRenderer();
         BlockModelShaper models = buildContext.cache.getBlockModels();
+        boolean shaders = Integrations.isLoaded(Integrations.IRIS);
         Offsets.suppress(() -> {
             for (OverlayGeometry.Entry entry : entries) {
                 BlockState state = entry.state();
                 context.update(entry.host(), BlockPos.ZERO, state, entry.model(models.getBlockModel(state)), state.getSeed(entry.host()));
                 ((BlockRenderContextAccessor) context).offgrid$getOrigin().set(entry.x(origin), entry.y(origin), entry.z(origin));
-                renderer.renderModel(context, buildContext.buffers);
+                if (shaders) {
+                    IrisBlockContext.begin(buildContext.buffers, state, entry.host());
+                }
+                entry.view(() -> renderer.renderModel(context, buildContext.buffers));
+            }
+            if (shaders) {
+                IrisBlockContext.end(buildContext.buffers);
             }
         });
     }

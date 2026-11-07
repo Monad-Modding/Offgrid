@@ -13,6 +13,8 @@ public final class Integrations {
     public static final String QUARK = "quark";
     public static final String ADDITIONAL_PLACEMENTS = "additionalplacements";
     public static final String SNOW_REAL_MAGIC = "snowrealmagic";
+    public static final String IRIS = "iris";
+    public static final String OCULUS = "oculus";
 
     private Integrations() {
     }
