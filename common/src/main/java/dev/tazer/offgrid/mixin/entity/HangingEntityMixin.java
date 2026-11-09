@@ -7,7 +7,6 @@ import dev.tazer.offgrid.world.SurfaceMounted;
 import dev.tazer.offgrid.world.SurfaceMounts;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.decoration.HangingEntity;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import org.spongepowered.asm.mixin.Mixin;
@@ -91,13 +90,9 @@ public abstract class HangingEntityMixin extends BlockAttachedEntity {
 
     @Inject(method = "survives", at = @At("HEAD"), cancellable = true)
     private void offgrid$surviveOnSurface(CallbackInfoReturnable<Boolean> cir) {
-        HangingEntity self = (HangingEntity) (Object) this;
-        UseOnContext placing = SurfaceMounts.placingContext();
-        if (placing != null && !SurfaceMounts.isMounting() && self.getPos().equals(placing.getClickedPos().relative(placing.getClickedFace()))) {
-            SurfaceMounts.mount(self, placing);
-        }
-        if (SurfaceMounts.isShifted(self)) {
-            cir.setReturnValue(SurfaceMounts.survives(self));
+        Boolean survives = SurfaceMounts.survivesOverride((HangingEntity) (Object) this);
+        if (survives != null) {
+            cir.setReturnValue(survives);
         }
     }
 

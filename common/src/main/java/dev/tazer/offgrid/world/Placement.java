@@ -58,6 +58,14 @@ public final class Placement {
         return held == item || !(held instanceof BlockItem);
     }
 
+    @Nullable
+    private static BlockState placementState(BlockItem item, BlockPlaceContext context) {
+        if (context.getItemInHand().getItem() == item) return ((BlockItemAccessor) item).offgrid$getPlacementState(context);
+        BlockState state = item.getBlock().getStateForPlacement(context);
+        if (state == null || !state.canSurvive(context.getLevel(), context.getClickedPos()) || !context.getLevel().isUnobstructed(state, context.getClickedPos(), CollisionContext.empty())) return null;
+        return state;
+    }
+
     private static Decision decide(BlockItem item, BlockPlaceContext context) {
         Level level = context.getLevel();
         boolean replacing = context.replacingClickedOnBlock();
@@ -76,7 +84,7 @@ public final class Placement {
         Direction face = context.getClickedFace();
         BlockPos target = context.getClickedPos();
         BlockPos support = target.relative(face.getOpposite());
-        BlockState state = within(Plan.probe(level, target, face), () -> ((BlockItemAccessor) item).offgrid$getPlacementState(context));
+        BlockState state = within(Plan.probe(level, target, face), () -> placementState(item, context));
         if (state == null || !Overlays.canOffset(state) || !Support.heldFrom(state, face.getOpposite())) return Decision.VANILLA_DECISION;
         if (Cells.realState(level, support).isAir() && !Cells.hasOverlays(level, support)) return Decision.VANILLA_DECISION;
         Player player = context.getPlayer();
@@ -96,7 +104,7 @@ public final class Placement {
         if (!Layers.isHost(host) || Layers.layerIn(level, cell) != null || Cells.overlays(level, cell).size() >= Overlays.MAX_PER_CELL) return null;
         BlockPlaceContext inside = new OverlayPlaceContext(context, cell);
         Overlay probe = new Overlay(-1, Blocks.AIR.defaultBlockState(), Vec3.ZERO, null);
-        BlockState placed = OverlayContext.call(level, cell, probe, () -> ((BlockItemAccessor) item).offgrid$getPlacementState(inside));
+        BlockState placed = OverlayContext.call(level, cell, probe, () -> placementState(item, inside));
         if (placed == null || !Layers.isLayer(placed) || Blocklogging.of(placed, host) == null || Overlays.obstructed(level, cell, placed, Vec3.ZERO, null)) return null;
         return new Decision(Kind.OVERLAY, cell, Vec3.ZERO, placed);
     }
@@ -112,7 +120,7 @@ public final class Placement {
         if (!Blocklogging.isBlockloggable(host) || Layers.isLayer(host) || Cells.overlays(level, cell).size() >= Overlays.MAX_PER_CELL) return null;
         BlockPlaceContext inside = new OverlayPlaceContext(context, cell);
         Overlay probe = new Overlay(-1, Blocks.AIR.defaultBlockState(), Vec3.ZERO, null);
-        BlockState placed = OverlayContext.call(level, cell, probe, () -> ((BlockItemAccessor) item).offgrid$getPlacementState(inside));
+        BlockState placed = OverlayContext.call(level, cell, probe, () -> placementState(item, inside));
         if (placed == null) return null;
         BlockState state = Blocklogging.isAxial(placed) ? placed : Blocklogging.fit(placed, host, Connections.along(placed, context.getHorizontalDirection().getClockWise().getAxis()));
         if (state == null) return null;
@@ -158,7 +166,7 @@ public final class Placement {
         Vec3 offset = stored == null ? Vec3.ZERO : stored;
         BlockPlaceContext into = new BeneathPlaceContext(context, cell);
         Overlay probe = new Overlay(-1, Blocks.AIR.defaultBlockState(), Vec3.ZERO, null);
-        BlockState host = OverlayContext.call(level, cell, probe, () -> ((BlockItemAccessor) item).offgrid$getPlacementState(into));
+        BlockState host = OverlayContext.call(level, cell, probe, () -> placementState(item, into));
         if (host == null || Overlays.canOverlay(host) || !fitsBeneath(level, cell, host, resident, offset)) return vanilla.apply(context);
         CompoundTag tag = BlockEntities.saveAt(level, cell);
         OffgridChunk data = Cells.data(level, cell, !level.isClientSide());
@@ -286,7 +294,7 @@ public final class Placement {
         }
         Vec3 offset = Offsets.of(level, pos, state);
         if (offset != null) return Overlays.offsetHolds(level, pos, state, offset);
-        return Overlays.canOffset(state) && OffgridSettings.of(level).offsetting() && Overlays.offsetHolds(level, pos, state, Vec3.ZERO);
+        return Overlays.canOffset(state) && !Layers.isLayer(state) && OffgridSettings.of(level).offsetting() && Overlays.offsetHolds(level, pos, state, Vec3.ZERO);
     }
 
     private static boolean supportsFace(Level level, BlockPos support, Direction face) {

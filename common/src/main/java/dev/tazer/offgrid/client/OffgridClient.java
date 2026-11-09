@@ -16,6 +16,7 @@ import net.minecraft.client.gui.screens.inventory.SignEditScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
@@ -103,6 +104,9 @@ public final class OffgridClient {
         ClientLevel level = Minecraft.getInstance().level;
         if (level != null && level.getEntity(packet.entity()) instanceof SurfaceMounted mounted) {
             mounted.offgrid$setSurfaceOffset(packet.offset());
+            if (mounted instanceof HangingEntity hanging) {
+                hanging.getPositionCodec().setBase(Vec3.atLowerCornerOf(hanging.getPos()).add(packet.offset()));
+            }
         }
     }
 

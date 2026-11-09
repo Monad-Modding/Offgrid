@@ -1,12 +1,2 @@
-- Fixed crash with Sodium when a translucent block has a layer
-- Added Jade integration
-- Iris/Oculus shader tag compat
-- Immersive Portals compat
-- Improved block entity overlay and mixed slab handling
-- Fixed surface mounting issues
-- Fixed Create schematicannon issues
-- Improved overlay collision
-- Connectible Chains compat
-- Fixed break particles being in the wrong place
-- Fixed Sable issue with persistence
-- ScalableLux compat
+- Fixed more surface mounting issues
+- Fixed snow layers being placeable floating

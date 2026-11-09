@@ -132,53 +132,147 @@ public final class Surfaces {
         return Vec3.ZERO;
     }
 
-    @Nullable
-    public static Vec3 hangingOffsetFor(Level level, BlockPos clicked, Direction face, Vec3 location, AABB painting, boolean whole) {
+    public static List<Vec3> hangingOffsetsFor(Level level, BlockPos clicked, Direction face, Vec3 location, AABB hanging, boolean whole) {
         Vec3 hit = location.subtract(clicked.getX(), clicked.getY(), clicked.getZ());
-        Surface surface = surfaceAt(level, clicked, null, false);
-        AABB box = boxAt(surface.outline(), face, hit);
-        if (box == null) return null;
-        box = clipObstructed(surface.outline(), box, face);
+        VoxelShape outline = surfaceAt(level, clicked, null, false).outline();
+        AABB box = boxAt(outline, face, hit);
+        if (box == null) return List.of();
+        box = clipObstructed(outline, box, face);
+        List<Vec3> offsets = new ArrayList<>();
+        addHangingOffsets(level, new HashMap<>(), offsets, clicked, face, location, box, hanging, whole);
+        AABB front = frontBox(outline, face, hit, box);
+        if (front != null) {
+            addHangingOffsets(level, new HashMap<>(), offsets, clicked, face, location, front, hanging, whole);
+        }
+        return offsets;
+    }
+
+    private static void addHangingOffsets(Level level, Map<BlockPos, VoxelShape> regions, List<Vec3> offsets, BlockPos clicked, Direction face, Vec3 location, AABB box, AABB hanging, boolean whole) {
         Direction.Axis axis = face.getAxis();
         Direction.Axis first = axis == Direction.Axis.X ? Direction.Axis.Y : Direction.Axis.X;
         Direction.Axis second = axis == Direction.Axis.Z ? Direction.Axis.Y : Direction.Axis.Z;
         int step = face.getAxisDirection().getStep();
         double plane = plane(clicked, box, face);
-        double along = snap(plane - (step > 0 ? painting.min(axis) : painting.max(axis)));
-        Map<BlockPos, VoxelShape> regions = new HashMap<>();
-        List<Double> firstShifts = new ArrayList<>();
-        List<Double> secondShifts = new ArrayList<>();
-        firstShifts.add(0.0);
-        secondShifts.add(0.0);
-        double firstSize = painting.max(first) - painting.min(first);
-        double secondSize = painting.max(second) - painting.min(second);
-        int cellAxis = (int) Math.floor(plane - step * Support.EPSILON);
-        for (int firstCell = (int) Math.floor(painting.min(first) - firstSize); firstCell <= (int) Math.floor(painting.max(first) + firstSize); firstCell++) {
-            for (int secondCell = (int) Math.floor(painting.min(second) - secondSize); secondCell <= (int) Math.floor(painting.max(second) + secondSize); secondCell++) {
-                BlockPos cell = cellAt(axis, cellAxis, first, firstCell, second, secondCell);
-                if (!level.hasChunkAt(cell)) {
+        double along = snap(plane - (step > 0 ? hanging.min(axis) : hanging.max(axis)));
+        List<Double> firstShifts;
+        List<Double> secondShifts;
+        if (whole) {
+            firstShifts = new ArrayList<>();
+            secondShifts = new ArrayList<>();
+            firstShifts.add(0.0);
+            secondShifts.add(0.0);
+            double firstSize = hanging.max(first) - hanging.min(first);
+            double secondSize = hanging.max(second) - hanging.min(second);
+            int cellAxis = (int) Math.floor(plane - step * Support.EPSILON);
+            for (int firstCell = (int) Math.floor(hanging.min(first) - firstSize); firstCell <= (int) Math.floor(hanging.max(first) + firstSize); firstCell++) {
+                for (int secondCell = (int) Math.floor(hanging.min(second) - secondSize); secondCell <= (int) Math.floor(hanging.max(second) + secondSize); secondCell++) {
+                    BlockPos cell = cellAt(axis, cellAxis, first, firstCell, second, secondCell);
+                    if (!level.hasChunkAt(cell)) {
+                        continue;
+                    }
+                    for (AABB region : regionAt(level, regions, cell, face, plane).toAabbs()) {
+                        addShift(firstShifts, firstCell + region.minX - hanging.min(first), firstSize);
+                        addShift(firstShifts, firstCell + region.maxX - hanging.max(first), firstSize);
+                        addShift(secondShifts, secondCell + region.minZ - hanging.min(second), secondSize);
+                        addShift(secondShifts, secondCell + region.maxZ - hanging.max(second), secondSize);
+                    }
+                }
+            }
+        } else {
+            double firstBase = first.choose(clicked.getX(), clicked.getY(), clicked.getZ());
+            double secondBase = second.choose(clicked.getX(), clicked.getY(), clicked.getZ());
+            firstShifts = frameShifts(hanging, first, firstBase + box.min(first), firstBase + box.max(first));
+            secondShifts = frameShifts(hanging, second, secondBase + box.min(second), secondBase + box.max(second));
+        }
+        List<int[]> pairs = new ArrayList<>(firstShifts.size() * secondShifts.size());
+        for (int firstIndex = 0; firstIndex < firstShifts.size(); firstIndex++) {
+            for (int secondIndex = 0; secondIndex < secondShifts.size(); secondIndex++) {
+                pairs.add(new int[]{firstIndex, secondIndex});
+            }
+        }
+        if (whole) {
+            pairs.sort(Comparator.comparingDouble((int[] pair) -> Math.abs(firstShifts.get(pair[0])) + Math.abs(secondShifts.get(pair[1]))).thenComparingDouble(pair -> firstShifts.get(pair[0])).thenComparingDouble(pair -> secondShifts.get(pair[1])));
+        } else {
+            pairs.sort(Comparator.comparingInt((int[] pair) -> pair[0] + pair[1]).thenComparingDouble(pair -> Math.abs(firstShifts.get(pair[0])) + Math.abs(secondShifts.get(pair[1]))));
+        }
+        for (int[] pair : pairs) {
+            Vec3 option = compose(axis, along, first, firstShifts.get(pair[0]), second, secondShifts.get(pair[1]));
+            if (offsets.contains(option)) {
+                continue;
+            }
+            if (whole) {
+                AABB moved = hanging.move(option);
+                if (!holds(moved, location, first, second) || !covers(level, regions, face, plane, moved)) {
                     continue;
                 }
-                for (AABB region : regionAt(level, regions, cell, face, plane).toAabbs()) {
-                    addShift(firstShifts, firstCell + region.minX - painting.min(first), firstSize);
-                    addShift(firstShifts, firstCell + region.maxX - painting.max(first), firstSize);
-                    addShift(secondShifts, secondCell + region.minZ - painting.min(second), secondSize);
-                    addShift(secondShifts, secondCell + region.maxZ - painting.max(second), secondSize);
-                }
+            }
+            offsets.add(option);
+        }
+    }
+
+    private static List<Double> frameShifts(AABB hanging, Direction.Axis lateral, double min, double max) {
+        double low = hanging.min(lateral);
+        double high = hanging.max(lateral);
+        List<Double> shifts = new ArrayList<>(4);
+        if (low >= min - Support.EPSILON && high <= max + Support.EPSILON) {
+            shifts.add(0.0);
+        }
+        addFrameShift(shifts, snap((min + max - low - high) * 0.5));
+        double toMin = snap(min - low);
+        double toMax = snap(max - high);
+        addFrameShift(shifts, Math.abs(toMin) <= Math.abs(toMax) ? toMin : toMax);
+        addFrameShift(shifts, Math.abs(toMin) <= Math.abs(toMax) ? toMax : toMin);
+        addFrameShift(shifts, 0.0);
+        return shifts;
+    }
+
+    private static void addFrameShift(List<Double> shifts, double shift) {
+        if (!shifts.contains(shift)) {
+            shifts.add(shift);
+        }
+    }
+
+    private static boolean holds(AABB box, Vec3 location, Direction.Axis first, Direction.Axis second) {
+        double firstValue = first.choose(location.x, location.y, location.z);
+        double secondValue = second.choose(location.x, location.y, location.z);
+        return firstValue >= box.min(first) - Support.EPSILON && firstValue <= box.max(first) + Support.EPSILON && secondValue >= box.min(second) - Support.EPSILON && secondValue <= box.max(second) + Support.EPSILON;
+    }
+
+    @Nullable
+    private static AABB frontBox(VoxelShape outline, Direction face, Vec3 hit, AABB clicked) {
+        Direction.Axis axis = face.getAxis();
+        int step = face.getAxisDirection().getStep();
+        double current = step > 0 ? clicked.max(axis) : clicked.min(axis);
+        AABB nearest = null;
+        double front = current;
+        double distance = Double.MAX_VALUE;
+        for (AABB box : outline.toAabbs()) {
+            double value = step > 0 ? box.max(axis) : box.min(axis);
+            double gap = lateralDistance(box, axis, hit);
+            boolean further = step > 0 ? value > front + Support.EPSILON : value < front - Support.EPSILON;
+            boolean tied = Math.abs(value - front) <= Support.EPSILON && Math.abs(front - current) > Support.EPSILON;
+            if (further || tied && gap < distance) {
+                front = value;
+                nearest = box;
+                distance = gap;
             }
         }
-        List<Vec3> options = new ArrayList<>(firstShifts.size() * secondShifts.size());
-        for (double firstShift : firstShifts) {
-            for (double secondShift : secondShifts) {
-                options.add(compose(axis, along, first, firstShift, second, secondShift));
+        if (nearest == null) return null;
+        Vec3 centre = onPlane(nearest.getCenter().x, nearest.getCenter().y, nearest.getCenter().z, axis, front);
+        AABB merged = boxAt(outline, face, centre);
+        return merged == null ? null : clipObstructed(outline, merged, face);
+    }
+
+    private static double lateralDistance(AABB box, Direction.Axis axis, Vec3 hit) {
+        double distance = 0.0;
+        for (Direction.Axis other : Direction.Axis.values()) {
+            if (other == axis) {
+                continue;
             }
+            double value = other.choose(hit.x, hit.y, hit.z);
+            distance += Math.max(0.0, Math.max(box.min(other) - value, value - box.max(other)));
         }
-        options.sort(Comparator.comparingDouble((Vec3 option) -> Math.abs(first.choose(option.x, option.y, option.z)) + Math.abs(second.choose(option.x, option.y, option.z))).thenComparingDouble(option -> first.choose(option.x, option.y, option.z)).thenComparingDouble(option -> second.choose(option.x, option.y, option.z)));
-        for (Vec3 option : options) {
-            AABB moved = painting.move(option);
-            if (whole ? covers(level, regions, face, plane, moved) : touches(level, regions, face, plane, moved)) return option;
-        }
-        return null;
+        return distance;
     }
 
     public static boolean touches(Level level, Direction face, AABB box) {

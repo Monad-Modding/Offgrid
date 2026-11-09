@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.world.entity.decoration.Painting;
 //?}
 
+import java.util.List;
 import java.util.function.Supplier;
 
 public final class SurfaceMounts {
@@ -70,19 +71,23 @@ public final class SurfaceMounts {
         return Scope.get(Scope.MOUNTING);
     }
 
-    private static boolean mountHanging(HangingEntity hanging, SurfaceMounted mounted, UseOnContext context) {
-        mounted.offgrid$setSurfaceOffset(Vec3.ZERO);
-        Vec3 offset = Surfaces.hangingOffsetFor(context.getLevel(), context.getClickedPos(), context.getClickedFace(), context.getClickLocation(), hanging.getBoundingBox(), hanging instanceof Painting);
-        if (offset != null && !Overlays.isZero(offset)) {
-            mounted.offgrid$setSurfaceOffset(offset);
-            if (hanging.survives()) return true;
-            mounted.offgrid$setSurfaceOffset(Vec3.ZERO);
-        }
-        return hanging.survives();
+    @Nullable
+    public static Boolean survivesOverride(HangingEntity entity) {
+        if (!(entity instanceof SurfaceMounted mounted) || !OffgridSettings.of(entity.level()).surfaceAttaching()) return null;
+        UseOnContext placing = placingContext();
+        if (placing != null && !isMounting() && entity.getPos().equals(placing.getClickedPos().relative(placing.getClickedFace()))) return Scope.with(Scope.MOUNTING, Boolean.TRUE, () -> mountHanging(entity, mounted, placing));
+        return survives(entity);
     }
 
-    public static boolean isShifted(Entity entity) {
-        return entity instanceof SurfaceMounted mounted && !Overlays.isZero(mounted.offgrid$getSurfaceOffset());
+    private static boolean mountHanging(HangingEntity hanging, SurfaceMounted mounted, UseOnContext context) {
+        mounted.offgrid$setSurfaceOffset(Vec3.ZERO);
+        List<Vec3> offsets = Surfaces.hangingOffsetsFor(context.getLevel(), context.getClickedPos(), context.getClickedFace(), context.getClickLocation(), hanging.getBoundingBox(), hanging instanceof Painting);
+        for (Vec3 offset : offsets) {
+            mounted.offgrid$setSurfaceOffset(offset);
+            if (survives(hanging)) return true;
+        }
+        mounted.offgrid$setSurfaceOffset(Vec3.ZERO);
+        return false;
     }
 
     public static boolean survives(HangingEntity entity) {
