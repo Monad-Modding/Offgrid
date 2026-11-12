@@ -18,6 +18,38 @@
     "minecraft:chain",
     "minecraft:iron_bars",
     {
+      "id": "phantasm:crystal_glass_pane",
+      "required": false
+    },
+    {
+      "id": "phantasm:void_crystal_glass_pane",
+      "required": false
+    },
+    {
+      "id": "quark:paper_wall_sakura",
+      "required": false
+    },
+    {
+      "id": "netherdungeons:gold_chain",
+      "required": false
+    },
+    {
+      "id": "createdeco:iron_bars_overlay",
+      "required": false
+    },
+    {
+      "id": "#quark:posts",
+      "required": false
+    },
+    {
+      "id": "#createframed:dyed_cardboard_window_panes",
+      "required": false
+    },
+    {
+      "id": "galosphere:palladium_lattice",
+      "required": false
+    },
+    {
       "id": "create:andesite_bars",
       "required": false
     },
@@ -75,10 +107,6 @@
     },
     {
       "id": "createdeco:industrial_iron_bars_overlay",
-      "required": false
-    },
-    {
-      "id": "createdeco:iron_bars_overlay",
       "required": false
     },
     {
