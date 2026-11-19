@@ -10,6 +10,7 @@ public final class OffgridTags {
     public static final TagKey<Block> CAN_OFFSET = TagKey.create(Registries.BLOCK, Offgrid.id("can_offset"));
     public static final TagKey<Block> CAN_OVERLAY = TagKey.create(Registries.BLOCK, Offgrid.id("can_overlay"));
     public static final TagKey<Block> FACING_ATTACHING = TagKey.create(Registries.BLOCK, Offgrid.id("facing_attaching"));
+    public static final TagKey<Block> HANGS_FROM_CEILING = TagKey.create(Registries.BLOCK, Offgrid.id("hangs_from_ceiling"));
     public static final TagKey<Block> CAN_BLOCKLOG = TagKey.create(Registries.BLOCK, Offgrid.id("can_blocklog"));
     public static final TagKey<Block> BLOCKLOGGABLE = TagKey.create(Registries.BLOCK, Offgrid.id("blockloggable"));
     public static final TagKey<Block> LAYERS = TagKey.create(Registries.BLOCK, Offgrid.id("layers"));

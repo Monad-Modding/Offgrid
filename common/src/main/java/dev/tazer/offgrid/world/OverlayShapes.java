@@ -1,6 +1,8 @@
 package dev.tazer.offgrid.world;
 
+import dev.tazer.offgrid.OffgridTags;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.Level;
@@ -8,17 +10,21 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 public final class OverlayShapes {
+
+    private static final double ROPE_MIN = 7.5 / 16.0;
+    private static final double ROPE_MAX = 8.5 / 16.0;
 
     private OverlayShapes() {
     }
 
     public static VoxelShape of(BlockState state, Vec3 offset) {
         VoxelShape shape = state.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());
-        return shape.isEmpty() ? shape : shape.move(offset.x, offset.y, offset.z);
+        return shape.isEmpty() ? shape : hanging(state, offset, shape.move(offset.x, offset.y, offset.z));
     }
 
     public static VoxelShape of(Level level, BlockPos host, Overlay overlay) {
@@ -26,6 +32,10 @@ public final class OverlayShapes {
     }
 
     public static VoxelShape of(Level level, BlockPos host, BlockState state, Vec3 offset, @Nullable Overlay existing) {
+        return hanging(state, offset, resolve(level, host, state, offset, existing));
+    }
+
+    private static VoxelShape resolve(Level level, BlockPos host, BlockState state, Vec3 offset, @Nullable Overlay existing) {
         Blocklogging.Blocklog cut = Blocklogging.at(level, host, state, offset);
         if (cut != null) return cut.outline();
         if (Scope.get(Scope.RESOLVING_SHAPE)) return of(state, offset);
@@ -38,6 +48,13 @@ public final class OverlayShapes {
                 return of(state, offset);
             }
         }));
+    }
+
+    private static VoxelShape hanging(BlockState state, Vec3 offset, VoxelShape shape) {
+        if (shape.isEmpty() || !state.is(OffgridTags.HANGS_FROM_CEILING)) return shape;
+        double top = shape.max(Direction.Axis.Y) - offset.y;
+        if (top >= 1.0) return shape;
+        return Shapes.or(shape, Shapes.box(ROPE_MIN, top, ROPE_MIN, ROPE_MAX, 1.0, ROPE_MAX).move(offset.x, offset.y, offset.z));
     }
 
     public static VoxelShape support(Level level, BlockPos host, Overlay overlay) {

@@ -52,6 +52,7 @@
     "#minecraft:banners",
     "minecraft:lightning_rod",
     "#offgrid:can_blocklog",
+    "#offgrid:hangs_from_ceiling",
     {
       "id": "another_furniture:service_bell",
       "required": false

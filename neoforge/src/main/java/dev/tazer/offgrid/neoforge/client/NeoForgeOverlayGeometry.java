@@ -4,6 +4,8 @@ package dev.tazer.offgrid.neoforge.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.tazer.offgrid.client.OverlayGeometry;
 import dev.tazer.offgrid.client.OverlayShaderTags;
+import dev.tazer.offgrid.compat.Integrations;
+import dev.tazer.offgrid.neoforge.client.compat.snowrealmagic.SnowRealMagicOverlayRender;
 import dev.tazer.offgrid.world.Connections;
 import dev.tazer.offgrid.world.Offsets;
 import dev.tazer.offgrid.world.OverlayContext;
@@ -49,6 +51,7 @@ public final class NeoForgeOverlayGeometry {
         PoseStack poseStack = context.getPoseStack();
         RandomSource random = RandomSource.create();
         OverlayShaderTags tags = OverlayShaderTags.create();
+        boolean snow = Integrations.isLoaded(Integrations.SNOW_REAL_MAGIC);
         Offsets.suppress(() -> {
             for (Prepared item : prepared) {
                 OverlayGeometry.Entry entry = item.entry();
@@ -57,6 +60,14 @@ public final class NeoForgeOverlayGeometry {
                 random.setSeed(seed);
                 tags.enter(entry);
                 entry.view(() -> {
+                    BlockEntity blockEntity = snow ? entry.overlay().getBlockEntity() : null;
+                    if (blockEntity != null && SnowRealMagicOverlayRender.isSnowCovered(blockEntity)) {
+                        poseStack.pushPose();
+                        poseStack.translate(entry.x(origin), entry.y(origin), entry.z(origin));
+                        SnowRealMagicOverlayRender.render(blockEntity, entry.open(), context, tags, state, entry.host(), poseStack, entry.culls(), random, seed, OverlayTexture.NO_OVERLAY);
+                        poseStack.popPose();
+                        return;
+                    }
                     for (RenderType type : item.model().getRenderTypes(state, random, item.data())) {
                         poseStack.pushPose();
                         poseStack.translate(entry.x(origin), entry.y(origin), entry.z(origin));

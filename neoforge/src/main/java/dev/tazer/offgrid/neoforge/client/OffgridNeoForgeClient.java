@@ -21,7 +21,10 @@ import java.util.Map;
 /*import dev.tazer.offgrid.client.BlockloggedStateModel;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 *///?} else {
+import dev.tazer.offgrid.client.ClientCells;
 import dev.tazer.offgrid.client.OverlayBlockEntities;
+import dev.tazer.offgrid.compat.Integrations;
+import dev.tazer.offgrid.neoforge.compat.polytone.PolytoneOverlayLights;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.resources.model.BakedModel;
@@ -42,6 +45,9 @@ public final class OffgridNeoForgeClient {
         NeoForge.EVENT_BUS.addListener(OffgridNeoForgeClient::onSectionGeometry);
         //? if <26 {
         NeoForge.EVENT_BUS.addListener(OffgridNeoForgeClient::onRenderStage);
+        if (Integrations.isLoaded(Integrations.POLYTONE)) {
+            ClientCells.addDirtyListener(PolytoneOverlayLights::markDirty);
+        }
         //?}
     }
 

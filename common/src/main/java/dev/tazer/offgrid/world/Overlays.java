@@ -39,6 +39,7 @@ public final class Overlays {
     public static final int MAX_PER_CELL = 8;
 
     private static final int[] NONE = new int[0];
+    private static final double SLIVER = 1.0 / 16.0 - Support.EPSILON;
 
     private Overlays() {
     }
@@ -105,7 +106,7 @@ public final class Overlays {
                 BlockState occupant = Covers.raw(level, cell, Cells.realState(level, cell));
                 if (!occupant.isAir() && !occupant.canBeReplaced()) {
                     VoxelShape occupantShape = occupant.getShape(level, cell, CollisionContext.empty());
-                    if (!occupantShape.isEmpty() && Shapes.joinIsNotEmpty(shape, occupantShape.move(dx, dy, dz), BooleanOp.AND)) return true;
+                    if (!occupantShape.isEmpty() && Shapes.joinIsNotEmpty(shape, occupantShape.move(dx, dy, dz), BooleanOp.AND) && !edgeContact(shape, occupantShape.move(dx, dy, dz))) return true;
                 }
             }
             for (Overlay existing : Cells.overlays(level, cell)) {
@@ -113,10 +114,19 @@ public final class Overlays {
                     continue;
                 }
                 VoxelShape existingShape = OverlayShapes.of(level, cell, existing);
-                if (!existingShape.isEmpty() && Shapes.joinIsNotEmpty(shape, existingShape.move(dx, dy, dz), BooleanOp.AND)) return true;
+                if (!existingShape.isEmpty() && Shapes.joinIsNotEmpty(shape, existingShape.move(dx, dy, dz), BooleanOp.AND) && !edgeContact(shape, existingShape.move(dx, dy, dz))) return true;
             }
         }
         return false;
+    }
+
+    private static boolean edgeContact(VoxelShape first, VoxelShape second) {
+        AABB overlap = Shapes.join(first, second, BooleanOp.AND).bounds();
+        int thin = 0;
+        for (Direction.Axis axis : Direction.Axis.values()) {
+            if (overlap.max(axis) - overlap.min(axis) < SLIVER) thin++;
+        }
+        return thin >= 2;
     }
 
     public static boolean survives(Level level, BlockPos host, BlockState state, Vec3 offset, @Nullable Overlay existing, @Nullable BlockState hostReplacement) {

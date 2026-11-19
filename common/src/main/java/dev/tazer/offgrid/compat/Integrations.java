@@ -15,6 +15,8 @@ public final class Integrations {
     public static final String SNOW_REAL_MAGIC = "snowrealmagic";
     public static final String IRIS = "iris";
     public static final String OCULUS = "oculus";
+    public static final String MOONLIGHT = "moonlight";
+    public static final String POLYTONE = "polytone";
 
     private Integrations() {
     }

@@ -29,15 +29,23 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public final class Placement {
 
+    private static final List<BiFunction<BlockItem, BlockPlaceContext, BlockState>> STATE_FALLBACKS = new ArrayList<>();
 
     private static int nextClientId = -1;
 
     private Placement() {
+    }
+
+    public static void addStateFallback(BiFunction<BlockItem, BlockPlaceContext, BlockState> fallback) {
+        STATE_FALLBACKS.add(fallback);
     }
 
     public static InteractionResult place(BlockItem item, BlockPlaceContext context, Function<BlockPlaceContext, InteractionResult> vanilla) {
@@ -60,10 +68,22 @@ public final class Placement {
 
     @Nullable
     private static BlockState placementState(BlockItem item, BlockPlaceContext context) {
-        if (context.getItemInHand().getItem() == item) return ((BlockItemAccessor) item).offgrid$getPlacementState(context);
+        if (context.getItemInHand().getItem() == item) {
+            BlockState held = ((BlockItemAccessor) item).offgrid$getPlacementState(context);
+            return held != null ? held : fallbackState(item, context);
+        }
         BlockState state = item.getBlock().getStateForPlacement(context);
         if (state == null || !state.canSurvive(context.getLevel(), context.getClickedPos()) || !context.getLevel().isUnobstructed(state, context.getClickedPos(), CollisionContext.empty())) return null;
         return state;
+    }
+
+    @Nullable
+    private static BlockState fallbackState(BlockItem item, BlockPlaceContext context) {
+        for (BiFunction<BlockItem, BlockPlaceContext, BlockState> fallback : STATE_FALLBACKS) {
+            BlockState alternative = fallback.apply(item, context);
+            if (alternative != null) return alternative;
+        }
+        return null;
     }
 
     private static Decision decide(BlockItem item, BlockPlaceContext context) {

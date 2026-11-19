@@ -66,6 +66,7 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         this.blocks(OffgridTags.CAN_OVERLAY, Blocks.COPPER_LANTERN.waxed(), Blocks.COPPER_LANTERN.waxedExposed(), Blocks.COPPER_LANTERN.waxedWeathered(), Blocks.COPPER_LANTERN.waxedOxidized());
         *///?}
         this.tags(OffgridTags.CAN_OVERLAY, OffgridTags.CAN_BLOCKLOG);
+        this.tags(OffgridTags.CAN_OVERLAY, OffgridTags.HANGS_FROM_CEILING);
         this.tags(OffgridTags.CAN_OFFSET, OffgridTags.CAN_OVERLAY);
         this.blocks(OffgridTags.CAN_OFFSET, Blocks.TRIPWIRE_HOOK, Blocks.DRAGON_EGG, Blocks.PLAYER_HEAD, Blocks.PLAYER_WALL_HEAD);
         this.tags(OffgridTags.FACING_ATTACHING, BlockTags.WALL_SIGNS);
@@ -159,6 +160,9 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         this.optional(OffgridTags.CAN_OFFSET, "passager:pigeon_nest", "farmersdelight:skillet", "farmersdelight:cooking_pot");
         this.optional(OffgridTags.CAN_OVERLAY, "supplementaries:sconce", "supplementaries:sconce_soul", "supplementaries:sconce_green", "supplementaries:sconce_ender", "supplementaries:sconce_glow", "supplementaries:sconce_nether_brass", "supplementaries:sconce_lever");
         this.optional(OffgridTags.CAN_OVERLAY, SCONCE_WALLS);
+
+        this.optional(OffgridTags.HANGS_FROM_CEILING, "amendments:hanging_flower_pot");
+        this.optional(OffgridTags.HANGS_FROM_CEILING, dyed("amendments:ceiling_banner_%"));
 
         this.optional(OffgridTags.FACING_ATTACHING, "nomansland:shelf_mushroom");
         this.optional(OffgridTags.FACING_ATTACHING, SCONCE_WALLS);
