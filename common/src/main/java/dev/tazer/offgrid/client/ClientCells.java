@@ -25,10 +25,17 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public final class ClientCells {
 
+    private static final List<Consumer<BlockPos>> DIRTY_LISTENERS = new ArrayList<>();
+
     private ClientCells() {
+    }
+
+    public static void addDirtyListener(Consumer<BlockPos> listener) {
+        DIRTY_LISTENERS.add(listener);
     }
 
     public static void markDirty(Level level, BlockPos pos) {
@@ -39,6 +46,9 @@ public final class ClientCells {
         *///?} else {
         minecraft.levelRenderer.setBlocksDirty(pos.getX() - 1, pos.getY() - 1, pos.getZ() - 1, pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
         //?}
+        for (Consumer<BlockPos> listener : DIRTY_LISTENERS) {
+            listener.accept(pos);
+        }
     }
 
     public static void applyChunk(ChunkSync packet) {

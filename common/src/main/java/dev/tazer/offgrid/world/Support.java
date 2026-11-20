@@ -34,6 +34,7 @@ public final class Support {
             };
         }
         if (state.hasProperty(BlockStateProperties.HANGING) && state.getValue(BlockStateProperties.HANGING)) return Direction.UP;
+        if (state.is(OffgridTags.HANGS_FROM_CEILING)) return Direction.UP;
         if (state.is(OffgridTags.FACING_ATTACHING)) {
             if (state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) return state.getValue(BlockStateProperties.HORIZONTAL_FACING).getOpposite();
             if (state.hasProperty(BlockStateProperties.FACING)) return state.getValue(BlockStateProperties.FACING).getOpposite();

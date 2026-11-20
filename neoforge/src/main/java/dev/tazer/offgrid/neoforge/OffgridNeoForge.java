@@ -32,7 +32,9 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegisterEvent;
 //? if <26 {
+import dev.tazer.offgrid.neoforge.compat.moonlight.MoonlightPlacements;
 import dev.tazer.offgrid.neoforge.compat.quark.QuarkVerticalSlabs;
+import dev.tazer.offgrid.world.Placement;
 //?}
 //? if <26.2 {
 import dev.tazer.offgrid.neoforge.compat.additionalplacements.AdditionalPlacementsSlabs;
@@ -58,6 +60,9 @@ public final class OffgridNeoForge {
         //? if <26 {
         if (Integrations.isLoaded(Integrations.QUARK)) {
             MixedSlabs.addFamily(new QuarkVerticalSlabs());
+        }
+        if (Integrations.isLoaded(Integrations.MOONLIGHT)) {
+            Placement.addStateFallback(MoonlightPlacements::placementState);
         }
         //?}
         //? if <26.2 {

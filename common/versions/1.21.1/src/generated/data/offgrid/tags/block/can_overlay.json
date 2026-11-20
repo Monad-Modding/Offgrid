@@ -30,6 +30,7 @@
     "#minecraft:banners",
     "minecraft:lightning_rod",
     "#offgrid:can_blocklog",
+    "#offgrid:hangs_from_ceiling",
     "minecraft:daylight_detector",
     "minecraft:bell",
     "minecraft:conduit",

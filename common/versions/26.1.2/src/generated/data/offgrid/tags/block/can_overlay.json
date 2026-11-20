@@ -41,6 +41,7 @@
     "minecraft:waxed_weathered_copper_lantern",
     "minecraft:waxed_oxidized_copper_lantern",
     "#offgrid:can_blocklog",
+    "#offgrid:hangs_from_ceiling",
     "minecraft:daylight_detector",
     "minecraft:bell",
     "minecraft:conduit",

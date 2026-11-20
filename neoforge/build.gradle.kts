@@ -53,4 +53,6 @@ dependencies {
     integration("iris")?.let { compileOnly("maven.modrinth:iris:$it") { isTransitive = false } }
     integration("immersiveportals")?.let { compileOnly("maven.modrinth:immersive-portals-neoforge:$it") { isTransitive = false } }
     integration("connectiblechains")?.let { compileOnly("maven.modrinth:reconnectible-chains:$it") { isTransitive = false } }
+    integration("moonlight")?.let { compileOnly("maven.modrinth:moonlight:$it") { isTransitive = false } }
+    integration("polytone")?.let { compileOnly("maven.modrinth:polytone:$it") { isTransitive = false } }
 }
