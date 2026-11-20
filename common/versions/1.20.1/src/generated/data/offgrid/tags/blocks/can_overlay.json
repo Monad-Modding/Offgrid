@@ -53,71 +53,110 @@
     "minecraft:lightning_rod",
     "#offgrid:can_blocklog",
     {
+      "id": "#create:seats",
+      "required": false
+    },
+    {
+      "id": "#quark:stools",
+      "required": false
+    },
+    {
+      "id": "#twigs:seashells",
+      "required": false
+    },
+    {
+      "id": "#createframed:dyed_cardboard_window_panes",
+      "required": false
+    },
+    {
+      "id": "#quark:posts",
+      "required": false
+    },
+    "minecraft:daylight_detector",
+    "minecraft:bell",
+    "minecraft:conduit",
+    "minecraft:red_mushroom",
+    "minecraft:brown_mushroom",
+    "minecraft:decorated_pot",
+    "#minecraft:campfires",
+    {
+      "id": "#quark:stools",
+      "required": false
+    },
+    {
+      "id": "#twigs:seashells",
+      "required": false
+    },
+    {
+      "id": "#caverns_and_chasms:braziers",
+      "required": false
+    },
+    {
+      "id": "#quark:hedges",
+      "required": false
+    },
+    {
+      "id": "#create:seats",
+      "required": false
+    },
+    {
+      "id": "#create:corals",
+      "required": false
+    },
+    {
+      "id": "#createdeco:decals",
+      "required": false
+    },
+    {
+      "id": "#createframed:dyed_cardboard_window_panes",
+      "required": false
+    },
+    {
+      "id": "#createdeco:placards",
+      "required": false
+    },
+    {
+      "id": "#create:valve_handle",
+      "required": false
+    },
+    {
+      "id": "create:stock_ticker",
+      "required": false
+    },
+    {
+      "id": "create:package_frogport",
+      "required": false
+    },
+    {
+      "id": "create:haunted_bell",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:false_hope",
+      "required": false
+    },
+    {
+      "id": "betterarcheology:vase",
+      "required": false
+    },
+    {
+      "id": "betterarcheology:vase_green",
+      "required": false
+    },
+    {
+      "id": "betterarcheology:vase_creeper",
+      "required": false
+    },
+    {
+      "id": "toughasnails:temperature_gauge",
+      "required": false
+    },
+    {
       "id": "another_furniture:service_bell",
       "required": false
     },
     {
-      "id": "create:white_seat",
-      "required": false
-    },
-    {
-      "id": "create:light_gray_seat",
-      "required": false
-    },
-    {
-      "id": "create:gray_seat",
-      "required": false
-    },
-    {
-      "id": "create:black_seat",
-      "required": false
-    },
-    {
-      "id": "create:brown_seat",
-      "required": false
-    },
-    {
-      "id": "create:yellow_seat",
-      "required": false
-    },
-    {
-      "id": "create:lime_seat",
-      "required": false
-    },
-    {
-      "id": "create:green_seat",
-      "required": false
-    },
-    {
-      "id": "create:cyan_seat",
-      "required": false
-    },
-    {
-      "id": "create:blue_seat",
-      "required": false
-    },
-    {
-      "id": "create:light_blue_seat",
-      "required": false
-    },
-    {
-      "id": "create:magenta_seat",
-      "required": false
-    },
-    {
-      "id": "create:pink_seat",
-      "required": false
-    },
-    {
-      "id": "create:purple_seat",
-      "required": false
-    },
-    {
-      "id": "create:red_seat",
-      "required": false
-    },
-    {
-      "id": "create:orange_seat",
+      "id": "spelunkery:salt_lamp",
       "required": false
     },
     {
@@ -185,6 +224,410 @@
       "required": false
     },
     {
+      "id": "create:nixie_tube",
+      "required": false
+    },
+    {
+      "id": "create:peculiar_bell",
+      "required": false
+    },
+    {
+      "id": "create:haunted_bell",
+      "required": false
+    },
+    {
+      "id": "quark:oak_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:spruce_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:birch_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:jungle_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:acacia_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:cherry_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:dark_oak_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:mangrove_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:azalea_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:flowering_azalea_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:veiled_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:ancient_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:blue_blossom_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:lavender_blossom_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:orange_blossom_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:yellow_blossom_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:red_blossom_leaf_carpet",
+      "required": false
+    },
+    {
+      "id": "quark:tiny_potato",
+      "required": false
+    },
+    {
+      "id": "quark:iron_rod",
+      "required": false
+    },
+    {
+      "id": "quark:glow_lichen_growth",
+      "required": false
+    },
+    {
+      "id": "quark:paper_wall_sakura",
+      "required": false
+    },
+    {
+      "id": "quark:paper_lantern_sakura",
+      "required": false
+    },
+    {
+      "id": "quark:blossom_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "quark:obsidian_pressure_plate",
+      "required": false
+    },
+    {
+      "id": "dndecor:stepped_lever",
+      "required": false
+    },
+    {
+      "id": "dndecor:breaker_switch",
+      "required": false
+    },
+    {
+      "id": "dndecor:text_plate",
+      "required": false
+    },
+    {
+      "id": "securitycraft:panic_button",
+      "required": false
+    },
+    {
+      "id": "twigs:bamboo_leaves",
+      "required": false
+    },
+    {
+      "id": "twigs:twig",
+      "required": false
+    },
+    {
+      "id": "twigs:pebble",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:safety_net",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:cooking_pot",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:skillet",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:cutting_board",
+      "required": false
+    },
+    {
+      "id": "netherdungeons:magmacube_lantern",
+      "required": false
+    },
+    {
+      "id": "netherdungeons:magmacube_lantern_empty",
+      "required": false
+    },
+    {
+      "id": "netherdungeons:warped_creeping_vine",
+      "required": false
+    },
+    {
+      "id": "phantasm:choral_fan",
+      "required": false
+    },
+    {
+      "id": "galosphere:pink_salt_lamp",
+      "required": false
+    },
+    {
+      "id": "galosphere:chandelier",
+      "required": false
+    },
+    {
+      "id": "galosphere:soul_chandelier",
+      "required": false
+    },
+    {
+      "id": "galosphere:light_stand",
+      "required": false
+    },
+    {
+      "id": "galosphere:soul_light_stand",
+      "required": false
+    },
+    {
+      "id": "galosphere:gilded_beads",
+      "required": false
+    },
+    {
+      "id": "galosphere:allurite_cluster",
+      "required": false
+    },
+    {
+      "id": "galosphere:glinted_allurite_cluster",
+      "required": false
+    },
+    {
+      "id": "galosphere:lumiere_cluster",
+      "required": false
+    },
+    {
+      "id": "galosphere:glinted_lumiere_cluster",
+      "required": false
+    },
+    {
+      "id": "galosphere:glinted_amethyst_cluster",
+      "required": false
+    },
+    {
+      "id": "galosphere:bowl_lichen",
+      "required": false
+    },
+    {
+      "id": "enderscape:repulsive_magnia_sprout",
+      "required": false
+    },
+    {
+      "id": "enderscape:alluring_magnia_sprout",
+      "required": false
+    },
+    {
+      "id": "enderscape:bulb_lantern",
+      "required": false
+    },
+    {
+      "id": "enderscape:unripe_flanger_berry_block",
+      "required": false
+    },
+    {
+      "id": "enderscape:flanger_berry_flower",
+      "required": false
+    },
+    {
+      "id": "wholecloth:white_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:light_gray_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:gray_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:black_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:brown_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:yellow_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:lime_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:green_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:cyan_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:blue_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:light_blue_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:magenta_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:pink_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:purple_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:red_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:orange_cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "wholecloth:cloth_scrap_carpet",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:white_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:light_gray_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:gray_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:black_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:brown_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:yellow_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:lime_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:green_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:cyan_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:blue_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:light_blue_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:magenta_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:pink_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:purple_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:red_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:orange_sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:sparkler",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:exposed_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:weathered_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:oxidized_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_exposed_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_weathered_floodlight",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:waxed_oxidized_floodlight",
+      "required": false
+    },
+    {
       "id": "caverns_and_chasms:cupric_torch",
       "required": false
     },
@@ -242,6 +685,14 @@
     },
     {
       "id": "caverns_and_chasms:cupric_lantern",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:dimmer",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:lava_lamp",
       "required": false
     },
     {
