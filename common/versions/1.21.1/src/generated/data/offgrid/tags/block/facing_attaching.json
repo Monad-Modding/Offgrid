@@ -33,6 +33,70 @@
     "minecraft:tripwire_hook",
     "minecraft:lightning_rod",
     {
+      "id": "create:nixie_tube",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:false_hope",
+      "required": false
+    },
+    {
+      "id": "netherdungeons:warped_creeping_vine",
+      "required": false
+    },
+    {
+      "id": "galosphere:pink_salt_lamp",
+      "required": false
+    },
+    {
+      "id": "galosphere:allurite_cluster",
+      "required": false
+    },
+    {
+      "id": "galosphere:glinted_allurite_cluster",
+      "required": false
+    },
+    {
+      "id": "galosphere:lumiere_cluster",
+      "required": false
+    },
+    {
+      "id": "galosphere:glinted_lumiere_cluster",
+      "required": false
+    },
+    {
+      "id": "galosphere:glinted_amethyst_cluster",
+      "required": false
+    },
+    {
+      "id": "galosphere:gilded_beads",
+      "required": false
+    },
+    {
+      "id": "galosphere:chandelier",
+      "required": false
+    },
+    {
+      "id": "galosphere:soul_chandelier",
+      "required": false
+    },
+    {
+      "id": "enderscape:repulsive_magnia_sprout",
+      "required": false
+    },
+    {
+      "id": "enderscape:alluring_magnia_sprout",
+      "required": false
+    },
+    {
+      "id": "enderscape:unripe_flanger_berry_block",
+      "required": false
+    },
+    {
+      "id": "enderscape:flanger_berry_flower",
+      "required": false
+    },
+    {
       "id": "nomansland:shelf_mushroom",
       "required": false
     },
@@ -62,6 +126,10 @@
     },
     {
       "id": "caverns_and_chasms:cupric_wall_torch",
+      "required": false
+    },
+    {
+      "id": "caverns_and_chasms:lava_lamp",
       "required": false
     },
     {
