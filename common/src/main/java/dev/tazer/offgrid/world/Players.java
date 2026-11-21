@@ -6,16 +6,13 @@ import net.minecraft.world.entity.player.Player;
 /*import net.minecraft.world.phys.Vec3;
 *///?}
 
-public final class Players {
-
-    private Players() {
-    }
+public class Players {
 
     public static double reach(Player player) {
         //? if >=1.20.5 {
         return player.blockInteractionRange();
         //?} else {
-        /*return player.isCreative() ? 5.0 : 4.5;
+        /*return player.isCreative() ? 5 : 4.5;
         *///?}
     }
 

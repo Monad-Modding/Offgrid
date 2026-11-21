@@ -14,13 +14,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public final class Covers {
+public class Covers {
 
-    private static final int MAX_SNOW_LAYERS = 8;
     private static final List<Cover> COVERS = new CopyOnWriteArrayList<>();
-
-    private Covers() {
-    }
 
     public static void addCover(Cover cover) {
         COVERS.add(cover);
@@ -29,9 +25,11 @@ public final class Covers {
     @Nullable
     private static Cover of(BlockState state) {
         if (COVERS.isEmpty()) return null;
+
         for (Cover cover : COVERS) {
             if (cover.covers(state)) return cover;
         }
+
         return null;
     }
 
@@ -66,8 +64,9 @@ public final class Covers {
         if (cover == null || cell == null || cell.isEmpty()) return;
         BlockState raw = cover.raw(level, pos, covered);
         if (raw == null || raw.isAir() || isCovered(raw)) return;
-        int layers = Math.min(cover.layers(level, pos, covered), MAX_SNOW_LAYERS);
+        int layers = Math.min(cover.layers(level, pos, covered), 8);
         level.setBlock(pos, raw, Block.UPDATE_ALL);
+
         if (layers > 0) {
             keepSnow(level, pos, raw, layers);
         }
@@ -76,6 +75,7 @@ public final class Covers {
     private static void keepSnow(ServerLevel level, BlockPos pos, BlockState host, int layers) {
         Overlay existing = Layers.layerIn(level, pos);
         int kept = 0;
+
         if (existing == null) {
             for (int candidate = layers; candidate > 0 && kept == 0; candidate--) {
                 BlockState snow = Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, candidate);
@@ -85,14 +85,16 @@ public final class Covers {
             }
         } else if (existing.getState().is(Blocks.SNOW)) {
             int current = existing.getState().getValue(SnowLayerBlock.LAYERS);
-            for (int total = Math.min(current + layers, MAX_SNOW_LAYERS); total > current && kept == 0; total--) {
+            for (int total = Math.min(current + layers, 8); total > current && kept == 0; total--) {
                 BlockState grown = existing.getState().setValue(SnowLayerBlock.LAYERS, total);
                 int added = total - current;
+
                 if (Blocklogging.of(grown, host) != null && OverlayContext.call(level, pos, existing, () -> level.setBlock(pos, grown, Block.UPDATE_ALL))) {
                     kept = added;
                 }
             }
         }
+
         if (kept < layers) {
             Block.dropResources(Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, layers - kept), level, pos);
         }

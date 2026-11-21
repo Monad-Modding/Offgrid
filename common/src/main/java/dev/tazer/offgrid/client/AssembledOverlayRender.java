@@ -23,10 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-public final class AssembledOverlayRender {
-
-    private AssembledOverlayRender() {
-    }
+public class AssembledOverlayRender {
 
     public static void render(Level level, BlockPos pos, BlockState host, AssembledCell.AssembledOverlay overlay, Map<AssembledCell.AssembledOverlay, BlockEntity> blockEntities, PoseStack pose, MultiBufferSource buffers, int light, float partialTicks) {
         BlockEntity blockEntity = blockEntities.computeIfAbsent(overlay, key -> createBlockEntity(level, pos, overlay.state(), overlay.tag()));
@@ -42,6 +39,7 @@ public final class AssembledOverlayRender {
         if (renderer != null) {
             renderer.render(blockEntity, partialTicks, pose, buffers, light, OverlayTexture.NO_OVERLAY);
         }
+
         pose.popPose();
     }
 
@@ -52,10 +50,11 @@ public final class AssembledOverlayRender {
         if (cut != null) {
             model = new BlockloggedBakedModel(model, cut.open());
         }
+
         int color = Minecraft.getInstance().getBlockColors().getColor(state, null, null, 0);
-        float red = (color >> 16 & 255) / 255.0F;
-        float green = (color >> 8 & 255) / 255.0F;
-        float blue = (color & 255) / 255.0F;
+        float red = (color >> 16 & 255) / 255f;
+        float green = (color >> 8 & 255) / 255f;
+        float blue = (color & 255) / 255f;
         dispatcher.getModelRenderer().renderModel(pose.last(), buffers.getBuffer(ItemBlockRenderTypes.getRenderType(state, false)), state, model, red, green, blue, light, OverlayTexture.NO_OVERLAY);
     }
 
@@ -70,6 +69,7 @@ public final class AssembledOverlayRender {
         if (created != null) {
             created.setLevel(level);
         }
+
         return created;
     }
 }

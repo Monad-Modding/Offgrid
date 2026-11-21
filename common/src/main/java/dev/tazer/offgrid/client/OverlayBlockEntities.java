@@ -33,15 +33,11 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.phys.AABB;
 //?}
 
-public final class OverlayBlockEntities {
+public class OverlayBlockEntities {
 
-    private static final double MAX_DISTANCE = 128.0;
     //? if >=26 {
     /*private static final Map<BlockEntityRenderState, Vec3> OFFSETS = new IdentityHashMap<>();
     *///?}
-
-    private OverlayBlockEntities() {
-    }
 
     //? if >=26 {
     /*public static void extract(float partialTick, List<BlockEntityRenderState> output) {
@@ -52,20 +48,25 @@ public final class OverlayBlockEntities {
         if (level == null || index == null || index.isEmpty()) return;
         BlockEntityRenderDispatcher dispatcher = minecraft.getBlockEntityRenderDispatcher();
         Vec3 camera = minecraft.gameRenderer.getMainCamera().position();
+
         for (Long2ObjectMap.Entry<OffgridChunk> chunkEntry : index.getChunks().long2ObjectEntrySet()) {
             if (!withinRange(minecraft, camera, chunkEntry.getLongKey())) {
                 continue;
             }
+
             for (Long2ObjectMap.Entry<Cell> cellEntry : chunkEntry.getValue().getCells().long2ObjectEntrySet()) {
                 Cell cell = cellEntry.getValue();
                 if (!cell.hasOverlays()) {
                     continue;
                 }
+
                 BlockPos host = BlockPos.of(cellEntry.getLongKey());
+
                 for (Overlay overlay : cell.overlays()) {
                     if (!overlay.getState().hasBlockEntity()) {
                         continue;
                     }
+
                     BlockEntity blockEntity = overlay.materialize(level, host);
                     if (blockEntity == null || dispatcher.getRenderer(blockEntity) == null) {
                         continue;
@@ -89,7 +90,8 @@ public final class OverlayBlockEntities {
         Vec3 overlay = OFFSETS.get(state);
         if (overlay != null) return overlay;
         ClientLevel level = Minecraft.getInstance().level;
-        return level == null ? null : Offsets.of(level, state.blockPos, ((BlockEntityRenderStateAccessor) state).offgrid$getBlockState());
+        if (level == null) return null;
+        return Offsets.of(level, state.blockPos, ((BlockEntityRenderStateAccessor) state).offgrid$getBlockState());
     }
     *///?} else {
     public static void render(PoseStack poseStack, Vec3 camera, MultiBufferSource buffers, @Nullable Frustum frustum, float partialTick) {
@@ -98,48 +100,57 @@ public final class OverlayBlockEntities {
         OffgridIndex index = OffgridIndex.of(level);
         if (level == null || index == null || index.isEmpty()) return;
         BlockEntityRenderDispatcher dispatcher = minecraft.getBlockEntityRenderDispatcher();
+
         for (Long2ObjectMap.Entry<OffgridChunk> chunkEntry : index.getChunks().long2ObjectEntrySet()) {
             long chunk = chunkEntry.getLongKey();
             boolean subLevel = SubLevelView.contains(new BlockPos(SectionPos.sectionToBlockCoord(ChunkPos.getX(chunk), 8), 0, SectionPos.sectionToBlockCoord(ChunkPos.getZ(chunk), 8)));
             if (!subLevel && !withinRange(minecraft, camera, chunk)) {
                 continue;
             }
+
             for (Long2ObjectMap.Entry<Cell> cellEntry : chunkEntry.getValue().getCells().long2ObjectEntrySet()) {
                 Cell cell = cellEntry.getValue();
                 if (!cell.hasOverlays()) {
                     continue;
                 }
+
                 BlockPos host = BlockPos.of(cellEntry.getLongKey());
-                if (!subLevel && frustum != null && !frustum.isVisible(new AABB(host).inflate(1.0))) {
+                if (!subLevel && frustum != null && !frustum.isVisible(new AABB(host).inflate(1))) {
                     continue;
                 }
+
                 for (Overlay overlay : cell.overlays()) {
                     if (!overlay.getState().hasBlockEntity()) {
                         continue;
                     }
+
                     BlockEntity blockEntity = overlay.materialize(level, host);
                     BlockEntityRenderer<BlockEntity> renderer = blockEntity == null ? null : dispatcher.getRenderer(blockEntity);
                     if (renderer == null) {
                         continue;
                     }
+
                     poseStack.pushPose();
                     SubLevelView.enter(poseStack, camera, host, overlay.getOffset(), partialTick);
+
                     if (subLevel) {
                         int light = LevelRenderer.getLightColor(level, host);
                         OverlayContext.run(level, host, overlay, () -> renderer.render(blockEntity, partialTick, poseStack, buffers, light, OverlayTexture.NO_OVERLAY));
                     } else {
                         OverlayContext.run(level, host, overlay, () -> dispatcher.render(blockEntity, partialTick, poseStack, buffers));
                     }
+
                     poseStack.popPose();
                 }
             }
         }
+
         OverlayCracks.render(minecraft, level, poseStack, camera, partialTick);
     }
     //?}
 
     private static boolean withinRange(Minecraft minecraft, Vec3 camera, long chunk) {
-        double range = Math.min(MAX_DISTANCE, minecraft.options.getEffectiveRenderDistance() * 16.0) + 16.0;
+        double range = Math.min(128.0, minecraft.options.getEffectiveRenderDistance() * 16.0) + 16.0;
         double dx = SectionPos.sectionToBlockCoord(ChunkPos.getX(chunk), 8) - camera.x;
         double dz = SectionPos.sectionToBlockCoord(ChunkPos.getZ(chunk), 8) - camera.z;
         return dx * dx + dz * dz <= range * range;

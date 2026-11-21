@@ -18,6 +18,7 @@ public abstract class LeashFenceKnotEntityMixin {
         for (Overlay overlay : Cells.overlays(self.level(), self.getPos())) {
             if (overlay.getState().is(BlockTags.FENCES)) return true;
         }
+
         return false;
     }
 }

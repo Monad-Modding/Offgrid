@@ -13,19 +13,17 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-public final class OverlayFluids {
-
-    private OverlayFluids() {
-    }
+public class OverlayFluids {
 
     public static FluidState around(Level level, BlockPos host, BlockState state, Vec3 offset, @Nullable BlockPos changed, @Nullable FluidState changedFluid) {
         VoxelShape shape = OverlayShapes.of(level, host, state, offset, null);
-        AABB bounds = shape.isEmpty() ? new AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0).move(offset.x, offset.y, offset.z) : shape.bounds();
+        AABB bounds = shape.isEmpty() ? new AABB(0, 0, 0, 1, 1, 1).move(offset.x, offset.y, offset.z) : shape.bounds();
         FluidState found = Fluids.EMPTY.defaultFluidState();
         BlockPos min = BlockPos.containing(host.getX() + bounds.minX + Support.EPSILON, host.getY() + bounds.minY + Support.EPSILON, host.getZ() + bounds.minZ + Support.EPSILON);
         BlockPos max = BlockPos.containing(host.getX() + bounds.maxX - Support.EPSILON, host.getY() + bounds.maxY - Support.EPSILON, host.getZ() + bounds.maxZ - Support.EPSILON);
         for (BlockPos cell : BlockPos.betweenClosed(min, max)) {
             FluidState here;
+
             if (changed != null && changedFluid != null && cell.equals(changed)) {
                 here = changedFluid;
             } else if (level.hasChunkAt(cell)) {
@@ -33,10 +31,12 @@ public final class OverlayFluids {
             } else {
                 continue;
             }
+
             if (!here.isEmpty() && (found.isEmpty() || !here.is(FluidTags.WATER))) {
                 found = here;
             }
         }
+
         return found;
     }
 

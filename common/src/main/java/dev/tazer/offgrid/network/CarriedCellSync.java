@@ -16,6 +16,7 @@ public record CarriedCellSync(int entity, long pos, @Nullable AssembledCell cell
         buf.writeVarInt(packet.entity);
         buf.writeLong(packet.pos);
         buf.writeBoolean(packet.cell != null);
+
         if (packet.cell != null) {
             AssembledCell.write(buf, packet.cell);
         }

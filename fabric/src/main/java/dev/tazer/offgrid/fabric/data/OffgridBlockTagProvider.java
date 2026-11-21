@@ -21,9 +21,9 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
 import java.util.concurrent.CompletableFuture;
 
 //? if >=26 {
-/*public final class OffgridBlockTagProvider extends FabricTagsProvider.BlockTagsProvider {
+/*public class OffgridBlockTagProvider extends FabricTagsProvider.BlockTagsProvider {
 *///?} else {
-public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagProvider {
+public class OffgridBlockTagProvider extends FabricTagProvider.BlockTagProvider {
 //?}
 
     private static final String[] DYES2 = {"white_", "light_gray_", "gray_", "black_", "brown_", "yellow_", "lime_", "green_", "cyan_", "blue_", "light_blue_", "magenta_", "pink_", "purple_", "red_", "orange_", ""};
@@ -243,11 +243,13 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         this.optional(OffgridTags.FACING_ATTACHING, wallHeads(HEADS));
     }
 
-    private static String[] dyed(String format) {
+    private String[] dyed(String format) {
         String[] ids = new String[DYES.length];
+
         for (int i = 0; i < DYES.length; i++) {
             ids[i] = format.replace("%", DYES[i]);
         }
+
         return ids;
     }
 
@@ -283,49 +285,59 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         return ids;
     }
 
-    private static String[] weathered(String format) {
+    private String[] weathered(String format) {
         String[] ids = new String[WEATHERING.length];
+
         for (int i = 0; i < WEATHERING.length; i++) {
             ids[i] = format.replace("%", WEATHERING[i]);
         }
+
         return ids;
     }
 
-    private static String[] metal(String format) {
+    private String[] metal(String format) {
         String[] ids = new String[METAL.length];
+
         for (int i = 0; i < METAL.length; i++) {
             ids[i] = format.replace("%", METAL[i]);
         }
+
         return ids;
     }
 
-    private static String[] withWallTorches(String... torches) {
+    private String[] withWallTorches(String... torches) {
         String[] ids = new String[torches.length * 2];
+
         for (int i = 0; i < torches.length; i++) {
             ids[i * 2] = torches[i];
             ids[i * 2 + 1] = torches[i].substring(0, torches[i].length() - "torch".length()) + "wall_torch";
         }
+
         return ids;
     }
 
-    private static String[] withWallHeads(String... heads) {
+    private String[] withWallHeads(String... heads) {
         String[] ids = new String[heads.length * 2];
+
         for (int i = 0; i < heads.length; i++) {
             ids[i * 2] = heads[i];
             ids[i * 2 + 1] = wallHead(heads[i]);
         }
+
         return ids;
     }
 
-    private static String[] wallHeads(String... heads) {
+    private String[] wallHeads(String... heads) {
         String[] ids = new String[heads.length];
+
         for (int i = 0; i < heads.length; i++) {
             ids[i] = wallHead(heads[i]);
         }
+
         return ids;
     }
 
-    private static String wallHead(String head) {
+    private String wallHead(String head) {
         return head.replaceAll("_(head|skull)$", "_wall_$1");
     }
 
@@ -368,7 +380,7 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         }
     }
 
-    private static TagKey<Block> conventional(String path) {
+    private TagKey<Block> conventional(String path) {
         //? if >=1.21 {
         return TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath("c", path));
         //?} else {
@@ -388,7 +400,7 @@ public final class OffgridBlockTagProvider extends FabricTagProvider.BlockTagPro
         }
     }
 
-    private static ResourceKey<Block> key(Block block) {
+    private ResourceKey<Block> key(Block block) {
         return BuiltInRegistries.BLOCK.getResourceKey(block).orElseThrow();
     }
 }

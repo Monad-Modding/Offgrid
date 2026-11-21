@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class ForgeMixedSlabModel implements IDynamicBakedModel {
+public class ForgeMixedSlabModel implements IDynamicBakedModel {
 
     private static final ModelProperty<BlockState> FIRST = new ModelProperty<>();
     private static final ModelProperty<BlockState> SECOND = new ModelProperty<>();
@@ -39,7 +39,7 @@ public final class ForgeMixedSlabModel implements IDynamicBakedModel {
         this.fallback = fallback;
     }
 
-    private static BakedModel modelOf(BlockState state) {
+    private BakedModel modelOf(BlockState state) {
         return Minecraft.getInstance().getBlockRenderer().getBlockModel(state);
     }
 
@@ -49,16 +49,17 @@ public final class ForgeMixedSlabModel implements IDynamicBakedModel {
         return ModelData.builder().with(FIRST, entity.getFirst()).with(SECOND, entity.getSecond()).with(FIRST_DATA, halfData(level, pos, entity, false)).with(SECOND_DATA, halfData(level, pos, entity, true)).build();
     }
 
-    private static ModelData halfData(BlockAndTintGetter level, BlockPos pos, MixedSlabBlockEntity entity, boolean second) {
+    private ModelData halfData(BlockAndTintGetter level, BlockPos pos, MixedSlabBlockEntity entity, boolean second) {
         BlockState half = entity.getHalf(second);
         BlockEntity halfEntity = entity.getHalfEntity(second);
         if (half == null || halfEntity == null) return ModelData.EMPTY;
         AtomicReference<ModelData> data = new AtomicReference<>(ModelData.EMPTY);
         MixedSlabs.viewingHalf(level, pos, half, halfEntity, () -> data.set(modelOf(half).getModelData(level, pos, half, halfEntity.getModelData())));
+
         return data.get();
     }
 
-    private static ModelData halfData(ModelData data, boolean second) {
+    private ModelData halfData(ModelData data, boolean second) {
         ModelData half = data.get(second ? SECOND_DATA : FIRST_DATA);
         return half == null ? ModelData.EMPTY : half;
     }
@@ -71,12 +72,14 @@ public final class ForgeMixedSlabModel implements IDynamicBakedModel {
         List<BakedQuad> quads = new ArrayList<>();
         this.addHalf(quads, first, false, side, random, halfData(data, false), renderType);
         this.addHalf(quads, second, true, side, random, halfData(data, true), renderType);
+
         return quads;
     }
 
     private void addHalf(List<BakedQuad> quads, BlockState half, boolean second, @Nullable Direction side, RandomSource random, ModelData data, @Nullable RenderType renderType) {
         BakedModel model = modelOf(half);
         if (renderType != null && !model.getRenderTypes(half, random, data).contains(renderType)) return;
+
         for (BakedQuad quad : model.getQuads(half, side, random, data, renderType)) {
             quads.add(second && quad.isTinted() ? new BakedQuad(quad.getVertices(), quad.getTintIndex() + MixedSlabColors.SECOND_TINT_OFFSET, quad.getDirection(), quad.getSprite(), quad.isShade(), quad.hasAmbientOcclusion()) : quad);
         }

@@ -7,7 +7,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
 
-public final class NeoForgeMixedSlabBlockEntity extends MixedSlabBlockEntity {
+public class NeoForgeMixedSlabBlockEntity extends MixedSlabBlockEntity {
 
     public static final ModelProperty<BlockState> FIRST = new ModelProperty<>();
     public static final ModelProperty<BlockState> SECOND = new ModelProperty<>();

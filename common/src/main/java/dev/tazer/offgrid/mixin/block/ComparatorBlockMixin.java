@@ -22,6 +22,7 @@ public abstract class ComparatorBlockMixin {
         if (best < 15 && level.getBlockState(input).isRedstoneConductor(level, input)) {
             best = Math.max(best, Signals.analogOutput(level, input.relative(facing)));
         }
+
         return best;
     }
 }

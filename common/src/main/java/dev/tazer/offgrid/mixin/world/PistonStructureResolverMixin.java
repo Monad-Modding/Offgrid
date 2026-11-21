@@ -59,6 +59,7 @@ public abstract class PistonStructureResolverMixin implements SlabMergeHolder {
         BlockPos from = pos.relative(this.pushDirection.getOpposite());
         if (!MixedSlabs.mergesInto(level, from, level.getBlockState(from), pos, state, this.pushDirection)) return state;
         this.offgrid$slabMerges.put(pos.immutable(), state);
+
         return Blocks.AIR.defaultBlockState();
     }
 }

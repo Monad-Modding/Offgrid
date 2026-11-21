@@ -34,6 +34,7 @@ public abstract class ServerLevelPrecipitationMixin {
             //?}
             Layers.snowfall(level, biome, top, maxLayers);
         }
+
         return snows;
     }
 }

@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import org.jetbrains.annotations.Nullable;
 
-public final class AdditionalPlacementsSlabs implements SlabFamily {
+public class AdditionalPlacementsSlabs implements SlabFamily {
 
     public static Block parentOf(Block block) {
         return block instanceof VerticalSlabBlock vertical ? vertical.parentBlock : block;
@@ -46,9 +46,12 @@ public final class AdditionalPlacementsSlabs implements SlabFamily {
         Direction side = this.side(existing);
         BlockState kept = MixedSlabs.dry(existing);
         BlockState added = MixedSlabs.dry(((ISlabBlock<?>) parent).additionalplacements$forPlacing(side.getOpposite(), parent.defaultBlockState()));
-        if (!(added.getBlock() instanceof VerticalSlabBlock)) return null;
-        boolean keptFirst = side.getAxisDirection() == Direction.AxisDirection.NEGATIVE;
-        return keptFirst ? new Halves(kept, added, side.getAxis()) : new Halves(added, kept, side.getAxis());
+        if (added.getBlock() instanceof VerticalSlabBlock) {
+            boolean keptFirst = side.getAxisDirection() == Direction.AxisDirection.NEGATIVE;
+            return keptFirst ? new Halves(kept, added, side.getAxis()) : new Halves(added, kept, side.getAxis());
+        }
+
+        return null;
     }
 
     @Override

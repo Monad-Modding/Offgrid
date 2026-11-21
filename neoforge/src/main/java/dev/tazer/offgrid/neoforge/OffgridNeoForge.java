@@ -42,7 +42,7 @@ import dev.tazer.offgrid.neoforge.compat.snowrealmagic.SnowRealMagicCover;
 //?}
 
 @Mod(Offgrid.MOD_ID)
-public final class OffgridNeoForge {
+public class OffgridNeoForge {
 
     private static final String PROTOCOL = "1";
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENTS = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Offgrid.MOD_ID);
@@ -70,6 +70,7 @@ public final class OffgridNeoForge {
             MixedSlabs.addParent(AdditionalPlacementsSlabs::parentOf);
             MixedSlabs.addFamily(new AdditionalPlacementsSlabs());
         }
+
         if (Integrations.isLoaded(Integrations.SNOW_REAL_MAGIC)) {
             Covers.addCover(new SnowRealMagicCover());
         }
@@ -86,6 +87,7 @@ public final class OffgridNeoForge {
 
     private static void onPayloads(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(PROTOCOL);
+
         for (PacketType<?> type : OffgridNetwork.all()) {
             register(registrar, type);
         }

@@ -46,10 +46,7 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import java.util.function.Function;
 //?}
 
-public final class OverlayGeometry {
-
-    private OverlayGeometry() {
-    }
+public class OverlayGeometry {
 
     public static boolean hasOverlays(BlockGetter getter, BlockPos origin) {
         return scan(getter, origin, null);
@@ -69,20 +66,24 @@ public final class OverlayGeometry {
         boolean found = false;
         int minY = origin.getY();
         int maxY = minY + 15;
+
         for (Long2ObjectMap.Entry<Cell> entry : chunk.getCells().long2ObjectEntrySet()) {
             Cell cell = entry.getValue();
             if (!cell.hasOverlays()) {
                 continue;
             }
+
             int y = BlockPos.getY(entry.getLongKey());
             if (y < minY || y > maxY) {
                 continue;
             }
+
             for (Overlay overlay : cell.overlays()) {
                 BlockState state = overlay.getState();
                 if (state.getRenderShape() != RenderShape.MODEL) {
                     continue;
                 }
+
                 if (into == null) return true;
                 BlockPos host = BlockPos.of(entry.getLongKey());
                 Blocklogging.Blocklog cut = Blocklogging.at(getter, host, overlay);
@@ -90,10 +91,12 @@ public final class OverlayGeometry {
                 if (open instanceof Layers.HostOutline) {
                     open = HostFaces.of(Blocklogging.hostState(getter, host), host, open);
                 }
+
                 into.add(new Entry(host, overlay, state, overlay.getOffset(), open));
                 found = true;
             }
         }
+
         return found;
     }
 

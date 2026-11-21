@@ -40,12 +40,12 @@ public abstract class AbstractContraptionEntityMixin implements ContraptionCarri
 
     @Override
     public Vec3 offgrid$toGlobal(Vec3 local) {
-        return this.toGlobalVector(local, 1.0F);
+        return this.toGlobalVector(local, 1);
     }
 
     @Override
     public Vec3 offgrid$toLocal(Vec3 global) {
-        return this.toLocalVector(global, 1.0F);
+        return this.toLocalVector(global, 1);
     }
 
     @Override

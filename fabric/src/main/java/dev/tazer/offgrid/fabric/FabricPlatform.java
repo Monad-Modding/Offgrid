@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import net.minecraft.network.FriendlyByteBuf;
 *///?}
 
-public final class FabricPlatform implements Platform {
+public class FabricPlatform implements Platform {
 
     public static final AttachmentType<OffgridChunk> CHUNK = AttachmentRegistry.<OffgridChunk>builder().persistent(OffgridChunk.CODEC).initializer(OffgridChunk::new).buildAndRegister(Offgrid.id("chunk"));
 

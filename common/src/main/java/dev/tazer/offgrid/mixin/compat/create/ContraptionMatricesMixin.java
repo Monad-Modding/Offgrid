@@ -56,16 +56,18 @@ public abstract class ContraptionMatricesMixin {
             int packedLight = offgrid$light(level, matrices.getWorld(), local);
             pose.pushPose();
             pose.translate(local.getX(), local.getY(), local.getZ());
+
             for (AssembledCell.AssembledOverlay overlay : entry.getValue().overlays()) {
                 AssembledOverlayRender.render(level, local, host, overlay, carried.offgrid$getCarriedBlockEntities(), pose, buffers, packedLight, partialTicks);
             }
+
             pose.popPose();
         }
     }
 
     @Unique
     private static int offgrid$light(Level level, Matrix4f toWorld, BlockPos local) {
-        Vector4f world = new Vector4f(local.getX() + 0.5F, local.getY() + 0.5F, local.getZ() + 0.5F, 1.0F).mul(toWorld);
+        Vector4f world = new Vector4f(local.getX() + 0.5f, local.getY() + 0.5f, local.getZ() + 0.5f, 1).mul(toWorld);
         return LevelRenderer.getLightColor(level, BlockPos.containing(world.x(), world.y(), world.z()));
     }
 }

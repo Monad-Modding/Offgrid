@@ -21,9 +21,11 @@ public abstract class LevelChunkMixin {
         if (previous == null) return null;
         Level level = ((LevelChunk) (Object) this).getLevel();
         Layers.onReplaced(level, pos, previous, state);
+
         if (level instanceof ServerLevel serverLevel) {
             Overlays.onBlockChanged(serverLevel, pos, previous, state);
         }
+
         return previous;
     }
     *///?} else {
@@ -32,9 +34,11 @@ public abstract class LevelChunkMixin {
         if (previous == null) return null;
         Level level = ((LevelChunk) (Object) this).getLevel();
         Layers.onReplaced(level, pos, previous, state);
+
         if (level instanceof ServerLevel serverLevel) {
             Overlays.onBlockChanged(serverLevel, pos, previous, state);
         }
+
         return previous;
     }
     //?}

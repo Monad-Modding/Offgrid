@@ -3,7 +3,7 @@ package dev.tazer.offgrid.fabric.data;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 
-public final class OffgridDataGenerator implements DataGeneratorEntrypoint {
+public class OffgridDataGenerator implements DataGeneratorEntrypoint {
 
     @Override
     public void onInitializeDataGenerator(FabricDataGenerator generator) {

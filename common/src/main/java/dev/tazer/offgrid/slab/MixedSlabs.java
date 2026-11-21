@@ -1,12 +1,7 @@
 package dev.tazer.offgrid.slab;
 
 import dev.tazer.offgrid.registry.OffgridBlocks;
-import dev.tazer.offgrid.world.BlockEntities;
-import dev.tazer.offgrid.world.MovingBlockData;
-import dev.tazer.offgrid.world.OffgridIndex;
-import dev.tazer.offgrid.world.Players;
-import dev.tazer.offgrid.world.Scope;
-import dev.tazer.offgrid.world.SubLevelSpace;
+import dev.tazer.offgrid.world.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -37,18 +32,14 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
-public final class MixedSlabs {
+public class MixedSlabs {
 
-    private static final double REACH_MARGIN = 1.0;
     private static final VoxelShape[][] HALF_SHAPES = {
-            {Shapes.box(0.0, 0.0, 0.0, 0.5, 1.0, 1.0), Shapes.box(0.5, 0.0, 0.0, 1.0, 1.0, 1.0)},
-            {Shapes.box(0.0, 0.0, 0.0, 1.0, 0.5, 1.0), Shapes.box(0.0, 0.5, 0.0, 1.0, 1.0, 1.0)},
-            {Shapes.box(0.0, 0.0, 0.0, 1.0, 1.0, 0.5), Shapes.box(0.0, 0.0, 0.5, 1.0, 1.0, 1.0)}};
+            {Shapes.box(0, 0, 0, 0.5, 1, 1), Shapes.box(0.5, 0, 0, 1, 1, 1)},
+            {Shapes.box(0, 0, 0, 1, 0.5, 1), Shapes.box(0, 0.5, 0, 1, 1, 1)},
+            {Shapes.box(0, 0, 0, 1, 1, 0.5), Shapes.box(0, 0, 0.5, 1, 1, 1)}};
     private static final List<SlabFamily> FAMILIES = new ArrayList<>(List.of(new HorizontalSlabs()));
     private static final List<UnaryOperator<Block>> PARENTS = new ArrayList<>();
-
-    private MixedSlabs() {
-    }
 
     public static void addFamily(SlabFamily family) {
         FAMILIES.add(family);
@@ -60,9 +51,11 @@ public final class MixedSlabs {
 
     public static Block parentOf(Block block) {
         Block parent = block;
+
         for (UnaryOperator<Block> resolver : PARENTS) {
             parent = resolver.apply(parent);
         }
+
         return parent;
     }
 
@@ -75,6 +68,7 @@ public final class MixedSlabs {
         for (SlabFamily family : FAMILIES) {
             if (family.isSingle(state)) return family;
         }
+
         return null;
     }
 
@@ -95,7 +89,9 @@ public final class MixedSlabs {
         SlabFamily.Halves halves = family == null ? null : family.combine(existing, placing);
         if (halves == null) return false;
         CompoundTag kept = existing.hasBlockEntity() ? BlockEntities.saveAt(level, pos) : null;
+
         if (!level.setBlock(pos, mixedState(halves.axis(), halves.first(), halves.second()), Block.UPDATE_ALL_IMMEDIATE)) return false;
+
         if (level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) {
             boolean placedSecond = halves.first().equals(dry(existing));
             entity.setHalves(halves.first(), halves.second());
@@ -107,10 +103,12 @@ public final class MixedSlabs {
                 level.sendBlockUpdated(pos, level.getBlockState(pos), level.getBlockState(pos), Block.UPDATE_ALL_IMMEDIATE);
             }
         }
+
         AtomicReference<BlockState> placed = Scope.get(Scope.PLACED_HALF);
         if (placed != null) {
             placed.set(placing);
         }
+
         return true;
     }
 
@@ -156,7 +154,10 @@ public final class MixedSlabs {
     @Nullable
     public static Merge merge(BlockState moving, BlockState fixed, Direction direction) {
         SlabFamily family = familyOf(fixed);
-        if (family == null || !family.isSingle(moving) || moving.hasBlockEntity() || fixed.hasBlockEntity()) return null;
+        if (family == null) return null;
+        if (!family.isSingle(moving)) return null;
+        if (moving.hasBlockEntity()) return null;
+        if (fixed.hasBlockEntity()) return null;
         Direction side = family.side(moving);
         if (side != family.side(fixed).getOpposite() || side == direction) return null;
         SlabFamily.Halves halves = family.combine(fixed, moving);
@@ -197,35 +198,43 @@ public final class MixedSlabs {
 
     public static void replaceHalves(Level level, BlockPos pos, MixedSlabBlockEntity entity, BlockState first, BlockState second) {
         BlockState current = level.getBlockState(pos);
-        if (!(current.getBlock() instanceof MixedSlabBlock)) return;
-        BlockState updated = mixedState(current.getValue(MixedSlabBlock.AXIS), first, second);
-        entity.setHalves(first, second);
-        if (updated != current) {
-            level.setBlock(pos, updated, Block.UPDATE_ALL);
+        if (current.getBlock() instanceof MixedSlabBlock) {
+            BlockState updated = mixedState(current.getValue(MixedSlabBlock.AXIS), first, second);
+            entity.setHalves(first, second);
+
+            if (updated != current) {
+                level.setBlock(pos, updated, Block.UPDATE_ALL);
+            }
         }
     }
 
     public static boolean keepsShape(BlockState candidate, BlockState original) {
         if (candidate.hasBlockEntity()) return false;
+
         for (SlabFamily family : FAMILIES) {
             if (family.isSingle(original)) return family.keepsShape(candidate, original);
         }
+
         return false;
     }
 
     public static PushReaction pushReaction(BlockGetter level, BlockPos pos, PushReaction original) {
         MixedSlabBlockEntity entity = entity(level, pos);
         if (entity == null) return original;
-        if (isImmovable(entity.getFirst(), level, pos) || isImmovable(entity.getSecond(), level, pos) || entity.getFirst().hasBlockEntity() || entity.getSecond().hasBlockEntity()) return PushReaction.BLOCK;
+        if (isImmovable(entity.getFirst(), level, pos)) return PushReaction.BLOCK;
+        if (isImmovable(entity.getSecond(), level, pos)) return PushReaction.BLOCK;
+        if (entity.getFirst().hasBlockEntity()) return PushReaction.BLOCK;
+        if (entity.getSecond().hasBlockEntity()) return PushReaction.BLOCK;
         return original;
     }
 
     private static boolean isImmovable(BlockState half, BlockGetter level, BlockPos pos) {
-        return half.getPistonPushReaction() == PushReaction.BLOCK || half.getDestroySpeed(level, pos) == -1.0F;
+        return half.getPistonPushReaction() == PushReaction.BLOCK || half.getDestroySpeed(level, pos) == -1;
     }
 
     public static BlockState dry(BlockState state) {
-        return state.hasProperty(BlockStateProperties.WATERLOGGED) ? state.setValue(BlockStateProperties.WATERLOGGED, false) : state;
+        if (state.hasProperty(BlockStateProperties.WATERLOGGED)) return state.setValue(BlockStateProperties.WATERLOGGED, false);
+        return state;
     }
 
     public static VoxelShape halfShape(Direction.Axis axis, boolean second) {
@@ -235,9 +244,9 @@ public final class MixedSlabs {
     public static boolean targetsSecond(Entity viewer, BlockPos pos, Direction.Axis axis) {
         Level level = viewer.level();
         Vec3 worldEye = viewer.getEyePosition();
-        double reach = viewer instanceof Player player ? Players.reach(player) : 6.0;
+        double reach = viewer instanceof Player player ? Players.reach(player) : 6;
         Vec3 eye = SubLevelSpace.toLocal(level, pos, worldEye);
-        Vec3 end = SubLevelSpace.toLocal(level, pos, worldEye.add(viewer.getViewVector(1.0F).scale(reach + REACH_MARGIN)));
+        Vec3 end = SubLevelSpace.toLocal(level, pos, worldEye.add(viewer.getViewVector(1).scale(reach + 1)));
         Optional<Vec3> hit = new AABB(pos).clip(eye, end);
         Vec3 point = hit.orElse(eye);
         double along = axis.choose(point.x - pos.getX(), point.y - pos.getY(), point.z - pos.getZ());
@@ -258,9 +267,11 @@ public final class MixedSlabs {
         if (turnedState != state) {
             level.setBlock(pos, turnedState, Block.UPDATE_CLIENTS);
         }
+
         if (swap) {
             entity.swapHalfEntities();
         }
+
         entity.setHalves(swap ? second : first, swap ? first : second);
     }
 

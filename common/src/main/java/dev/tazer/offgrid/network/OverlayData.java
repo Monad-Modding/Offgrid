@@ -24,6 +24,7 @@ public record OverlayData(int id, BlockState state, Vec3 offset, @Nullable Compo
         buf.writeDouble(data.offset.y);
         buf.writeDouble(data.offset.z);
         buf.writeBoolean(data.tag != null);
+
         if (data.tag != null) {
             buf.writeNbt(data.tag);
         }

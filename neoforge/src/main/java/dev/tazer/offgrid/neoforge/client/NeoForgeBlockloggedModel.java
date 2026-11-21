@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public final class NeoForgeBlockloggedModel extends BakedModelWrapper<BakedModel> {
+public class NeoForgeBlockloggedModel extends BakedModelWrapper<BakedModel> {
 
     private final List<AABB> open;
 

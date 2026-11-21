@@ -18,7 +18,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import dev.tazer.offgrid.fabric.compat.snowrealmagic.SnowRealMagicCover;
 //?}
 
-public final class OffgridFabric implements ModInitializer {
+public class OffgridFabric implements ModInitializer {
 
     @Override
     public void onInitialize() {

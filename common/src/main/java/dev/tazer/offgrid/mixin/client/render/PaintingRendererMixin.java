@@ -68,6 +68,7 @@ public abstract class PaintingRendererMixin {
             FlatPaintingRender.rotate(poseStack, state.direction, ((FlatPaintingState) state).offgrid$getTop());
             return;
         }
+
         original.call(poseStack, axis, degrees);
     }
     ^///?} else {
@@ -77,6 +78,7 @@ public abstract class PaintingRendererMixin {
             FlatPaintingRender.rotate(poseStack, state.direction, ((FlatPaintingState) state).offgrid$getTop());
             return;
         }
+
         original.call(poseStack, rotation);
     }
     //?}

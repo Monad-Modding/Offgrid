@@ -13,9 +13,11 @@ public record Cell(@Nullable Vec3 offset, List<Overlay> overlays, int light) {
     public static Cell of(@Nullable Vec3 offset, List<Overlay> overlays) {
         if (offset == null && overlays.isEmpty()) return EMPTY;
         int light = 0;
+
         for (Overlay overlay : overlays) {
             light = Math.max(light, overlay.getState().getLightEmission());
         }
+
         return new Cell(offset, List.copyOf(overlays), light);
     }
 
@@ -32,6 +34,7 @@ public record Cell(@Nullable Vec3 offset, List<Overlay> overlays, int light) {
         for (Overlay overlay : this.overlays) {
             if (overlay.getId() == id) return overlay;
         }
+
         return null;
     }
 
@@ -43,16 +46,19 @@ public record Cell(@Nullable Vec3 offset, List<Overlay> overlays, int light) {
         List<Overlay> next = new ArrayList<>(this.overlays.size() + 1);
         next.addAll(this.overlays);
         next.add(overlay);
+
         return of(this.offset, next);
     }
 
     public Cell without(Overlay overlay) {
         List<Overlay> next = new ArrayList<>(this.overlays.size());
+
         for (Overlay existing : this.overlays) {
             if (existing != overlay) {
                 next.add(existing);
             }
         }
+
         return of(this.offset, next);
     }
 

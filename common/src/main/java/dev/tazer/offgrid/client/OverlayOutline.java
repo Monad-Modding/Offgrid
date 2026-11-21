@@ -11,10 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-public final class OverlayOutline {
-
-    private OverlayOutline() {
-    }
+public class OverlayOutline {
 
     @Nullable
     public static VoxelShape shape(BlockGetter level, BlockPos pos) {
@@ -24,7 +21,12 @@ public final class OverlayOutline {
 
     @Nullable
     public static Overlay target(BlockGetter level, BlockPos pos) {
-        if (!(Minecraft.getInstance().hitResult instanceof OverlayHitResult hit) || !hit.getBlockPos().equals(pos) || !(level instanceof Level real)) return null;
-        return Cells.find(real, pos, hit.getOverlayId());
+        if (Minecraft.getInstance().hitResult instanceof OverlayHitResult hit) {
+            if (!hit.getBlockPos().equals(pos)) return null;
+            if (!(level instanceof Level real)) return null;
+            return Cells.find(real, pos, hit.getOverlayId());
+        }
+
+        return null;
     }
 }

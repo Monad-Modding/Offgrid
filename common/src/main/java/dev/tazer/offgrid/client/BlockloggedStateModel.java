@@ -38,8 +38,8 @@ public class BlockloggedStateModel implements BlockStateModel {
     }
 
     protected void cutParts(List<BlockStateModelPart> output, int start) {
-        for (int index = start; index < output.size(); index++) {
-            output.set(index, this.cut(output.get(index)));
+        for (int i = start; i < output.size(); i++) {
+            output.set(i, this.cut(output.get(i)));
         }
     }
 

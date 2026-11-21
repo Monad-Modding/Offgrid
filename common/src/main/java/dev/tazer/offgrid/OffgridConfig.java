@@ -5,7 +5,7 @@ import folk.sisby.kaleido.api.ReflectiveConfig;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.SerializedName;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
 
-public final class OffgridConfig extends ReflectiveConfig {
+public class OffgridConfig extends ReflectiveConfig {
 
     public static final OffgridConfig INSTANCE = createToml(Services.PLATFORM.getConfigDirectory(), Offgrid.MOD_ID, "common", OffgridConfig.class);
 

@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.violetmoon.quark.content.building.block.VerticalSlabBlock;
 
-public final class QuarkVerticalSlabs implements SlabFamily {
+public class QuarkVerticalSlabs implements SlabFamily {
 
     @Override
     public boolean isSingle(BlockState state) {

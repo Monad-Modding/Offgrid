@@ -1,18 +1,8 @@
 package dev.tazer.offgrid.client;
 
-import dev.tazer.offgrid.network.CellData;
-import dev.tazer.offgrid.network.CellSync;
-import dev.tazer.offgrid.network.ChunkSync;
-import dev.tazer.offgrid.network.MovingCell;
-import dev.tazer.offgrid.network.OverlayData;
-import dev.tazer.offgrid.network.OverlayEvent;
+import dev.tazer.offgrid.network.*;
 import dev.tazer.offgrid.platform.Services;
-import dev.tazer.offgrid.world.Cell;
-import dev.tazer.offgrid.world.Cells;
-import dev.tazer.offgrid.world.OffgridChunk;
-import dev.tazer.offgrid.world.OffgridIndex;
-import dev.tazer.offgrid.world.Overlay;
-import dev.tazer.offgrid.world.OverlayContext;
+import dev.tazer.offgrid.world.*;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
@@ -27,12 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public final class ClientCells {
+public class ClientCells {
 
     private static final List<Consumer<BlockPos>> DIRTY_LISTENERS = new ArrayList<>();
-
-    private ClientCells() {
-    }
 
     public static void addDirtyListener(Consumer<BlockPos> listener) {
         DIRTY_LISTENERS.add(listener);
@@ -63,16 +50,19 @@ public final class ClientCells {
         for (CellData cell : packet.cells()) {
             cells.put(cell.pos(), rebuild(level, cell, previous.get(cell.pos())));
         }
+
         for (Long2ObjectMap.Entry<Cell> entry : previous.long2ObjectEntrySet()) {
             if (!cells.containsKey(entry.getLongKey())) {
                 discard(entry.getValue(), null);
             }
         }
+
         data.replaceAll(cells);
         OffgridIndex index = OffgridIndex.of(level);
         if (index != null) {
             index.track(key, data);
         }
+
         for (long pos : cells.keySet()) {
             refresh(level, BlockPos.of(pos), previous.get(pos), cells.get(pos));
         }
@@ -91,6 +81,7 @@ public final class ClientCells {
                 }
             }
         }
+
         Cell rebuilt = rebuild(level, packet.cell(), previous);
         Cells.updateSilently(level, pos, cell -> rebuilt);
     }
@@ -114,6 +105,7 @@ public final class ClientCells {
                 if (existing.getState() != incoming.state()) {
                     existing.setState(incoming.state());
                 }
+
                 existing.loadBlockEntity(level, incoming.tag());
                 overlays.add(existing);
             } else {
@@ -122,10 +114,13 @@ public final class ClientCells {
                 overlays.add(created);
             }
         }
+
         Cell rebuilt = Cell.of(data.offset(), overlays);
+
         if (previous != null) {
             discard(previous, rebuilt);
         }
+
         return rebuilt;
     }
 
@@ -139,6 +134,7 @@ public final class ClientCells {
 
     private static void refresh(ClientLevel level, BlockPos pos, @Nullable Cell before, Cell after) {
         markDirty(level, pos);
+
         if (before == null || before.light() != after.light()) {
             level.getChunkSource().getLightEngine().checkBlock(pos);
         }

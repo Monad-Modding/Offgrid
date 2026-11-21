@@ -7,10 +7,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 
-public final class OffgridEvents {
-
-    private OffgridEvents() {
-    }
+public class OffgridEvents {
 
     public static void onServerLevelTick(ServerLevel level) {
         OverlayTicker.tickServer(level);
@@ -24,17 +21,20 @@ public final class OffgridEvents {
 
     public static void onChunkLoad(Level level, LevelChunk chunk) {
         Cells.track(level, chunk);
+
         if (!(level instanceof ServerLevel serverLevel)) return;
         OffgridIndex index = OffgridIndex.of(level);
         OffgridChunk data = index == null ? null : index.getChunk(chunk.getPos().toLong());
         if (data == null) return;
         OverlayTicker.restore(serverLevel, data);
+
         for (Long2ObjectMap.Entry<Cell> entry : data.getCells().long2ObjectEntrySet()) {
             BlockPos host = BlockPos.of(entry.getLongKey());
             Cell cell = entry.getValue();
             for (Overlay overlay : cell.overlays()) {
                 overlay.materialize(level, host);
             }
+
             if (cell.light() > 0) {
                 level.getChunkSource().getLightEngine().checkBlock(host);
             }

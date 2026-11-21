@@ -39,7 +39,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.registries.RegisterEvent;
 
 @Mod(Offgrid.MOD_ID)
-public final class OffgridForge {
+public class OffgridForge {
 
     private static final String GENERATING_KEY = "offgrid:generating";
 
@@ -48,16 +48,20 @@ public final class OffgridForge {
         ForgeNetwork.register();
         OffgridConfig.get();
         Integrations.init();
+
         if (Integrations.isLoaded(Integrations.QUARK)) {
             MixedSlabs.addFamily(new QuarkVerticalSlabs());
         }
+
         if (Integrations.isLoaded(Integrations.ADDITIONAL_PLACEMENTS)) {
             MixedSlabs.addParent(AdditionalPlacementsSlabs::parentOf);
             MixedSlabs.addFamily(new AdditionalPlacementsSlabs());
         }
+
         if (Integrations.isLoaded(Integrations.SNOW_REAL_MAGIC)) {
             Covers.addCover(new SnowRealMagicCover());
         }
+
         modBus.addListener(OffgridForge::onRegister);
         modBus.addListener(OffgridForge::onCapabilities);
         MinecraftForge.EVENT_BUS.addGenericListener(LevelChunk.class, OffgridForge::onAttachChunk);
@@ -69,6 +73,7 @@ public final class OffgridForge {
         MinecraftForge.EVENT_BUS.addListener(OffgridForge::onLevelUnload);
         MinecraftForge.EVENT_BUS.addListener(OffgridForge::onLogout);
         MinecraftForge.EVENT_BUS.addListener(OffgridForge::onCommands);
+
         if (FMLEnvironment.dist == Dist.CLIENT) {
             OffgridForgeClient.init(modBus);
         }
@@ -92,6 +97,7 @@ public final class OffgridForge {
 
     private static void onLevelTick(TickEvent.LevelTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
+
         if (event.level instanceof ServerLevel level) {
             OffgridEvents.onServerLevelTick(level);
         } else {
@@ -104,6 +110,7 @@ public final class OffgridForge {
             if (level instanceof ServerLevel) {
                 ForgeChunkData.promoteGenerating(level.dimension(), chunk);
             }
+
             OffgridEvents.onChunkLoad(level, chunk);
         }
     }
@@ -117,10 +124,13 @@ public final class OffgridForge {
     }
 
     private static void onChunkRead(ChunkDataEvent.Load event) {
-        if (!(event.getChunk() instanceof ProtoChunk) || event.getChunk() instanceof ImposterProtoChunk || !(event.getLevel() instanceof ServerLevel level)) return;
-        Tag stored = event.getData().get(GENERATING_KEY);
-        if (stored != null) {
-            OffgridChunk.CODEC.parse(NbtOps.INSTANCE, stored).result().ifPresent(pending -> ForgeChunkData.restoreGenerating(level.dimension(), event.getChunk().getPos().toLong(), pending));
+        if (event.getChunk() instanceof ProtoChunk) {
+            if (event.getChunk() instanceof ImposterProtoChunk) return;
+            if (!(event.getLevel() instanceof ServerLevel level)) return;
+            Tag stored = event.getData().get(GENERATING_KEY);
+            if (stored != null) {
+                OffgridChunk.CODEC.parse(NbtOps.INSTANCE, stored).result().ifPresent(pending -> ForgeChunkData.restoreGenerating(level.dimension(), event.getChunk().getPos().toLong(), pending));
+            }
         }
     }
 
@@ -133,6 +143,7 @@ public final class OffgridForge {
     private static void onLevelUnload(LevelEvent.Unload event) {
         if (event.getLevel() instanceof Level level) {
             OffgridEvents.onLevelUnload(level);
+
             if (level instanceof ServerLevel) {
                 ForgeChunkData.forgetGenerating(level.dimension());
             }

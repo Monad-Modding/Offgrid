@@ -74,13 +74,19 @@ public class MixedSlabBlockEntity extends BlockEntity {
     public synchronized BlockEntity getHalfEntity(boolean second) {
         BlockState half = this.getHalf(second);
         BlockEntity existing = second ? this.secondEntity : this.firstEntity;
-        if (half == null || !half.hasBlockEntity() || !(half.getBlock() instanceof EntityBlock entityBlock)) return null;
+
+        if (half == null) return null;
+        if (!half.hasBlockEntity()) return null;
+        if (!(half.getBlock() instanceof EntityBlock entityBlock)) return null;
+
         if (existing != null) {
             if (existing.getLevel() != this.level && this.level != null) {
                 existing.setLevel(this.level);
             }
+
             return existing;
         }
+
         if (this.level == null) return null;
         BlockEntity created = entityBlock.newBlockEntity(this.worldPosition, half);
         if (created == null) return null;
@@ -88,12 +94,15 @@ public class MixedSlabBlockEntity extends BlockEntity {
         if (tag != null) {
             BlockEntities.load(created, tag, this.level.registryAccess());
         }
+
         created.setLevel(this.level);
+
         if (second) {
             this.secondEntity = created;
         } else {
             this.firstEntity = created;
         }
+
         return created;
     }
 
@@ -102,12 +111,14 @@ public class MixedSlabBlockEntity extends BlockEntity {
         BlockEntity live = second ? this.secondEntity : this.firstEntity;
         if (live != null && this.level != null) {
             CompoundTag saved = BlockEntities.save(live, this.level.registryAccess());
+
             if (second) {
                 this.secondEntityTag = saved;
             } else {
                 this.firstEntityTag = saved;
             }
         }
+
         return second ? this.secondEntityTag : this.firstEntityTag;
     }
 
@@ -119,6 +130,7 @@ public class MixedSlabBlockEntity extends BlockEntity {
             this.firstEntityTag = tag;
             this.discardHalfEntity(false);
         }
+
         this.setChanged();
     }
 
@@ -136,6 +148,7 @@ public class MixedSlabBlockEntity extends BlockEntity {
         if (live != null) {
             live.setRemoved();
         }
+
         if (second) {
             this.secondEntity = null;
         } else {
@@ -149,9 +162,12 @@ public class MixedSlabBlockEntity extends BlockEntity {
             if (live != null) {
                 live.setBlockState(next);
             }
+
             return;
         }
+
         this.discardHalfEntity(second);
+
         if (second) {
             this.secondEntityTag = null;
         } else {
@@ -175,6 +191,7 @@ public class MixedSlabBlockEntity extends BlockEntity {
         this.second = second;
         this.onHalvesChanged();
         this.setChanged();
+
         if (this.level != null) {
             this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         }
@@ -184,16 +201,20 @@ public class MixedSlabBlockEntity extends BlockEntity {
     /*@Override
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
+
         if (this.first != null) {
             output.store(FIRST, BlockState.CODEC, this.first);
         }
+
         if (this.second != null) {
             output.store(SECOND, BlockState.CODEC, this.second);
         }
+
         CompoundTag firstTag = this.saveHalfEntity(false);
         if (firstTag != null) {
             output.store(FIRST_ENTITY, CompoundTag.CODEC, firstTag);
         }
+
         CompoundTag secondTag = this.saveHalfEntity(true);
         if (secondTag != null) {
             output.store(SECOND_ENTITY, CompoundTag.CODEC, secondTag);
@@ -240,13 +261,16 @@ public class MixedSlabBlockEntity extends BlockEntity {
         if (this.first != null) {
             tag.put(FIRST, NbtUtils.writeBlockState(this.first));
         }
+
         if (this.second != null) {
             tag.put(SECOND, NbtUtils.writeBlockState(this.second));
         }
+
         CompoundTag firstTag = this.saveHalfEntity(false);
         if (firstTag != null) {
             tag.put(FIRST_ENTITY, firstTag);
         }
+
         CompoundTag secondTag = this.saveHalfEntity(true);
         if (secondTag != null) {
             tag.put(SECOND_ENTITY, secondTag);
@@ -269,11 +293,13 @@ public class MixedSlabBlockEntity extends BlockEntity {
             this.discardHalfEntity(second);
             live = null;
         }
+
         if (second) {
             this.secondEntityTag = tag;
         } else {
             this.firstEntityTag = tag;
         }
+
         if (live != null && tag != null && this.level != null) {
             live.setBlockState(half);
             BlockEntities.load(live, tag, this.level.registryAccess());
@@ -285,6 +311,7 @@ public class MixedSlabBlockEntity extends BlockEntity {
 
     private void refreshClient() {
         this.onHalvesChanged();
+
         if (this.level != null && this.level.isClientSide()) {
             this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_IMMEDIATE);
         }

@@ -21,15 +21,11 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.world.entity.decoration.Painting;
 //?}
 
-import java.util.List;
 import java.util.function.Supplier;
 
-public final class SurfaceMounts {
+public class SurfaceMounts {
 
     public static final String KEY = "offgrid:surface_offset";
-
-    private SurfaceMounts() {
-    }
 
     public static <T> T placing(UseOnContext context, Supplier<T> use) {
         return Scope.with(Scope.PLACING, context, use);
@@ -42,19 +38,25 @@ public final class SurfaceMounts {
 
     public static void mountPlaced(Entity entity) {
         UseOnContext context = Scope.get(Scope.PLACING);
-        if (context == null || !(entity instanceof SurfaceMounted mounted) || !entity.getType().builtInRegistryHolder().is(OffgridTags.SURFACE_ATTACHING)) return;
+        if (context == null) return;
+        if (!(entity instanceof SurfaceMounted mounted)) return;
+        if (!entity.getType().builtInRegistryHolder().is(OffgridTags.SURFACE_ATTACHING)) return;
         if (!Overlays.isZero(mounted.offgrid$getSurfaceOffset())) return;
         mount(entity, context);
     }
 
     public static void mount(Entity entity, UseOnContext context) {
-        if (!(entity instanceof SurfaceMounted mounted) || !OffgridSettings.of(context.getLevel()).surfaceAttaching()) return;
-        if (entity instanceof HangingEntity hanging) {
-            Scope.with(Scope.MOUNTING, Boolean.TRUE, () -> mountHanging(hanging, mounted, context));
-            return;
+        if (entity instanceof SurfaceMounted mounted) {
+            if (!OffgridSettings.of(context.getLevel()).surfaceAttaching()) return;
+
+            if (entity instanceof HangingEntity hanging) {
+                Scope.with(Scope.MOUNTING, Boolean.TRUE, () -> mountHanging(hanging, mounted, context));
+                return;
+            }
+
+            boolean vanillaFits = !(entity instanceof HangingEntity hanging) || hanging.survives();
+            mounted.offgrid$setSurfaceOffset(Surfaces.mountOffsetFor(context.getLevel(), context.getClickedPos(), context.getClickedFace(), context.getClickLocation(), entity.getBoundingBox().getCenter(), vanillaFits));
         }
-        boolean vanillaFits = !(entity instanceof HangingEntity hanging) || hanging.survives();
-        mounted.offgrid$setSurfaceOffset(Surfaces.mountOffsetFor(context.getLevel(), context.getClickedPos(), context.getClickedFace(), context.getClickLocation(), entity.getBoundingBox().getCenter(), vanillaFits));
     }
 
     //? if <1.21 {
@@ -73,20 +75,28 @@ public final class SurfaceMounts {
 
     @Nullable
     public static Boolean survivesOverride(HangingEntity entity) {
-        if (!(entity instanceof SurfaceMounted mounted) || !OffgridSettings.of(entity.level()).surfaceAttaching()) return null;
-        UseOnContext placing = placingContext();
-        if (placing != null && !isMounting() && entity.getPos().equals(placing.getClickedPos().relative(placing.getClickedFace()))) return Scope.with(Scope.MOUNTING, Boolean.TRUE, () -> mountHanging(entity, mounted, placing));
-        return survives(entity);
+        if (entity instanceof SurfaceMounted mounted) {
+            UseOnContext placing = placingContext();
+            if (placing != null && !isMounting() && entity.getPos().equals(placing.getClickedPos().relative(placing.getClickedFace())) && OffgridSettings.of(placing.getLevel()).surfaceAttaching()) return Scope.with(Scope.MOUNTING, Boolean.TRUE, () -> mountHanging(entity, mounted, placing));
+            return Overlays.isZero(mounted.offgrid$getSurfaceOffset()) ? null : survives(entity);
+        }
+
+        return null;
     }
 
     private static boolean mountHanging(HangingEntity hanging, SurfaceMounted mounted, UseOnContext context) {
         mounted.offgrid$setSurfaceOffset(Vec3.ZERO);
-        List<Vec3> offsets = Surfaces.hangingOffsetsFor(context.getLevel(), context.getClickedPos(), context.getClickedFace(), context.getClickLocation(), hanging.getBoundingBox(), hanging instanceof Painting);
-        for (Vec3 offset : offsets) {
+        Surfaces.Hanging mount = Surfaces.hangingOffsetsFor(context.getLevel(), context.getClickedPos(), context.getClickedFace(), context.getClickLocation(), hanging.getBoundingBox(), hanging instanceof Painting);
+        if (mount.flush() && hanging.survives()) return true;
+
+        for (Vec3 offset : mount.offsets()) {
             mounted.offgrid$setSurfaceOffset(offset);
+
             if (survives(hanging)) return true;
         }
+
         mounted.offgrid$setSurfaceOffset(Vec3.ZERO);
+
         return false;
     }
 
@@ -100,14 +110,16 @@ public final class SurfaceMounts {
     }
 
     public static void sendTo(ServerPlayer player, Entity entity) {
-        if (!(entity instanceof SurfaceMounted mounted)) return;
-        Vec3 offset = mounted.offgrid$getSurfaceOffset();
-        if (Overlays.isZero(offset)) return;
-        SurfaceOffsetSync packet = new SurfaceOffsetSync(entity.getId(), offset);
-        if (entity.level() instanceof ServerLevel entityLevel) {
-            ImmersivePortals.sending(entityLevel, player, () -> OffgridNetwork.sendToPlayer(player, OffgridNetwork.SURFACE, packet));
-        } else {
-            OffgridNetwork.sendToPlayer(player, OffgridNetwork.SURFACE, packet);
+        if (entity instanceof SurfaceMounted mounted) {
+            Vec3 offset = mounted.offgrid$getSurfaceOffset();
+            if (Overlays.isZero(offset)) return;
+            SurfaceOffsetSync packet = new SurfaceOffsetSync(entity.getId(), offset);
+
+            if (entity.level() instanceof ServerLevel entityLevel) {
+                ImmersivePortals.sending(entityLevel, player, () -> OffgridNetwork.sendToPlayer(player, OffgridNetwork.SURFACE, packet));
+            } else {
+                OffgridNetwork.sendToPlayer(player, OffgridNetwork.SURFACE, packet);
+            }
         }
     }
 }

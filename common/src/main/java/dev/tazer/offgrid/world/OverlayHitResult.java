@@ -5,7 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-public final class OverlayHitResult extends BlockHitResult {
+public class OverlayHitResult extends BlockHitResult {
 
     private final int overlayId;
 

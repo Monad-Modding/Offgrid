@@ -43,6 +43,7 @@ public abstract class DebugInfoMixin {
         if (minecraft.level != null && this.block instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK) {
             lines.addAll(OffgridClient.debugLines(minecraft.level, hit.getBlockPos()));
         }
+
         return lines;
     }
     //?}

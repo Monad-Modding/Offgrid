@@ -7,11 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.CrossCollisionBlock;
-import net.minecraft.world.level.block.FenceBlock;
-import net.minecraft.world.level.block.StairBlock;
-import net.minecraft.world.level.block.WallBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
@@ -34,16 +30,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
-public final class Blocklogging {
+public class Blocklogging {
 
-    private static final double ABOVE_CELL = 2.0;
     private static final Blocklog INVALID = new Blocklog(Shapes.empty(), Shapes.empty(), Shapes.empty(), List.of());
     private static final Map<Key, Blocklog> CACHE = new ConcurrentHashMap<>();
     private static final List<Predicate<BlockState>> HOSTS = new CopyOnWriteArrayList<>();
     private static final List<Predicate<BlockState>> STEPPED = new CopyOnWriteArrayList<>();
-
-    private Blocklogging() {
-    }
 
     public static void addBlockloggable(Predicate<BlockState> host) {
         HOSTS.add(host);
@@ -55,11 +47,14 @@ public final class Blocklogging {
 
     @Nullable
     public static Direction.Axis runAxis(BlockState state, BlockState host) {
-        if (!(state.getBlock() instanceof FenceBlock) && !(state.getBlock() instanceof WallBlock) || !host.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) return null;
+        if (!(state.getBlock() instanceof FenceBlock) && !(state.getBlock() instanceof WallBlock)) return null;
+        if (!host.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) return null;
         if (host.getBlock() instanceof StairBlock) return host.getValue(BlockStateProperties.HORIZONTAL_FACING).getAxis();
+
         for (Predicate<BlockState> stepped : STEPPED) {
             if (stepped.test(host)) return host.getValue(BlockStateProperties.HORIZONTAL_FACING).getAxis();
         }
+
         return null;
     }
 
@@ -74,9 +69,11 @@ public final class Blocklogging {
     public static boolean isBlockloggable(BlockState state) {
         if (state.isAir()) return false;
         if (state.is(OffgridTags.BLOCKLOGGABLE)) return true;
+
         for (Predicate<BlockState> host : HOSTS) {
             if (host.test(state)) return true;
         }
+
         return false;
     }
 
@@ -99,9 +96,9 @@ public final class Blocklogging {
         if (!canBlocklog(state)) return offset;
         if (!isAxial(state)) return Vec3.ZERO;
         return switch (state.getValue(BlockStateProperties.AXIS)) {
-            case X -> new Vec3(0.0, offset.y, offset.z);
-            case Y -> new Vec3(offset.x, 0.0, offset.z);
-            case Z -> new Vec3(offset.x, offset.y, 0.0);
+            case X -> new Vec3(0, offset.y, offset.z);
+            case Y -> new Vec3(offset.x, 0, offset.z);
+            case Z -> new Vec3(offset.x, offset.y, 0);
         };
     }
 
@@ -113,11 +110,13 @@ public final class Blocklogging {
     @Nullable
     public static Blocklog of(BlockState state, BlockState host, Vec3 offset) {
         if (!allowsOffset(state, offset)) return null;
+
         if (Layers.isLayer(state)) {
             if (!Layers.isHost(host)) return null;
         } else if (!canBlocklog(state) || !isBlockloggable(host)) {
             return null;
         }
+
         Blocklog cut = CACHE.computeIfAbsent(new Key(state, host, offset), key -> Layers.isLayer(key.state()) ? computeLayer(key.state(), key.host()) : compute(key.state(), key.host(), key.offset()));
         return cut == INVALID ? null : cut;
     }
@@ -140,7 +139,8 @@ public final class Blocklogging {
 
     @Nullable
     public static BlockState refit(Level level, BlockPos host, Overlay overlay, BlockState requested) {
-        if (at(level, host, overlay) == null || at(level, host, requested, overlay.getOffset()) != null) return requested;
+        if (at(level, host, overlay) == null) return requested;
+        if (at(level, host, requested, overlay.getOffset()) != null) return requested;
         return fit(requested, hostState(level, host), overlay.getState());
     }
 
@@ -152,61 +152,76 @@ public final class Blocklogging {
         int bestKept = -1;
         int bestPreferred = -1;
         int bestAdded = Integer.MAX_VALUE;
+
         for (int connected = 0; connected < 16; connected++) {
             BlockState candidate = state;
             int kept = 0;
             int matching = 0;
             int added = 0;
             int bit = 0;
+
             for (Direction side : Direction.Plane.HORIZONTAL) {
                 boolean connects = (connected & (1 << bit++)) != 0;
                 boolean requested = Connections.connectsToward(state, side);
                 candidate = connects ? Connections.connect(candidate, side) : Connections.disconnect(candidate, side);
+
                 if (connects == requested) {
                     kept++;
                 } else if (connects) {
                     added++;
                 }
+
                 if (preferred != null && connects == Connections.connectsToward(preferred, side)) {
                     matching++;
                 }
             }
+
             boolean better = kept > bestKept || kept == bestKept && (added < bestAdded || added == bestAdded && matching > bestPreferred);
             if (!better) {
                 continue;
             }
+
             candidate = Connections.settlePost(candidate);
             if (of(candidate, host) == null) {
                 continue;
             }
+
             best = candidate;
             bestKept = kept;
             bestPreferred = matching;
             bestAdded = added;
         }
+
         return best;
     }
 
     public static boolean canArm(BlockState state, BlockState host, Direction side) {
         if (!Connections.isConnector(state)) return false;
         BlockState armed = Connections.connect(state, side);
+
         for (int connected = 0; connected < 16; connected++) {
             BlockState candidate = armed;
             int bit = 0;
+
             for (Direction other : Direction.Plane.HORIZONTAL) {
                 boolean connects = other == side || (connected & (1 << bit)) != 0;
                 bit++;
                 candidate = connects ? Connections.connect(candidate, other) : Connections.disconnect(candidate, other);
             }
+
             if (of(Connections.settlePost(candidate), host) != null) return true;
         }
+
         return false;
     }
 
     private static Blocklog compute(BlockState state, BlockState host, Vec3 offset) {
         VoxelShape hostShape = host.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());
         VoxelShape outline = moved(state.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty()), offset);
-        if (hostShape.isEmpty() || outline.isEmpty() || Block.isShapeFullBlock(hostShape) || !inside(outline.bounds())) return INVALID;
+        if (hostShape.isEmpty()) return INVALID;
+        if (outline.isEmpty()) return INVALID;
+        if (Block.isShapeFullBlock(hostShape)) return INVALID;
+        if (!inside(outline.bounds())) return INVALID;
         VoxelShape cutOutline = Shapes.join(outline, hostShape, BooleanOp.ONLY_FIRST);
         if (cutOutline.isEmpty()) return INVALID;
         Direction.Axis axis = runAxis(state, host);
@@ -214,16 +229,20 @@ public final class Blocklogging {
         VoxelShape collision = moved(state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty()), offset);
         VoxelShape support = moved(state.getBlockSupportShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO), offset);
         List<AABB> open = new ArrayList<>();
+
         for (AABB box : Shapes.join(Shapes.block(), hostShape, BooleanOp.ONLY_FIRST).toAabbs()) {
             open.add(box.move(-offset.x, -offset.y, -offset.z));
         }
+
         return new Blocklog(cutOutline, cut(collision, capped(hostShape)), cut(support, hostShape), List.copyOf(open));
     }
 
     private static Blocklog computeLayer(BlockState state, BlockState host) {
         VoxelShape hostOutline = host.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());
         VoxelShape outline = state.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());
-        if (outline.isEmpty() || Block.isShapeFullBlock(hostOutline) || outline.min(Direction.Axis.Y) > Support.EPSILON) return INVALID;
+        if (outline.isEmpty()) return INVALID;
+        if (Block.isShapeFullBlock(hostOutline)) return INVALID;
+        if (outline.min(Direction.Axis.Y) > Support.EPSILON) return INVALID;
         VoxelShape cutOutline = cut(outline, hostOutline);
         if (cutOutline.isEmpty()) return INVALID;
         VoxelShape collision = state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());
@@ -233,11 +252,13 @@ public final class Blocklogging {
 
     private static VoxelShape capped(VoxelShape host) {
         VoxelShape capped = host;
+
         for (AABB box : host.toAabbs()) {
-            if (box.maxY >= 1.0 - Support.EPSILON) {
-                capped = Shapes.or(capped, Shapes.box(box.minX, 1.0, box.minZ, box.maxX, ABOVE_CELL, box.maxZ));
+            if (box.maxY >= 1 - Support.EPSILON) {
+                capped = Shapes.or(capped, Shapes.box(box.minX, 1, box.minZ, box.maxX, 2, box.maxZ));
             }
         }
+
         return capped;
     }
 
@@ -246,7 +267,7 @@ public final class Blocklogging {
     }
 
     private static boolean inside(AABB bounds) {
-        return bounds.minX >= -Support.EPSILON && bounds.minY >= -Support.EPSILON && bounds.minZ >= -Support.EPSILON && bounds.maxX <= 1.0 + Support.EPSILON && bounds.maxY <= 1.0 + Support.EPSILON && bounds.maxZ <= 1.0 + Support.EPSILON;
+        return bounds.minX >= -Support.EPSILON && bounds.minY >= -Support.EPSILON && bounds.minZ >= -Support.EPSILON && bounds.maxX <= 1 + Support.EPSILON && bounds.maxY <= 1 + Support.EPSILON && bounds.maxZ <= 1 + Support.EPSILON;
     }
 
     private static VoxelShape cut(VoxelShape shape, VoxelShape host) {
@@ -269,6 +290,7 @@ public final class Blocklogging {
         List<AABB> maximal = new ArrayList<>();
         if (xs.length < 2 || ys.length < 2 || zs.length < 2) return maximal;
         Occupancy occupancy = new Occupancy(boxes, xs, ys, zs);
+
         for (int x0 = 0; x0 < xs.length; x0++) {
             for (int x1 = x0 + 1; x1 < xs.length; x1++) {
                 for (int y0 = 0; y0 < ys.length; y0++) {
@@ -284,20 +306,25 @@ public final class Blocklogging {
                 }
             }
         }
+
         return maximal;
     }
 
     private static double[] coordinates(List<AABB> boxes, Direction.Axis axis) {
         TreeSet<Double> values = new TreeSet<>();
+
         for (AABB box : boxes) {
             values.add(box.min(axis));
             values.add(box.max(axis));
         }
+
         double[] sorted = new double[values.size()];
         int index = 0;
+
         for (double value : values) {
             sorted[index++] = value;
         }
+
         return sorted;
     }
 
@@ -310,24 +337,27 @@ public final class Blocklogging {
                     if (lengthwise.test(box, axis)) {
                         continue;
                     }
-                    if (Math.abs(piece.min(axis) - box.min(axis)) > Support.EPSILON || Math.abs(piece.max(axis) - box.max(axis)) > Support.EPSILON) return true;
+
+                    if (Math.abs(piece.min(axis) - box.min(axis)) > Support.EPSILON) return true;
+                    if (Math.abs(piece.max(axis) - box.max(axis)) > Support.EPSILON) return true;
                 }
             }
         }
+
         return false;
     }
 
     private static boolean spans(AABB box, Direction.Axis axis) {
-        return box.min(axis) <= Support.EPSILON || box.max(axis) >= 1.0 - Support.EPSILON;
+        return box.min(axis) <= Support.EPSILON || box.max(axis) >= 1 - Support.EPSILON;
     }
 
     public record Blocklog(VoxelShape outline, VoxelShape collision, VoxelShape support, List<AABB> open) {
     }
 
-    private record Key(BlockState state, BlockState host, Vec3 offset) {
+    public record Key(BlockState state, BlockState host, Vec3 offset) {
     }
 
-    private static final class Occupancy {
+    public static class Occupancy {
 
         private final int sizeY;
         private final int sizeZ;
@@ -343,19 +373,24 @@ public final class Blocklogging {
             this.lastY = ys.length - 1;
             this.lastZ = zs.length - 1;
             this.sums = new int[xs.length * ys.length * zs.length];
+
             for (int x = 1; x < xs.length; x++) {
                 double centreX = (xs[x - 1] + xs[x]) * 0.5;
+
                 for (int y = 1; y < ys.length; y++) {
                     double centreY = (ys[y - 1] + ys[y]) * 0.5;
+
                     for (int z = 1; z < zs.length; z++) {
                         double centreZ = (zs[z - 1] + zs[z]) * 0.5;
                         int filled = 0;
+
                         for (AABB box : boxes) {
                             if (centreX > box.minX && centreX < box.maxX && centreY > box.minY && centreY < box.maxY && centreZ > box.minZ && centreZ < box.maxZ) {
                                 filled = 1;
                                 break;
                             }
                         }
+
                         this.sums[this.index(x, y, z)] = filled + this.sums[this.index(x - 1, y, z)] + this.sums[this.index(x, y - 1, z)] + this.sums[this.index(x, y, z - 1)] - this.sums[this.index(x - 1, y - 1, z)] - this.sums[this.index(x - 1, y, z - 1)] - this.sums[this.index(x, y - 1, z - 1)] + this.sums[this.index(x - 1, y - 1, z - 1)];
                     }
                 }

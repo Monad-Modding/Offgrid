@@ -27,20 +27,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
 
-public final class OverlayTicker {
-
-    private static final double RANDOM_TICK_RANGE = 128.0;
-
-    private OverlayTicker() {
-    }
+public class OverlayTicker {
 
     public static void tickServer(ServerLevel level) {
         OffgridIndex index = OffgridIndex.of(level);
         if (index == null) return;
+
         if (!index.isEmpty()) {
             tickOverlays(level, index, randomTickSpeed(level));
             runScheduledTicks(level, index);
         }
+
         runEvents(level, index);
         runUncovers(level, index);
         runPromotions(level, index);
@@ -65,17 +62,23 @@ public final class OverlayTicker {
 
     public static boolean reroute(LevelTicks<?> ticks, ScheduledTick<?> tick) {
         OverlayContext.Frame frame = OverlayContext.current();
-        if (frame == null || frame.getOverlay() == null || !(frame.getLevel() instanceof ServerLevel level) || !frame.getHost().equals(tick.pos())) return false;
+        if (frame == null) return false;
+        if (frame.getOverlay() == null) return false;
+        if (!(frame.getLevel() instanceof ServerLevel level)) return false;
+        if (!frame.getHost().equals(tick.pos())) return false;
         if (level.getBlockTicks() != ticks && level.getFluidTicks() != ticks) return false;
+
         if (tick.type() instanceof Block) {
             schedule(level, frame.getHost(), frame.getOverlay(), tick.triggerTick());
         }
+
         return true;
     }
 
     public static void restore(ServerLevel level, OffgridChunk data) {
         OffgridIndex index = OffgridIndex.of(level);
         if (index == null) return;
+
         for (OffgridChunk.ScheduledTick tick : data.getTicks()) {
             index.getTasks().getTicks().add(new LevelTasks.PendingTick(tick.trigger(), tick.pos(), tick.id()));
         }
@@ -106,48 +109,61 @@ public final class OverlayTicker {
 
     private static void tickOverlays(Level level, OffgridIndex index, int randomSpeed) {
         List<Job> jobs = new ArrayList<>();
+
         for (Long2ObjectMap.Entry<OffgridChunk> chunkEntry : index.getChunks().long2ObjectEntrySet()) {
             long chunkKey = chunkEntry.getLongKey();
             if (!level.shouldTickBlocksAt(chunkKey)) {
                 continue;
             }
+
             boolean randomChunk = randomSpeed > 0 && level instanceof ServerLevel serverLevel && randomTicksIn(serverLevel, chunkKey);
+
             for (Long2ObjectMap.Entry<Cell> cellEntry : chunkEntry.getValue().getCells().long2ObjectEntrySet()) {
                 Cell cell = cellEntry.getValue();
                 if (!cell.hasOverlays()) {
                     continue;
                 }
+
                 long packed = cellEntry.getLongKey();
                 BlockPos host = null;
                 boolean playerChecked = false;
                 boolean playerNear = false;
+
                 for (Overlay overlay : cell.overlays()) {
                     BlockState state = overlay.getState();
                     boolean random = false;
+
                     if (randomChunk && state.isRandomlyTicking() && level.getRandom().nextInt(4096) < randomSpeed) {
                         if (!playerChecked) {
-                            playerNear = level.hasNearbyAlivePlayer(BlockPos.getX(packed) + 0.5, SectionPos.sectionToBlockCoord(SectionPos.blockToSectionCoord(BlockPos.getY(packed))) + 8.0, BlockPos.getZ(packed) + 0.5, RANDOM_TICK_RANGE);
+                            playerNear = level.hasNearbyAlivePlayer(BlockPos.getX(packed) + 0.5, SectionPos.sectionToBlockCoord(SectionPos.blockToSectionCoord(BlockPos.getY(packed))) + 8.0, BlockPos.getZ(packed) + 0.5, 128.0);
                             playerChecked = true;
                         }
+
                         random = playerNear;
                     }
+
                     BlockEntityTicker<BlockEntity> ticker = null;
+
                     if (state.hasBlockEntity()) {
                         if (host == null) {
                             host = BlockPos.of(packed);
                         }
+
                         overlay.materialize(level, host);
                         ticker = overlay.getTicker(level);
                     }
+
                     if (random || ticker != null) {
                         if (host == null) {
                             host = BlockPos.of(packed);
                         }
+
                         jobs.add(new Job(host, overlay, random, ticker));
                     }
                 }
             }
         }
+
         for (Job job : jobs) {
             run(level, job);
         }
@@ -157,17 +173,19 @@ public final class OverlayTicker {
         Overlay overlay = job.overlay();
         if (!Cells.contains(level, job.host(), overlay)) return;
         OverlayContext.Frame frame = OverlayContext.push(level, job.host(), overlay);
+
         try {
             BlockEntity blockEntity = overlay.getBlockEntity();
             if (job.ticker() != null && blockEntity != null && !blockEntity.isRemoved()) {
                 job.ticker().tick(level, job.host(), overlay.getState(), blockEntity);
             }
+
             if (job.random() && level instanceof ServerLevel serverLevel && Cells.contains(level, job.host(), overlay)) {
                 overlay.getState().randomTick(serverLevel, job.host(), serverLevel.getRandom());
             }
-        } catch (RuntimeException exception) {
+        } catch (RuntimeException e) {
             overlay.stopTicking();
-            Offgrid.LOGGER.error("Overlay {} at {} failed to tick and will no longer tick", overlay.getState(), job.host(), exception);
+            Offgrid.LOGGER.error("Overlay {} at {} failed to tick and will no longer tick", overlay.getState(), job.host(), e);
         } finally {
             OverlayContext.pop(frame);
         }
@@ -177,20 +195,24 @@ public final class OverlayTicker {
         PriorityQueue<LevelTasks.PendingTick> queue = index.getTasks().getTicks();
         long now = level.getGameTime();
         List<LevelTasks.PendingTick> due = new ArrayList<>();
+
         while (!queue.isEmpty() && queue.peek().trigger() <= now) {
             due.add(queue.poll());
         }
+
         for (LevelTasks.PendingTick tick : due) {
             BlockPos host = BlockPos.of(tick.pos());
             OffgridChunk data = index.getChunk(ChunkPos.asLong(host.getX() >> 4, host.getZ() >> 4));
             if (data == null || !data.getTicks().contains(new OffgridChunk.ScheduledTick(tick.pos(), tick.id(), tick.trigger()))) {
                 continue;
             }
+
             data.unschedule(tick.pos(), tick.id());
             Overlay overlay = Cells.find(level, host, tick.id());
             if (overlay == null) {
                 continue;
             }
+
             OverlayContext.run(level, host, overlay, () -> overlay.getState().tick(level, host, level.getRandom()));
         }
     }
@@ -203,6 +225,7 @@ public final class OverlayTicker {
             if (overlay == null || !overlay.getState().is(event.block()) || !level.shouldTickBlocksAt(ChunkPos.asLong(event.host().getX() >> 4, event.host().getZ() >> 4))) {
                 continue;
             }
+
             boolean fired = OverlayContext.call(level, event.host(), overlay, () -> overlay.getState().triggerEvent(level, event.host(), event.type(), event.param()));
             if (fired) {
                 Cells.sendTracking(level, event.host(), OffgridNetwork.EVENT, new OverlayEvent(event.host().asLong(), event.id(), event.type(), event.param()));
@@ -215,6 +238,7 @@ public final class OverlayTicker {
         if (revalidations.isEmpty()) return;
         long[] pending = revalidations.toLongArray();
         revalidations.clear();
+
         for (long packed : pending) {
             BlockPos pos = BlockPos.of(packed);
             if (level.hasChunkAt(pos)) {
@@ -228,6 +252,7 @@ public final class OverlayTicker {
         if (undersides.isEmpty()) return;
         long[] pending = undersides.toLongArray();
         undersides.clear();
+
         for (long packed : pending) {
             BlockPos pos = BlockPos.of(packed);
             if (level.hasChunkAt(pos)) {
@@ -241,6 +266,7 @@ public final class OverlayTicker {
         if (uncovers.isEmpty()) return;
         long[] pending = uncovers.toLongArray();
         uncovers.clear();
+
         for (long packed : pending) {
             BlockPos pos = BlockPos.of(packed);
             if (level.hasChunkAt(pos)) {
@@ -254,6 +280,7 @@ public final class OverlayTicker {
         if (promotions.isEmpty()) return;
         long[] pending = promotions.toLongArray();
         promotions.clear();
+
         for (long packed : pending) {
             BlockPos pos = BlockPos.of(packed);
             if (level.hasChunkAt(pos) && Cells.hasOverlays(level, pos)) {
@@ -262,6 +289,6 @@ public final class OverlayTicker {
         }
     }
 
-    private record Job(BlockPos host, Overlay overlay, boolean random, @Nullable BlockEntityTicker<BlockEntity> ticker) {
+    public record Job(BlockPos host, Overlay overlay, boolean random, @Nullable BlockEntityTicker<BlockEntity> ticker) {
     }
 }

@@ -44,6 +44,7 @@ public abstract class SchematicannonBlockEntityMixin {
     @WrapOperation(method = "tickPrinter", at = @At(value = "INVOKE", target = "Lcom/simibubi/create/content/schematics/SchematicPrinter;handleCurrentTarget", remap = false), remap = false)
     private void offgrid$countPrintedOverlay(SchematicPrinter printer, SchematicPrinter.BlockTargetHandler blocks, SchematicPrinter.EntityTargetHandler entities, Operation<Void> original) {
         original.call(printer, blocks, entities);
+
         if (((OverlayPrinter) (Object) printer).offgrid$takePrintedOverlay()) {
             this.blocksPlaced++;
             this.statusMsg = "placing";
@@ -52,7 +53,8 @@ public abstract class SchematicannonBlockEntityMixin {
 
     @Inject(method = "launchBlock", at = @At("TAIL"), remap = false)
     private void offgrid$carryOffset(CallbackInfo ci) {
-        if (this.flyingBlocks.isEmpty() || !(this.flyingBlocks.get(this.flyingBlocks.size() - 1) instanceof OffsetLaunch launch)) return;
+        if (this.flyingBlocks.isEmpty()) return;
+        if (!(this.flyingBlocks.get(this.flyingBlocks.size() - 1) instanceof OffsetLaunch launch)) return;
         BlockPos target = this.flyingBlocks.get(this.flyingBlocks.size() - 1).target;
         launch.offgrid$setOffset(((OverlayPrinter) (Object) this.printer).offgrid$offsetAt(target));
     }

@@ -27,15 +27,19 @@ public record PrintedOverlay(BlockPos pos, BlockState state, Vec3 offset, @Nulla
         OffgridIndex index = OffgridIndex.of(schematic);
         if (index == null || index.isEmpty()) return List.of();
         List<PrintedOverlay> overlays = new ArrayList<>();
+
         for (Long2ObjectMap.Entry<OffgridChunk> chunk : index.getChunks().long2ObjectEntrySet()) {
             for (Long2ObjectMap.Entry<Cell> cell : chunk.getValue().getCells().long2ObjectEntrySet()) {
                 BlockPos pos = BlockPos.of(cell.getLongKey());
+
                 for (Overlay overlay : cell.getValue().overlays()) {
                     overlays.add(new PrintedOverlay(pos, overlay.getState(), overlay.getOffset(), overlay.getBlockEntityTag()));
                 }
             }
         }
+
         overlays.sort(Comparator.comparingInt((PrintedOverlay overlay) -> overlay.pos().getY()).thenComparingInt(overlay -> overlay.pos().getZ()).thenComparingInt(overlay -> overlay.pos().getX()));
+
         return List.copyOf(overlays);
     }
 
@@ -48,7 +52,9 @@ public record PrintedOverlay(BlockPos pos, BlockState state, Vec3 offset, @Nulla
     public static void printOffset(ServerLevel level, BlockPos pos, BlockState printed, Vec3 offset) {
         if (!level.isLoaded(pos)) return;
         BlockState placed = level.getBlockState(pos);
-        if (!placed.is(printed.getBlock()) || !Overlays.canOffset(placed) || !Overlays.offsetHolds(level, pos, placed, offset)) return;
+        if (!placed.is(printed.getBlock())) return;
+        if (!Overlays.canOffset(placed)) return;
+        if (!Overlays.offsetHolds(level, pos, placed, offset)) return;
         Cells.update(level, pos, cell -> cell.withOffset(offset));
     }
 
@@ -56,6 +62,7 @@ public record PrintedOverlay(BlockPos pos, BlockState state, Vec3 offset, @Nulla
         for (Overlay existing : Cells.overlays(level, this.pos)) {
             if (existing.isSamePlacement(this.state, this.offset)) return true;
         }
+
         return false;
     }
 

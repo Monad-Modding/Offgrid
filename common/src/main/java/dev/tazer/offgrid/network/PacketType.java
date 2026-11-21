@@ -15,7 +15,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public final class PacketType<T> {
+public class PacketType<T> {
 
     private final ResourceLocation id;
     private final Class<T> type;

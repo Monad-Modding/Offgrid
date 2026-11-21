@@ -6,7 +6,7 @@ import dev.tazer.offgrid.platform.Services;
 import dev.tazer.offgrid.slab.MixedSlabs;
 import dev.tazer.offgrid.world.Blocklogging;
 
-public final class Integrations {
+public class Integrations {
 
     public static final String CLUTTER_NO_MORE = "clutternomore";
     public static final String SABLE = "sable";
@@ -17,9 +17,6 @@ public final class Integrations {
     public static final String OCULUS = "oculus";
     public static final String MOONLIGHT = "moonlight";
     public static final String POLYTONE = "polytone";
-
-    private Integrations() {
-    }
 
     public static boolean isLoaded(String id) {
         return Services.PLATFORM.isModLoaded(id);

@@ -19,6 +19,8 @@ public abstract class RedStoneWireBlockMixin {
     private RedstoneSide offgrid$connectToOverlays(RedstoneSide original, BlockGetter level, BlockPos pos, Direction face) {
         if (original != RedstoneSide.NONE || !(level instanceof Level real)) return original;
         BlockPos neighbour = pos.relative(face);
-        return Signals.hasSource(real, neighbour) || Offsets.hostsRelocatedSource(real, neighbour) ? RedstoneSide.SIDE : original;
+        if (Signals.hasSource(real, neighbour)) return RedstoneSide.SIDE;
+        if (Offsets.hostsRelocatedSource(real, neighbour)) return RedstoneSide.SIDE;
+        return original;
     }
 }

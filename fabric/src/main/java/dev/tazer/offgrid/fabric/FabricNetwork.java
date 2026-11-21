@@ -7,10 +7,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 //?}
 
-public final class FabricNetwork {
-
-    private FabricNetwork() {
-    }
+public class FabricNetwork {
 
     public static void register() {
         for (PacketType<?> type : OffgridNetwork.all()) {

@@ -25,15 +25,13 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class NeoForgeOverlayGeometry {
-
-    private NeoForgeOverlayGeometry() {
-    }
+public class NeoForgeOverlayGeometry {
 
     public static List<Prepared> prepare(Level level, List<OverlayGeometry.Entry> entries) {
         if (entries.isEmpty()) return List.of();
         BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
         List<Prepared> prepared = new ArrayList<>(entries.size());
+
         for (OverlayGeometry.Entry entry : entries) {
             BlockState state = entry.state();
             BakedModel original = dispatcher.getBlockModel(state);
@@ -43,6 +41,7 @@ public final class NeoForgeOverlayGeometry {
             ModelData data = OverlayContext.call(level, entry.host(), entry.overlay(), () -> Connections.viewing(state, entry.host(), () -> model.getModelData(level, entry.host(), state, initial)));
             prepared.add(new Prepared(entry, model, data));
         }
+
         return prepared;
     }
 

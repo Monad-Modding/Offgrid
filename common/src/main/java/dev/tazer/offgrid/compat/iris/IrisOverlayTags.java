@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class IrisOverlayTags extends OverlayShaderTags {
+public class IrisOverlayTags extends OverlayShaderTags {
 
     private static final ThreadLocal<Object> BUFFERS = new ThreadLocal<>();
 
@@ -40,6 +40,7 @@ public final class IrisOverlayTags extends OverlayShaderTags {
     public void enter(OverlayGeometry.Entry entry) {
         Object2IntMap<BlockState> ids = WorldRenderingSettings.INSTANCE.getBlockStateIds();
         this.active = ids != null;
+
         if (!this.active) return;
         BlockPos host = entry.host();
         this.blockId = ids.getOrDefault(entry.state(), -1);
@@ -47,6 +48,7 @@ public final class IrisOverlayTags extends OverlayShaderTags {
         this.localX = host.getX() & 15;
         this.localY = host.getY() & 15;
         this.localZ = host.getZ() & 15;
+
         if (BUFFERS.get() instanceof BlockSensitiveBufferBuilder context) {
             this.sharedContext = context;
             context.beginBlock(this.blockId, (byte) 0, this.emission, this.localX, this.localY, this.localZ);
@@ -55,13 +57,21 @@ public final class IrisOverlayTags extends OverlayShaderTags {
 
     @Override
     public VertexConsumer tag(VertexConsumer consumer) {
-        if (!this.active || this.sharedContext != null || this.touched.contains(consumer) || !(consumer instanceof ChunkVertexConsumerAccessor accessor)) return consumer;
-        this.touched.add(consumer);
-        if (accessor.offgrid$getModelBuilder() instanceof BlockSensitiveBufferBuilder context) {
-            context.beginBlock(this.blockId, (byte) 0, this.emission, this.localX, this.localY, this.localZ);
-        } else {
-            Vertices.tag(accessor.offgrid$getVertices(), this.emission, this.blockId, this.localX, this.localY, this.localZ);
+        if (!this.active) return consumer;
+        if (this.sharedContext != null) return consumer;
+        if (this.touched.contains(consumer)) return consumer;
+        if (consumer instanceof ChunkVertexConsumerAccessor accessor) {
+            this.touched.add(consumer);
+
+            if (accessor.offgrid$getModelBuilder() instanceof BlockSensitiveBufferBuilder context) {
+                context.beginBlock(this.blockId, (byte) 0, this.emission, this.localX, this.localY, this.localZ);
+            } else {
+                Vertices.tag(accessor.offgrid$getVertices(), this.emission, this.blockId, this.localX, this.localY, this.localZ);
+            }
+
+            return consumer;
         }
+
         return consumer;
     }
 
@@ -71,6 +81,7 @@ public final class IrisOverlayTags extends OverlayShaderTags {
             this.sharedContext.endBlock();
             this.sharedContext = null;
         }
+
         for (VertexConsumer consumer : this.touched) {
             ChunkVertexConsumerAccessor accessor = (ChunkVertexConsumerAccessor) consumer;
             if (accessor.offgrid$getModelBuilder() instanceof BlockSensitiveBufferBuilder context) {
@@ -79,11 +90,12 @@ public final class IrisOverlayTags extends OverlayShaderTags {
                 Vertices.tag(accessor.offgrid$getVertices(), (byte) 0, 0, 0, 0, 0);
             }
         }
+
         this.touched.clear();
         this.active = false;
     }
 
-    private static final class Vertices {
+    public static class Vertices {
 
         private static void tag(ChunkVertexEncoder.Vertex[] vertices, byte emission, int blockId, int x, int y, int z) {
             for (ChunkVertexEncoder.Vertex vertex : vertices) {

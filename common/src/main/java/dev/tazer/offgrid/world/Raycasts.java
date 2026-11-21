@@ -11,12 +11,9 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-public final class Raycasts {
+public class Raycasts {
 
     private static final double EPSILON = 1.0E-6;
-
-    private Raycasts() {
-    }
 
     @Nullable
     public static BlockHitResult clipBlock(BlockGetter getter, Vec3 from, Vec3 to, BlockPos pos, VoxelShape shape, BlockState state) {
@@ -34,14 +31,17 @@ public final class Raycasts {
         BlockHitResult best = original;
         double nearest = original == null ? Double.MAX_VALUE : original.getLocation().distanceToSqr(from);
         best = test(level, index, pos, pos, from, to, best, nearest);
+
         for (Direction direction : Direction.values()) {
             BlockPos neighbour = pos.relative(direction);
             if (index.getCell(neighbour) == null) {
                 continue;
             }
+
             double distance = best == null ? Double.MAX_VALUE : best.getLocation().distanceToSqr(from);
             best = test(level, index, pos, neighbour, from, to, best, distance);
         }
+
         return best;
     }
 
@@ -51,6 +51,7 @@ public final class Raycasts {
         if (cell == null) return best;
         BlockHitResult result = best;
         double closest = nearest;
+
         if (cell.offset() != null && level.hasChunkAt(pos)) {
             BlockState state = Cells.realState(level, pos);
             VoxelShape shape = state.getShape(level, pos, CollisionContext.empty());
@@ -63,21 +64,25 @@ public final class Raycasts {
                 }
             }
         }
+
         for (Overlay overlay : cell.overlays()) {
             VoxelShape shape = OverlayShapes.of(level, pos, overlay);
             if (shape.isEmpty()) {
                 continue;
             }
+
             BlockHitResult hit = shape.clip(from, to, pos);
             if (hit == null || !reachedFrom(visiting, pos, hit.getLocation(), from, to)) {
                 continue;
             }
+
             double distance = hit.getLocation().distanceToSqr(from);
             if (distance < closest) {
                 closest = distance;
                 result = new OverlayHitResult(hit.getLocation(), hit.getDirection(), pos, overlay.getId());
             }
         }
+
         return result;
     }
 

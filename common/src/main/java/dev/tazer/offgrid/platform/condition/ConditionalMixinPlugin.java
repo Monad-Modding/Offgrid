@@ -48,6 +48,7 @@ public abstract class ConditionalMixinPlugin implements IMixinConfigPlugin {
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (this.mixinPackage != null && !mixinClassName.startsWith(this.mixinPackage)) return true;
+
         try {
             ClassNode mixin = MixinService.getService().getBytecodeProvider().getClassNode(mixinClassName);
             return this.evaluate(mixin, mixinClassName);
@@ -59,25 +60,31 @@ public abstract class ConditionalMixinPlugin implements IMixinConfigPlugin {
 
     private boolean evaluate(ClassNode mixin, String mixinClassName) {
         if (mixin.visibleAnnotations == null) return true;
+
         for (AnnotationNode annotation : mixin.visibleAnnotations) {
             if (annotation.desc.equals(DEV_ENVIRONMENT) && !this.isDevelopmentEnvironment()) {
                 LOGGER.debug("Skipping dev-only mixin: {}", mixinClassName);
                 return false;
             }
+
             if (annotation.desc.equals(MOD_PRESENT) && !this.isPresent(annotation, mixinClassName)) return false;
+
             if (annotation.desc.equals(MOD_PRESENT_LIST)) {
                 for (AnnotationNode inner : value(annotation, List.<AnnotationNode>of())) {
                     if (!this.isPresent(inner, mixinClassName)) return false;
                 }
             }
+
             if (annotation.desc.equals(ANY_MOD_PRESENT) && !this.isAnyPresent(annotation, mixinClassName)) return false;
             if (annotation.desc.equals(MOD_ABSENT) && !this.isAbsent(annotation, mixinClassName)) return false;
+
             if (annotation.desc.equals(MOD_ABSENT_LIST)) {
                 for (AnnotationNode inner : value(annotation, List.<AnnotationNode>of())) {
                     if (!this.isAbsent(inner, mixinClassName)) return false;
                 }
             }
         }
+
         return true;
     }
 
@@ -92,7 +99,9 @@ public abstract class ConditionalMixinPlugin implements IMixinConfigPlugin {
         for (String modId : candidates) {
             if (this.modIds.contains(modId)) return true;
         }
+
         LOGGER.debug("Skipping mixin {}; none of {} are present", mixinClassName, candidates);
+
         return false;
     }
 
@@ -107,15 +116,18 @@ public abstract class ConditionalMixinPlugin implements IMixinConfigPlugin {
         if (modId.isEmpty()) {
             throw new IllegalArgumentException("modid must not be empty");
         }
+
         return this.modIds.contains(modId);
     }
 
     @SuppressWarnings("unchecked")
     private static <T> T value(AnnotationNode annotation, T fallback) {
         if (annotation.values == null) return fallback;
+
         for (int i = 0; i < annotation.values.size(); i += 2) {
             if ("value".equals(annotation.values.get(i))) return (T) annotation.values.get(i + 1);
         }
+
         return fallback;
     }
 

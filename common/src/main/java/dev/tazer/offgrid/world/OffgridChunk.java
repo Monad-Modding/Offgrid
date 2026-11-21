@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 
-public final class OffgridChunk {
+public class OffgridChunk {
 
     public static final MapCodec<OffgridChunk> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             lenient(StoredCell.CODEC, "cell").optionalFieldOf("cells", List.of()).forGetter(OffgridChunk::storedCells),
@@ -42,18 +42,23 @@ public final class OffgridChunk {
     private OffgridChunk(List<StoredCell> stored, List<ScheduledTick> ticks, int nextId) {
         Long2ObjectOpenHashMap<Cell> loaded = new Long2ObjectOpenHashMap<>(stored.size());
         int highest = nextId;
+
         for (StoredCell cell : stored) {
             Cell restored = Cell.of(cell.offset().orElse(null), cell.overlays());
             if (restored.isEmpty()) {
                 continue;
             }
+
             loaded.put(cell.pos(), restored);
+
             for (Overlay overlay : restored.overlays()) {
                 highest = Math.max(highest, overlay.getId() + 1);
             }
         }
+
         this.cells = Long2ObjectMaps.unmodifiable(loaded);
         this.nextId = highest;
+
         for (ScheduledTick tick : ticks) {
             Cell cell = loaded.get(tick.pos());
             if (cell != null && cell.find(tick.id()) != null) {
@@ -68,26 +73,32 @@ public final class OffgridChunk {
 
     private static <T> List<T> decodeEach(Codec<T> codec, String kind, List<Dynamic<?>> entries) {
         List<T> decoded = new ArrayList<>(entries.size());
+
         for (Dynamic<?> entry : entries) {
             codec.parse(entry).resultOrPartial(error -> Offgrid.LOGGER.error("Dropping unreadable {}: {}", kind, error)).ifPresent(decoded::add);
         }
+
         return decoded;
     }
 
     private static <T> List<Dynamic<?>> encodeEach(Codec<T> codec, String kind, List<T> values) {
         List<Dynamic<?>> encoded = new ArrayList<>(values.size());
+
         for (T value : values) {
             codec.encodeStart(NbtOps.INSTANCE, value).resultOrPartial(error -> Offgrid.LOGGER.error("Could not save {}: {}", kind, error)).ifPresent(tag -> encoded.add(new Dynamic<>(NbtOps.INSTANCE, tag)));
         }
+
         return encoded;
     }
 
     private List<StoredCell> storedCells() {
         List<StoredCell> stored = new ArrayList<>(this.cells.size());
+
         for (Long2ObjectMap.Entry<Cell> entry : this.cells.long2ObjectEntrySet()) {
             Cell cell = entry.getValue();
             stored.add(new StoredCell(entry.getLongKey(), Optional.ofNullable(cell.offset()), cell.overlays()));
         }
+
         return stored;
     }
 
@@ -111,12 +122,15 @@ public final class OffgridChunk {
         SectionIndex index = this.sections;
         if (index == null || index.cells() != current) {
             IntOpenHashSet ys = new IntOpenHashSet();
+
             for (long key : current.keySet()) {
                 ys.add(SectionPos.blockToSectionCoord(BlockPos.getY(key)));
             }
+
             index = new SectionIndex(current, ys);
             this.sections = index;
         }
+
         return index.ys().contains(sectionY);
     }
 
@@ -126,6 +140,7 @@ public final class OffgridChunk {
 
     public void put(long pos, Cell cell) {
         Long2ObjectOpenHashMap<Cell> next = new Long2ObjectOpenHashMap<>(this.cells);
+
         if (cell.isEmpty()) {
             next.remove(pos);
             this.ticks.removeIf(tick -> tick.pos() == pos);
@@ -133,16 +148,19 @@ public final class OffgridChunk {
             next.put(pos, cell);
             this.ticks.removeIf(tick -> tick.pos() == pos && cell.find(tick.id()) == null);
         }
+
         this.cells = Long2ObjectMaps.unmodifiable(next);
     }
 
     public void replaceAll(Long2ObjectMap<Cell> cells) {
         Long2ObjectOpenHashMap<Cell> next = new Long2ObjectOpenHashMap<>(cells.size());
+
         for (Long2ObjectMap.Entry<Cell> entry : cells.long2ObjectEntrySet()) {
             if (!entry.getValue().isEmpty()) {
                 next.put(entry.getLongKey(), entry.getValue());
             }
         }
+
         this.cells = Long2ObjectMaps.unmodifiable(next);
         this.ticks.clear();
     }
@@ -159,6 +177,7 @@ public final class OffgridChunk {
         for (ScheduledTick tick : this.ticks) {
             if (tick.pos() == pos && tick.id() == id) return OptionalLong.of(tick.trigger());
         }
+
         return OptionalLong.empty();
     }
 
@@ -171,7 +190,9 @@ public final class OffgridChunk {
                 return true;
             }
         }
+
         this.ticks.add(new ScheduledTick(pos, id, trigger));
+
         return true;
     }
 
@@ -179,7 +200,7 @@ public final class OffgridChunk {
         this.ticks.removeIf(tick -> tick.pos() == pos && tick.id() == id);
     }
 
-    private record StoredCell(long pos, Optional<Vec3> offset, List<Overlay> overlays) {
+    public record StoredCell(long pos, Optional<Vec3> offset, List<Overlay> overlays) {
 
         private static final Codec<StoredCell> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.LONG.fieldOf("pos").forGetter(StoredCell::pos),
@@ -197,6 +218,6 @@ public final class OffgridChunk {
         ).apply(instance, ScheduledTick::new));
     }
 
-    private record SectionIndex(Long2ObjectMap<Cell> cells, IntSet ys) {
+    public record SectionIndex(Long2ObjectMap<Cell> cells, IntSet ys) {
     }
 }

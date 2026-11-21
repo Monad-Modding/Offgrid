@@ -39,6 +39,7 @@ public abstract class MultiPlayerGameModeMixin {
         if (this.minecraft.level != null && this.minecraft.player != null) {
             OverlayFocus.clear(this.minecraft.level, this.minecraft.player);
         }
+
         if (this.minecraft.hitResult instanceof OverlayHitResult hit && hit.getBlockPos().equals(pos)) {
             cir.setReturnValue(OverlayBreaking.start(hit));
         } else {

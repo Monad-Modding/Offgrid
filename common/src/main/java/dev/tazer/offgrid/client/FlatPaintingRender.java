@@ -16,25 +16,21 @@ import net.minecraft.client.resources.PaintingTextureManager;
 import net.minecraft.world.entity.decoration.Painting;
 //?}
 
-public final class FlatPaintingRender {
+public class FlatPaintingRender {
 
     //? if <26 {
     //? if >=1.21 {
-    private static final float UNIT = 1.0F;
+    private static final float UNIT = 1;
     //?} else {
-    /*private static final float UNIT = 16.0F;
+    /*private static final float UNIT = 16;
     *///?}
-    private static final float DEPTH = 0.03125F * UNIT;
-    private static final float EDGE = 1.0F / 16.0F;
+    private static final float DEPTH = 0.03125f * UNIT;
     //?}
-
-    private FlatPaintingRender() {
-    }
 
     public static void rotate(PoseStack poseStack, Direction face, Direction top) {
         boolean floor = face == Direction.UP;
-        float yaw = 180.0F - (floor ? top.getOpposite() : top).toYRot();
-        float pitch = floor ? 90.0F : -90.0F;
+        float yaw = 180 - (floor ? top.getOpposite() : top).toYRot();
+        float pitch = floor ? 90 : -90;
         //? if >=26.3 {
         /*poseStack.rotateDegrees(Axis.YP, yaw);
         poseStack.rotateDegrees(Axis.XP, pitch);
@@ -55,17 +51,18 @@ public final class FlatPaintingRender {
         poseStack.pushPose();
         rotate(poseStack, painting.getDirection(), FlatPaintings.top(painting));
         //? if <1.21 {
-        /*poseStack.scale(0.0625F, 0.0625F, 0.0625F);
+        /*poseStack.scale(0.0625f, 0.0625f, 0.0625f);
         *///?}
         PoseStack.Pose pose = poseStack.last();
-        float left = -width * UNIT / 2.0F;
-        float bottom = -height * UNIT / 2.0F;
+        float left = -width * UNIT / 2;
+        float bottom = -height * UNIT / 2;
         float backU0 = back.getU0();
         float backU1 = back.getU1();
         float backV0 = back.getV0();
         float backV1 = back.getV1();
-        float edgeV = v(back, EDGE);
-        float edgeU = u(back, EDGE);
+        float edgeV = v(back, (1f / 16f));
+        float edgeU = u(back, (1f / 16f));
+
         for (int column = 0; column < width; column++) {
             for (int row = 0; row < height; row++) {
                 float x1 = left + (column + 1) * UNIT;
@@ -103,6 +100,7 @@ public final class FlatPaintingRender {
                 vertex(pose, consumer, x0, y1, backU0, backV0, DEPTH, 1, 0, 0, light);
             }
         }
+
         poseStack.popPose();
     }
 

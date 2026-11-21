@@ -46,16 +46,20 @@ public abstract class ContraptionHandlerClientMixin {
             carrier.offgrid$setLastHit(hit);
             return hit;
         }
+
         Contraption contraption = (Contraption) (Object) carried;
         Map<BlockPos, BlockState> hosts = new HashMap<>();
+
         for (BlockPos local : carried.offgrid$getCarriedCells().keySet()) {
             StructureTemplate.StructureBlockInfo info = contraption.getBlocks().get(local);
             if (info != null) {
                 hosts.put(local, info.state());
             }
         }
+
         BlockHitResult best = CarriedOverlays.clip(carried, hosts, carrier.offgrid$toLocal(origin), carrier.offgrid$toLocal(target), hit);
         carrier.offgrid$setLastHit(best);
+
         return best;
     }
 
@@ -67,6 +71,7 @@ public abstract class ContraptionHandlerClientMixin {
         if (carried != null && CarriedOverlays.isUsable(carried.offgrid$getCarriedCells().get(pos).overlays().get(hit.getIndex()).state())) {
             OffgridNetwork.sendToServer(OffgridNetwork.USE_CARRIED, new UseCarriedOverlay(((Entity) (Object) entity).getId(), pos.asLong(), hit.getIndex()));
         }
+
         return false;
     }
 

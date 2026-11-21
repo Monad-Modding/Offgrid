@@ -39,6 +39,7 @@ public abstract class MultiPlayerGameModeMixin {
             BlockState half = MixedSlabs.half(this.minecraft.level, pos, MixedSlabs.targetsSecond(this.minecraft.player, pos, state.getValue(MixedSlabBlock.AXIS)));
             if (half != null) return original.call(half);
         }
+
         return original.call(state);
     }
     //?}

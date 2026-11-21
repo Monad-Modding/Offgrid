@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-public final class Scope {
+public class Scope {
 
     public static final Slot<OverlayContext.Frame> FRAME = new Slot<>(null);
     public static final Slot<Transaction> TRANSACTION = new Slot<>(null);
@@ -64,6 +64,7 @@ public final class Scope {
         T previous = (T) scope.values[slot.index];
         scope.values[slot.index] = value;
         slot.bound.incrementAndGet();
+
         return previous;
     }
 
@@ -74,6 +75,7 @@ public final class Scope {
 
     public static <T, R> R with(Slot<T> slot, T value, Supplier<R> action) {
         T previous = bind(slot, value);
+
         try {
             return action.get();
         } finally {
@@ -83,6 +85,7 @@ public final class Scope {
 
     public static <T> void run(Slot<T> slot, T value, Runnable action) {
         T previous = bind(slot, value);
+
         try {
             action.run();
         } finally {
@@ -110,7 +113,7 @@ public final class Scope {
         this.settling = settling;
     }
 
-    public static final class Slot<T> {
+    public static class Slot<T> {
 
         private static final List<Slot<?>> ALL = new ArrayList<>();
 

@@ -42,10 +42,12 @@ public abstract class HighlightHandlerMixin {
                 cir.setReturnValue(null);
                 return;
             }
+
             HighlightRenderState highlight = Scope.with(Scope.HIGHLIGHTING, Boolean.TRUE, () -> OverlayContext.call(level, pos, overlay, () -> HighlightHandler.extractState(level, pos, overlay.getState())));
             cir.setReturnValue(highlight == null ? null : offgrid$shifted(highlight, overlay.getOffset()));
             return;
         }
+
         Vec3 offset = Offsets.of(level, pos, state);
         if (offset == null) return;
         HighlightRenderState highlight = Scope.with(Scope.HIGHLIGHTING, Boolean.TRUE, () -> HighlightHandler.extractState(level, pos, state));
@@ -65,10 +67,12 @@ public abstract class HighlightHandlerMixin {
         Level level = cameraEntity.level();
         Overlay overlay = OverlayOutline.target(level, pos);
         if (overlay == null) return;
+
         if (Blocklogging.at(level, pos, overlay) != null) {
             cir.setReturnValue(false);
             return;
         }
+
         Vec3 offset = overlay.getOffset();
         stack.pushPose();
         stack.translate(offset.x, offset.y, offset.z);

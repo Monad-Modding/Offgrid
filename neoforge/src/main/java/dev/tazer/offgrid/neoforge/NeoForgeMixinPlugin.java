@@ -7,7 +7,7 @@ import net.neoforged.fml.loading.moddiscovery.ModInfo;
 import java.util.HashSet;
 import java.util.Set;
 
-public final class NeoForgeMixinPlugin extends ConditionalMixinPlugin {
+public class NeoForgeMixinPlugin extends ConditionalMixinPlugin {
 
     @Override
     protected Set<String> findModIds() {
@@ -19,6 +19,7 @@ public final class NeoForgeMixinPlugin extends ConditionalMixinPlugin {
         //?}
             ids.add(mod.getModId());
         }
+
         return ids;
     }
 

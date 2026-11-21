@@ -59,6 +59,7 @@ public abstract class ContraptionColliderMixin {
         if (carried.isEmpty()) return shapes;
         List<VoxelShape> combined = new ArrayList<>(shapes);
         combined.addAll(carried);
+
         return combined;
     }
     *///?}
@@ -66,21 +67,27 @@ public abstract class ContraptionColliderMixin {
     @Inject(method = "isCollidingWithWorld", at = @At("RETURN"), cancellable = true, remap = false)
     private static void offgrid$collideWithOverlays(Level level, TranslatingContraption contraption, BlockPos anchor, Direction movement, CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValueZ()) return;
+
         for (BlockPos local : contraption.getOrCreateColliders(level, movement)) {
             BlockPos target = local.offset(anchor);
             if (!Cells.hasOverlays(level, target)) {
                 continue;
             }
+
             StructureTemplate.StructureBlockInfo info = contraption.getBlocks().get(local);
             MovementBehaviour behaviour = info == null ? null : MovementBehaviour.REGISTRY.get(info.state());
+
             for (Overlay overlay : Cells.overlays(level, target)) {
                 if (OverlayShapes.collision(level, target, overlay).isEmpty()) {
                     continue;
                 }
+
                 if (behaviour instanceof BlockBreakingMovementBehaviour breaking && OverlayContext.call(level, target, overlay, () -> breaking.canBreak(level, target, overlay.getState()))) {
                     continue;
                 }
+
                 cir.setReturnValue(true);
+
                 return;
             }
         }
@@ -88,16 +95,20 @@ public abstract class ContraptionColliderMixin {
 
     @Unique
     private static List<VoxelShape> offgrid$carriedShapes(Contraption contraption, AABB localBox) {
-        if (!(contraption instanceof CarriedCells carried) || carried.offgrid$getCarriedCells().isEmpty()) return List.of();
-        AABB reach = localBox.inflate(2.0);
+        if (!(contraption instanceof CarriedCells carried)) return List.of();
+        if (carried.offgrid$getCarriedCells().isEmpty()) return List.of();
+        AABB reach = localBox.inflate(2);
         List<VoxelShape> shapes = new ArrayList<>();
+
         for (Map.Entry<BlockPos, AssembledCell> entry : carried.offgrid$getCarriedCells().entrySet()) {
             BlockPos local = entry.getKey();
             if (!reach.intersects(new AABB(local))) {
                 continue;
             }
+
             StructureTemplate.StructureBlockInfo info = contraption.getBlocks().get(local);
             BlockState host = info == null ? Blocks.AIR.defaultBlockState() : info.state();
+
             for (AssembledCell.AssembledOverlay overlay : entry.getValue().overlays()) {
                 Blocklogging.Blocklog cut = Blocklogging.of(overlay.state(), host, overlay.offset());
                 VoxelShape shape = cut != null ? cut.collision() : overlay.state().getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO).move(overlay.offset().x, overlay.offset().y, overlay.offset().z);
@@ -106,6 +117,7 @@ public abstract class ContraptionColliderMixin {
                 }
             }
         }
+
         return shapes;
     }
 }

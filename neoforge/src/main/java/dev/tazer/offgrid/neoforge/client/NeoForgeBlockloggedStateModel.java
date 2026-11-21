@@ -15,7 +15,7 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
-public final class NeoForgeBlockloggedStateModel extends BlockloggedStateModel {
+public class NeoForgeBlockloggedStateModel extends BlockloggedStateModel {
 
     public NeoForgeBlockloggedStateModel(BlockStateModel model, List<AABB> open) {
         super(model, open);
@@ -43,7 +43,7 @@ public final class NeoForgeBlockloggedStateModel extends BlockloggedStateModel {
         return new Part(part, this.open);
     }
 
-    private static final class Part extends BlockloggedStateModelPart {
+    public static class Part extends BlockloggedStateModelPart {
 
         private Part(BlockStateModelPart part, List<AABB> open) {
             super(part, open);

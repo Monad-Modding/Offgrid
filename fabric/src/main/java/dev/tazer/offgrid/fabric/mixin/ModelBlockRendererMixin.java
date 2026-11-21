@@ -31,6 +31,7 @@ public abstract class ModelBlockRendererMixin {
     private void offgrid$tesselateHalvesWithAO(BlockAndTintGetter level, BakedModel model, BlockState state, BlockPos pos, PoseStack poseStack, VertexConsumer consumer, boolean checkSides, RandomSource random, long seed, int packedOverlay, CallbackInfo ci) {
         if (!(model instanceof FabricMixedSlabModel)) return;
         ci.cancel();
+
         if (!(level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) || !entity.isComplete()) return;
         this.tesselateWithAO(level, offgrid$model(entity.getFirst()), entity.getFirst(), pos, poseStack, consumer, checkSides, random, seed, packedOverlay);
         this.tesselateWithAO(level, offgrid$model(entity.getSecond()), entity.getSecond(), pos, poseStack, consumer, checkSides, random, seed, packedOverlay);
@@ -40,6 +41,7 @@ public abstract class ModelBlockRendererMixin {
     private void offgrid$tesselateHalvesWithoutAO(BlockAndTintGetter level, BakedModel model, BlockState state, BlockPos pos, PoseStack poseStack, VertexConsumer consumer, boolean checkSides, RandomSource random, long seed, int packedOverlay, CallbackInfo ci) {
         if (!(model instanceof FabricMixedSlabModel)) return;
         ci.cancel();
+
         if (!(level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) || !entity.isComplete()) return;
         this.tesselateWithoutAO(level, offgrid$model(entity.getFirst()), entity.getFirst(), pos, poseStack, consumer, checkSides, random, seed, packedOverlay);
         this.tesselateWithoutAO(level, offgrid$model(entity.getSecond()), entity.getSecond(), pos, poseStack, consumer, checkSides, random, seed, packedOverlay);

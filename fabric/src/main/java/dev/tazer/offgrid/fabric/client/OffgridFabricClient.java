@@ -19,16 +19,18 @@ import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 //?}
 
-public final class OffgridFabricClient implements ClientModInitializer {
+public class OffgridFabricClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
         OffgridClient.init();
+
         for (PacketType<?> type : OffgridNetwork.all()) {
             if (!type.isServerbound()) {
                 registerReceiver(type);
             }
         }
+
         ClientTickEvents.END_WORLD_TICK.register(OffgridEvents::onClientLevelTick);
         ClientChunkEvents.CHUNK_LOAD.register(OffgridEvents::onChunkLoad);
         ClientChunkEvents.CHUNK_UNLOAD.register(OffgridEvents::onChunkUnload);
@@ -52,7 +54,7 @@ public final class OffgridFabricClient implements ClientModInitializer {
         *///?}
     }
 
-    private static <T> void registerReceiver(PacketType<T> type) {
+    private <T> void registerReceiver(PacketType<T> type) {
         //? if >=1.20.5 {
         ClientPlayNetworking.registerGlobalReceiver(type.getPayloadType(), (payload, context) -> payload.handleOnClient());
         //?} else {

@@ -3,11 +3,7 @@ package dev.tazer.offgrid.command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import dev.tazer.offgrid.world.Cell;
-import dev.tazer.offgrid.world.Cells;
-import dev.tazer.offgrid.world.Offsets;
-import dev.tazer.offgrid.world.Overlay;
-import dev.tazer.offgrid.world.Overlays;
+import dev.tazer.offgrid.world.*;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
@@ -17,10 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-public final class OffgridCommand {
-
-    private OffgridCommand() {
-    }
+public class OffgridCommand {
 
     public static LiteralArgumentBuilder<CommandSourceStack> build() {
         return Commands.literal("offgrid")
@@ -41,10 +34,13 @@ public final class OffgridCommand {
             context.getSource().sendSuccess(() -> Component.translatable("commands.offgrid.inspect.empty", pos.toShortString()), false);
             return 0;
         }
+
         context.getSource().sendSuccess(() -> Component.translatable("commands.offgrid.inspect.cell", pos.toShortString(), format(cell.offset()), cell.overlays().size()), false);
+
         for (Overlay overlay : cell.overlays()) {
             context.getSource().sendSuccess(() -> Component.translatable("commands.offgrid.inspect.overlay", overlay.getId(), overlay.getState().toString(), format(overlay.getOffset())), false);
         }
+
         return cell.overlays().size();
     }
 
@@ -55,6 +51,7 @@ public final class OffgridCommand {
         Overlays.destroyAll(level, pos);
         Offsets.set(level, pos, null);
         context.getSource().sendSuccess(() -> Component.translatable("commands.offgrid.clear", count, pos.toShortString()), true);
+
         return count;
     }
 

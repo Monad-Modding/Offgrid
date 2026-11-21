@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public final class ForgeBlockloggedModel extends BakedModelWrapper<BakedModel> {
+public class ForgeBlockloggedModel extends BakedModelWrapper<BakedModel> {
 
     private final List<AABB> open;
 

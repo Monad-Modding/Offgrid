@@ -27,14 +27,14 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ToolAction;
 import org.jetbrains.annotations.Nullable;
 
-public final class ForgeMixedSlabBlock extends MixedSlabBlock {
+public class ForgeMixedSlabBlock extends MixedSlabBlock {
 
     public ForgeMixedSlabBlock(Properties properties) {
         super(properties);
     }
 
     @Nullable
-    private static BlockState under(BlockState state, BlockGetter level, BlockPos pos, Vec3 point) {
+    private BlockState under(BlockState state, BlockGetter level, BlockPos pos, Vec3 point) {
         return MixedSlabs.half(level, pos, MixedSlabs.containsSecond(point, pos, state.getValue(AXIS)));
     }
 
@@ -46,7 +46,8 @@ public final class ForgeMixedSlabBlock extends MixedSlabBlock {
     @Override
     public boolean canHarvestBlock(BlockState state, BlockGetter level, BlockPos pos, Player player) {
         BlockState half = targetedHalf(state, level, pos, player);
-        return half == null ? super.canHarvestBlock(state, level, pos, player) : half.canHarvestBlock(level, pos, player);
+        if (half == null) return super.canHarvestBlock(state, level, pos, player);
+        return half.canHarvestBlock(level, pos, player);
     }
 
     @Override
@@ -61,6 +62,7 @@ public final class ForgeMixedSlabBlock extends MixedSlabBlock {
         } else {
             half = MixedSlabs.half(level, pos, true);
         }
+
         return half == null ? super.getSoundType(state, level, pos, entity) : half.getSoundType(level, pos, entity);
     }
 
@@ -111,9 +113,11 @@ public final class ForgeMixedSlabBlock extends MixedSlabBlock {
         if (modified == null || modified == half || !MixedSlabs.keepsShape(modified, half)) return null;
         BlockState first = second ? entity.getFirst() : modified;
         BlockState other = second ? modified : entity.getSecond();
+
         if (!simulate) {
             entity.setHalves(first, other);
         }
+
         return MixedSlabs.mixedState(axis, first, other);
     }
 
@@ -131,13 +135,17 @@ public final class ForgeMixedSlabBlock extends MixedSlabBlock {
         BlockPos at = entity.blockPosition();
         double x = entity.getX() + (level.getRandom().nextDouble() - 0.5) * entity.getBbWidth();
         double z = entity.getZ() + (level.getRandom().nextDouble() - 0.5) * entity.getBbWidth();
+
         if (at.getX() != pos.getX()) {
             x = Mth.clamp(x, pos.getX(), pos.getX() + 1.0);
         }
+
         if (at.getZ() != pos.getZ()) {
             z = Mth.clamp(z, pos.getZ(), pos.getZ() + 1.0);
         }
-        level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, half).setPos(pos), x, entity.getY() + 0.1, z, motion.x * -4.0, 1.5, motion.z * -4.0);
+
+        level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, half).setPos(pos), x, entity.getY() + 0.1, z, motion.x * -4, 1.5, motion.z * -4);
+
         return true;
     }
 
@@ -145,7 +153,8 @@ public final class ForgeMixedSlabBlock extends MixedSlabBlock {
     public boolean addLandingEffects(BlockState state, ServerLevel level, BlockPos pos, BlockState stateAgain, LivingEntity entity, int count) {
         BlockState half = under(state, level, pos, entity.position());
         if (half == null) return false;
-        level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, half).setPos(pos), entity.getX(), entity.getY(), entity.getZ(), count, 0.0, 0.0, 0.0, 0.15F);
+        level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, half).setPos(pos), entity.getX(), entity.getY(), entity.getZ(), count, 0, 0, 0, 0.15f);
+
         return true;
     }
 }

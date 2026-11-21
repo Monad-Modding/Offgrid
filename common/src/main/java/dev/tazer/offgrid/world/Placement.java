@@ -35,14 +35,11 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public final class Placement {
+public class Placement {
 
     private static final List<BiFunction<BlockItem, BlockPlaceContext, BlockState>> STATE_FALLBACKS = new ArrayList<>();
 
     private static int nextClientId = -1;
-
-    private Placement() {
-    }
 
     public static void addStateFallback(BiFunction<BlockItem, BlockPlaceContext, BlockState> fallback) {
         STATE_FALLBACKS.add(fallback);
@@ -50,6 +47,7 @@ public final class Placement {
 
     public static InteractionResult place(BlockItem item, BlockPlaceContext context, Function<BlockPlaceContext, InteractionResult> vanilla) {
         BlockState placing = item.getBlock().defaultBlockState();
+
         if (Scope.get(Scope.PLAN) != null || !placesHeld(item, context)) return vanilla.apply(context);
         if (!Overlays.canOffset(placing) && !Blocklogging.canBlocklog(placing) && !Layers.isLayer(placing)) return OverlayContext.outside(() -> placeBeneath(item, context, vanilla));
         Decision decision = decide(item, context);
@@ -73,7 +71,9 @@ public final class Placement {
             return held != null ? held : fallbackState(item, context);
         }
         BlockState state = item.getBlock().getStateForPlacement(context);
-        if (state == null || !state.canSurvive(context.getLevel(), context.getClickedPos()) || !context.getLevel().isUnobstructed(state, context.getClickedPos(), CollisionContext.empty())) return null;
+        if (state == null) return null;
+        if (!state.canSurvive(context.getLevel(), context.getClickedPos())) return null;
+        if (!context.getLevel().isUnobstructed(state, context.getClickedPos(), CollisionContext.empty())) return null;
         return state;
     }
 
@@ -95,17 +95,21 @@ public final class Placement {
             Decision layer = OverlayContext.outside(() -> planLayer(item, context));
             if (layer != null) return layer;
         }
+
         if (settings.allowsBlocklogging() && Blocklogging.canBlocklog(item.getBlock().defaultBlockState())) {
             Decision blocklog = OverlayContext.outside(() -> planBlocklog(item, context));
             if (blocklog != null) return blocklog;
         }
+
         if (replacing) return Decision.VANILLA_DECISION;
         if (!settings.offsetting()) return Decision.VANILLA_DECISION;
         Direction face = context.getClickedFace();
         BlockPos target = context.getClickedPos();
         BlockPos support = target.relative(face.getOpposite());
         BlockState state = within(Plan.probe(level, target, face), () -> placementState(item, context));
-        if (state == null || !Overlays.canOffset(state) || !Support.heldFrom(state, face.getOpposite())) return Decision.VANILLA_DECISION;
+        if (state == null) return Decision.VANILLA_DECISION;
+        if (!Overlays.canOffset(state)) return Decision.VANILLA_DECISION;
+        if (!Support.heldFrom(state, face.getOpposite())) return Decision.VANILLA_DECISION;
         if (Cells.realState(level, support).isAir() && !Cells.hasOverlays(level, support)) return Decision.VANILLA_DECISION;
         Player player = context.getPlayer();
         if (player != null && player.isSecondaryUseActive() && vanillaWouldPlace(context, state)) return Decision.VANILLA_DECISION;
@@ -115,17 +119,23 @@ public final class Placement {
     @Nullable
     private static Decision planLayer(BlockItem item, BlockPlaceContext context) {
         Level level = context.getLevel();
+
         if (context.getClickedFace() != Direction.UP || context.replacingClickedOnBlock()) return null;
         BlockPos cell = context.getClickedPos();
         if (!level.hasChunkAt(cell)) return null;
         BlockState real = Cells.realState(level, cell);
         if (Covers.snow(level, cell, real) > 0) return null;
         BlockState host = Covers.raw(level, cell, real);
-        if (!Layers.isHost(host) || Layers.layerIn(level, cell) != null || Cells.overlays(level, cell).size() >= Overlays.MAX_PER_CELL) return null;
+        if (!Layers.isHost(host)) return null;
+        if (Layers.layerIn(level, cell) != null) return null;
+        if (Cells.overlays(level, cell).size() >= Overlays.MAX_PER_CELL) return null;
         BlockPlaceContext inside = new OverlayPlaceContext(context, cell);
         Overlay probe = new Overlay(-1, Blocks.AIR.defaultBlockState(), Vec3.ZERO, null);
         BlockState placed = OverlayContext.call(level, cell, probe, () -> placementState(item, inside));
-        if (placed == null || !Layers.isLayer(placed) || Blocklogging.of(placed, host) == null || Overlays.obstructed(level, cell, placed, Vec3.ZERO, null)) return null;
+        if (placed == null) return null;
+        if (!Layers.isLayer(placed)) return null;
+        if (Blocklogging.of(placed, host) == null) return null;
+        if (Overlays.obstructed(level, cell, placed, Vec3.ZERO, null)) return null;
         return new Decision(Kind.OVERLAY, cell, Vec3.ZERO, placed);
     }
 
@@ -137,7 +147,9 @@ public final class Placement {
         BlockPos cell = BlockPos.containing(click.x + face.getStepX() * Support.EPSILON, click.y + face.getStepY() * Support.EPSILON, click.z + face.getStepZ() * Support.EPSILON);
         if (!level.hasChunkAt(cell)) return null;
         BlockState host = Covers.raw(level, cell, Cells.realState(level, cell));
-        if (!Blocklogging.isBlockloggable(host) || Layers.isLayer(host) || Cells.overlays(level, cell).size() >= Overlays.MAX_PER_CELL) return null;
+        if (!Blocklogging.isBlockloggable(host)) return null;
+        if (Layers.isLayer(host)) return null;
+        if (Cells.overlays(level, cell).size() >= Overlays.MAX_PER_CELL) return null;
         BlockPlaceContext inside = new OverlayPlaceContext(context, cell);
         Overlay probe = new Overlay(-1, Blocks.AIR.defaultBlockState(), Vec3.ZERO, null);
         BlockState placed = OverlayContext.call(level, cell, probe, () -> placementState(item, inside));
@@ -157,6 +169,7 @@ public final class Placement {
             Vec3 offset = Blocklogging.lateral(state, centred);
             if (Blocklogging.of(state, host, offset) != null && !Overlays.obstructed(level, cell, state, offset, null)) return offset;
         }
+
         return null;
     }
 
@@ -169,8 +182,10 @@ public final class Placement {
         BlockState occupant = Cells.realState(level, target);
         boolean occupied = !occupant.isAir() && !occupant.canBeReplaced();
         if (!crosses && !occupied && !Cells.hasOverlays(level, target)) {
-            return Overlays.isZero(offset) ? Decision.VANILLA_DECISION : new Decision(Kind.OFFSET, target, offset, state);
+            if (Overlays.isZero(offset)) return Decision.VANILLA_DECISION;
+            return new Decision(Kind.OFFSET, target, offset, state);
         }
+
         if (!Overlays.canOverlay(state) || !settings.allowsOverlaying()) return Decision.VANILLA_DECISION;
         if (crosses) return new Decision(Kind.OVERLAY, support, offset.add(face.getStepX(), face.getStepY(), face.getStepZ()), state);
         return new Decision(Kind.OVERLAY, target, offset, state);
@@ -179,15 +194,21 @@ public final class Placement {
     private static InteractionResult placeBeneath(BlockItem item, BlockPlaceContext context, Function<BlockPlaceContext, InteractionResult> vanilla) {
         Level level = context.getLevel();
         BlockPos cell = context.getClickedPos();
-        if (context.canPlace() || !level.hasChunkAt(cell) || !OffgridSettings.of(level).allowsOverlaying()) return vanilla.apply(context);
+        if (context.canPlace()) return vanilla.apply(context);
+        if (!level.hasChunkAt(cell)) return vanilla.apply(context);
+        if (!OffgridSettings.of(level).allowsOverlaying()) return vanilla.apply(context);
         BlockState resident = Cells.realState(level, cell);
-        if (resident.isAir() || !Overlays.canOverlay(resident) || Cells.overlays(level, cell).size() >= Overlays.MAX_PER_CELL) return vanilla.apply(context);
+        if (resident.isAir()) return vanilla.apply(context);
+        if (!Overlays.canOverlay(resident)) return vanilla.apply(context);
+        if (Cells.overlays(level, cell).size() >= Overlays.MAX_PER_CELL) return vanilla.apply(context);
         Vec3 stored = Offsets.of(level, cell, resident);
         Vec3 offset = stored == null ? Vec3.ZERO : stored;
         BlockPlaceContext into = new BeneathPlaceContext(context, cell);
         Overlay probe = new Overlay(-1, Blocks.AIR.defaultBlockState(), Vec3.ZERO, null);
         BlockState host = OverlayContext.call(level, cell, probe, () -> placementState(item, into));
-        if (host == null || Overlays.canOverlay(host) || !fitsBeneath(level, cell, host, resident, offset)) return vanilla.apply(context);
+        if (host == null) return vanilla.apply(context);
+        if (Overlays.canOverlay(host)) return vanilla.apply(context);
+        if (!fitsBeneath(level, cell, host, resident, offset)) return vanilla.apply(context);
         CompoundTag tag = BlockEntities.saveAt(level, cell);
         OffgridChunk data = Cells.data(level, cell, !level.isClientSide());
         int id = level.isClientSide() ? nextClientId-- : data == null ? -1 : data.allocateId();
@@ -199,10 +220,12 @@ public final class Placement {
         if (detached != null) {
             level.removeBlockEntity(cell);
         }
+
         InteractionResult result = vanilla.apply(into);
         if (!result.consumesAction() || !Cells.realState(level, cell).is(host.getBlock())) {
             moved.discardBlockEntity();
             Cells.update(level, cell, existing -> existing.without(moved));
+
             if (detached != null && Cells.realState(level, cell) == resident) {
                 detached.clearRemoved();
                 level.setBlockEntity(detached);
@@ -212,6 +235,7 @@ public final class Placement {
             moved.materialize(level, cell);
             Cells.sync(serverLevel, cell);
         }
+
         return result;
     }
 
@@ -219,10 +243,12 @@ public final class Placement {
         VoxelShape hostShape = host.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());
         VoxelShape residentShape = OverlayShapes.of(resident, offset);
         if (!hostShape.isEmpty() && !residentShape.isEmpty() && Shapes.joinIsNotEmpty(hostShape, residentShape, BooleanOp.AND)) return false;
+
         for (Overlay overlay : Cells.overlays(level, cell)) {
             VoxelShape overlayShape = OverlayShapes.of(level, cell, overlay);
             if (!overlayShape.isEmpty() && !hostShape.isEmpty() && Shapes.joinIsNotEmpty(hostShape, overlayShape, BooleanOp.AND)) return false;
         }
+
         return Overlays.survives(level, cell, resident, offset, null, host);
     }
 
@@ -230,12 +256,14 @@ public final class Placement {
         Level level = context.getLevel();
         InteractionResult result = within(Plan.offset(level, decision.cell(), decision.offset()), () -> vanilla.apply(context));
         if (!result.consumesAction() || !Overlays.canOffset(Cells.realState(level, decision.cell()))) return result;
+
         if (level instanceof ServerLevel serverLevel) {
             Offsets.set(serverLevel, decision.cell(), decision.offset());
             serverLevel.updateNeighborsAt(decision.cell(), Cells.realState(level, decision.cell()).getBlock());
         } else {
             Cells.update(level, decision.cell(), cell -> cell.withOffset(decision.offset()));
         }
+
         return result;
     }
 
@@ -251,12 +279,15 @@ public final class Placement {
         BlockPlaceContext inside = new OverlayPlaceContext(context, cell);
         InteractionResult result = within(plan, () -> OverlayContext.call(level, cell, blank, () -> vanilla.apply(inside)));
         if (!plan.isCommitted()) return result.consumesAction() ? fail(context) : result;
+
         if (context.getPlayer() != null) {
             OverlayFocus.focus(level, context.getPlayer(), cell, blank);
         }
+
         if (level instanceof ServerLevel serverLevel && blank.getBlockEntity() != null && Cells.contains(level, cell, blank)) {
             Cells.sync(serverLevel, cell);
         }
+
         return result;
     }
 
@@ -271,7 +302,10 @@ public final class Placement {
 
     public static boolean commit(Level level, BlockPos host, Overlay overlay, BlockState state) {
         Plan plan = Scope.get(Scope.PLAN);
-        if (plan == null || plan.getBlank() != overlay || !plan.getCell().equals(host) || plan.isCommitted()) return false;
+        if (plan == null) return false;
+        if (plan.getBlank() != overlay) return false;
+        if (!plan.getCell().equals(host)) return false;
+        if (plan.isCommitted()) return false;
         Vec3 offset = overlay.getOffset();
         BlockState hostState = Cells.realState(level, host);
         if (Blocklogging.isFreeStanding(state, offset) && Blocklogging.isBlockloggable(hostState)) {
@@ -279,21 +313,27 @@ public final class Placement {
             if (fitted == null) return false;
             state = fitted;
         }
-        if (!Overlays.canOverlay(state) && Blocklogging.at(level, host, state, offset) == null || !OverlayFluids.holds(state, overlay.getState().getFluidState())) return false;
+
+        if (!Overlays.canOverlay(state) && Blocklogging.at(level, host, state, offset) == null) return false;
+        if (!OverlayFluids.holds(state, overlay.getState().getFluidState())) return false;
         if (Cells.overlays(level, host).size() >= Overlays.MAX_PER_CELL) return false;
-        if (!Overlays.survives(level, host, state, offset, null, null) || Overlays.obstructed(level, host, state, offset, null)) return false;
+        if (!Overlays.survives(level, host, state, offset, null, null)) return false;
+        if (Overlays.obstructed(level, host, state, offset, null)) return false;
         BlockState previous = overlay.getState();
         overlay.setState(state);
         overlay.materialize(level, host);
         plan.markCommitted();
         Cells.update(level, host, cell -> cell.with(overlay));
         BlockStates.placed(state, level, host, previous);
+
         if (level instanceof ServerLevel serverLevel) {
             serverLevel.updateNeighborsAt(host, state.getBlock());
+
             if (Connections.isConnector(state)) {
                 Connections.update(serverLevel, host);
             }
         }
+
         return true;
     }
 
@@ -307,11 +347,13 @@ public final class Placement {
                 case OVERLAY -> Overlays.survives(level, pos, state, plan.getOffset(), null, null);
             };
         }
+
         OverlayContext.Frame frame = OverlayContext.at(level, pos);
         if (frame != null) {
             Overlay overlay = frame.getOverlay();
             return overlay != null && Overlays.survives(level, pos, state, overlay.getOffset(), overlay, null);
         }
+
         Vec3 offset = Offsets.of(level, pos, state);
         if (offset != null) return Overlays.offsetHolds(level, pos, state, offset);
         return Overlays.canOffset(state) && !Layers.isLayer(state) && OffgridSettings.of(level).offsetting() && Overlays.offsetHolds(level, pos, state, Vec3.ZERO);
@@ -336,7 +378,8 @@ public final class Placement {
         if (shape.isEmpty()) return false;
         AABB bounds = shape.bounds().move(offset.x, offset.y, offset.z);
         Direction.Axis axis = face.getAxis();
-        return face.getAxisDirection().getStep() > 0 ? bounds.min(axis) < -Support.EPSILON : bounds.max(axis) > 1.0 + Support.EPSILON;
+        if (face.getAxisDirection().getStep() > 0) return bounds.min(axis) < -Support.EPSILON;
+        return bounds.max(axis) > 1 + Support.EPSILON;
     }
 
     private static FluidState source(FluidState fluid) {
@@ -348,6 +391,7 @@ public final class Placement {
         if (context.getPlayer() instanceof ServerPlayer player) {
             player.containerMenu.sendAllDataToRemote();
         }
+
         return InteractionResult.FAIL;
     }
 
@@ -355,7 +399,7 @@ public final class Placement {
         return Scope.with(Scope.PLAN, plan, action);
     }
 
-    private static final class OverlayPlaceContext extends BlockPlaceContext {
+    public static class OverlayPlaceContext extends BlockPlaceContext {
 
         private OverlayPlaceContext(BlockPlaceContext context, BlockPos cell) {
             super(context.getLevel(), context.getPlayer(), context.getHand(), context.getItemInHand(), new BlockHitResult(context.getClickLocation(), context.getClickedFace(), cell.relative(context.getClickedFace().getOpposite()), context.isInside()));
@@ -363,7 +407,7 @@ public final class Placement {
         }
     }
 
-    private static final class BeneathPlaceContext extends BlockPlaceContext {
+    public static class BeneathPlaceContext extends BlockPlaceContext {
 
         private BeneathPlaceContext(BlockPlaceContext context, BlockPos cell) {
             super(context.getLevel(), context.getPlayer(), context.getHand(), context.getItemInHand(), new BlockHitResult(context.getClickLocation(), context.getClickedFace(), cell, context.isInside()));
@@ -371,14 +415,14 @@ public final class Placement {
         }
     }
 
-    private enum Kind {
+    public enum Kind {
         VANILLA,
         FAIL,
         OFFSET,
         OVERLAY
     }
 
-    private record Decision(Kind kind, BlockPos cell, Vec3 offset, BlockState state) {
+    public record Decision(Kind kind, BlockPos cell, Vec3 offset, BlockState state) {
 
         private static final Decision VANILLA_DECISION = new Decision(Kind.VANILLA, BlockPos.ZERO, Vec3.ZERO, Blocks.AIR.defaultBlockState());
         private static final Decision FAIL_DECISION = new Decision(Kind.FAIL, BlockPos.ZERO, Vec3.ZERO, Blocks.AIR.defaultBlockState());
@@ -390,7 +434,7 @@ public final class Placement {
         OVERLAY
     }
 
-    public static final class Plan {
+    public static class Plan {
 
         private final PlanKind kind;
         private final Level level;

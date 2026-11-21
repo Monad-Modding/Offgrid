@@ -33,7 +33,7 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 //?}
 
 @Mod(value = Offgrid.MOD_ID, dist = Dist.CLIENT)
-public final class OffgridNeoForgeClient {
+public class OffgridNeoForgeClient {
 
     public OffgridNeoForgeClient(IEventBus modBus) {
         OffgridClient.init();
@@ -58,6 +58,7 @@ public final class OffgridNeoForgeClient {
 
     private static void onModifyBakingResult(ModelEvent.ModifyBakingResult event) {
         Map<BlockState, BlockStateModel> models = event.getBakingResult().blockStateModels();
+
         for (BlockState state : OffgridBlocks.getMixedSlab().getStateDefinition().getPossibleStates()) {
             BlockStateModel fallback = models.get(state);
             if (fallback != null) {
@@ -80,6 +81,7 @@ public final class OffgridNeoForgeClient {
 
     private static void onModifyBakingResult(ModelEvent.ModifyBakingResult event) {
         Map<ModelResourceLocation, BakedModel> models = event.getModels();
+
         for (BlockState state : OffgridBlocks.getMixedSlab().getStateDefinition().getPossibleStates()) {
             ModelResourceLocation location = BlockModelShaper.stateToModelLocation(state);
             BakedModel fallback = models.get(location);

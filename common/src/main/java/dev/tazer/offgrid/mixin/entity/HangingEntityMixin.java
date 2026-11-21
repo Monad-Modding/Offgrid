@@ -128,17 +128,20 @@ public abstract class HangingEntityMixin extends BlockAttachedEntity {
             cir.setReturnValue(false);
             return;
         }
+
         AABB support = self.getBoundingBox().move(this.direction.getStepX() * -0.5, this.direction.getStepY() * -0.5, this.direction.getStepZ() * -0.5).deflate(1.0E-7);
         for (BlockPos cursor : BlockPos.betweenClosed(BlockPos.containing(support.minX, support.minY, support.minZ), BlockPos.containing(support.maxX, support.maxY, support.maxZ))) {
             if (Block.canSupportCenter(level, cursor, this.direction)) {
                 continue;
             }
+
             BlockState state = level.getBlockState(cursor);
             if (!state.isSolid() && !DiodeBlock.isDiode(state)) {
                 cir.setReturnValue(false);
                 return;
             }
         }
+
         cir.setReturnValue(level.getEntities(self, self.getBoundingBox(), entity -> entity instanceof HangingEntity).isEmpty());
     }
     *///?}

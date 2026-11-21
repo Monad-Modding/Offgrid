@@ -18,16 +18,14 @@ import net.minecraftforge.fml.ModList;
 
 import java.util.Map;
 
-public final class OffgridForgeClient {
-
-    private OffgridForgeClient() {
-    }
+public class OffgridForgeClient {
 
     public static void init(IEventBus modBus) {
         OffgridClient.init();
         modBus.addListener(OffgridForgeClient::onBlockColors);
         modBus.addListener(OffgridForgeClient::onModifyBakingResult);
         MinecraftForge.EVENT_BUS.addListener(OffgridForgeClient::onRenderStage);
+
         if (ModList.get().isLoaded("embeddium")) {
             EmbeddiumMeshing.register();
         }
@@ -39,6 +37,7 @@ public final class OffgridForgeClient {
 
     private static void onModifyBakingResult(ModelEvent.ModifyBakingResult event) {
         Map<ResourceLocation, BakedModel> models = event.getModels();
+
         for (BlockState state : OffgridBlocks.getMixedSlab().getStateDefinition().getPossibleStates()) {
             ResourceLocation location = BlockModelShaper.stateToModelLocation(state);
             BakedModel fallback = models.get(location);

@@ -12,7 +12,7 @@ import snownee.jade.api.IWailaClientRegistration;
 //?}
 
 @WailaPlugin
-public final class OffgridJadePlugin implements IWailaPlugin {
+public class OffgridJadePlugin implements IWailaPlugin {
 
     //? if >=26 {
     /*@Override

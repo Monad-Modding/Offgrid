@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-public final class VerticalSlabs implements SlabFamily {
+public class VerticalSlabs implements SlabFamily {
 
     @Override
     public boolean isSingle(BlockState state) {

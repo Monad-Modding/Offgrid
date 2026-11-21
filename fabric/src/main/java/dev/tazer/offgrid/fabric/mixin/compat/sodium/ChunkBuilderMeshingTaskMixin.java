@@ -119,11 +119,14 @@ public abstract class ChunkBuilderMeshingTaskMixin {
                 BlockState state = entry.state();
                 context.update(entry.host(), BlockPos.ZERO, state, entry.model(models.getBlockModel(state)), state.getSeed(entry.host()));
                 ((BlockRenderContextAccessor) context).offgrid$getOrigin().set(entry.x(origin), entry.y(origin), entry.z(origin));
+
                 if (shaders) {
                     IrisBlockContext.begin(buildContext.buffers, state, entry.host());
                 }
+
                 entry.view(() -> renderer.renderModel(context, buildContext.buffers));
             }
+
             if (shaders) {
                 IrisBlockContext.end(buildContext.buffers);
             }

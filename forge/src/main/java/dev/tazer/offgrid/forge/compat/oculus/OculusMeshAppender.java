@@ -21,7 +21,7 @@ import org.joml.Vector3fc;
 import java.util.List;
 import java.util.Map;
 
-public final class OculusMeshAppender extends OverlayShaderTags {
+public class OculusMeshAppender extends OverlayShaderTags {
 
     private static final Vector3fc ORIGIN = new Vector3f();
     private static final ThreadLocal<Map<RenderType, SinkingVertexBuilder>> SINKS = ThreadLocal.withInitial(Reference2ReferenceOpenHashMap::new);
@@ -40,10 +40,12 @@ public final class OculusMeshAppender extends OverlayShaderTags {
         BlockAndTintGetter region = context.blockRenderView();
         BlockPos origin = context.sectionOrigin().origin();
         List<OverlayGeometry.Entry> entries = OverlayGeometry.collect(region, origin);
+
         if (!((Object) context.sodiumBuildBuffers() instanceof ChunkBuildBuffersExt)) {
             ForgeOverlayGeometry.render(region, origin, entries, context.vertexConsumerProvider(), OverlayShaderTags.create());
             return;
         }
+
         OculusMeshAppender appender = new OculusMeshAppender(context.sodiumBuildBuffers());
         ForgeOverlayGeometry.render(region, origin, entries, appender::sink, appender);
     }
@@ -55,6 +57,7 @@ public final class OculusMeshAppender extends OverlayShaderTags {
     @Override
     public void enter(OverlayGeometry.Entry entry) {
         this.entry = entry;
+
         for (SinkingVertexBuilder sink : this.sinks.values()) {
             sink.reset();
         }
@@ -68,11 +71,13 @@ public final class OculusMeshAppender extends OverlayShaderTags {
         BlockPos host = current.host();
         context.iris$setLocalPos(host.getX() & 15, host.getY() & 15, host.getZ() & 15);
         context.iris$setMaterialId(current.state(), (short) -1, (byte) current.state().getLightEmission());
+
         for (Map.Entry<RenderType, SinkingVertexBuilder> sink : this.sinks.entrySet()) {
             Material material = DefaultMaterials.forRenderLayer(sink.getKey());
             sink.getValue().flush(this.buffers.get(material), material, ORIGIN);
             sink.getValue().reset();
         }
+
         context.iris$resetBlockContext();
         this.entry = null;
     }

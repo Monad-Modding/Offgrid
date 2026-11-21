@@ -13,10 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public final class OverlayLight {
-
-    private OverlayLight() {
-    }
+public class OverlayLight {
 
     public static int emission(@Nullable BlockGetter level, int x, int y, int z, int original) {
         if (original >= 15) return original;
@@ -31,14 +28,19 @@ public final class OverlayLight {
     }
 
     public static List<BlockPos> withSources(List<BlockPos> sources, ChunkAccess chunk) {
-        if (!(chunk instanceof LevelChunk levelChunk)) return sources;
-        OffgridChunk data = Services.PLATFORM.getChunkData(levelChunk);
-        if (data == null) return sources;
-        for (Long2ObjectMap.Entry<Cell> entry : data.getCells().long2ObjectEntrySet()) {
-            if (entry.getValue().light() > 0) {
-                sources.add(BlockPos.of(entry.getLongKey()));
+        if (chunk instanceof LevelChunk levelChunk) {
+            OffgridChunk data = Services.PLATFORM.getChunkData(levelChunk);
+            if (data == null) return sources;
+
+            for (Long2ObjectMap.Entry<Cell> entry : data.getCells().long2ObjectEntrySet()) {
+                if (entry.getValue().light() > 0) {
+                    sources.add(BlockPos.of(entry.getLongKey()));
+                }
             }
+
+            return sources;
         }
+
         return sources;
     }
 }

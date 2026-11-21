@@ -7,10 +7,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
-public final class Signals {
-
-    private Signals() {
-    }
+public class Signals {
 
     public static int adjust(BlockState self, BlockGetter getter, BlockPos pos, Direction direction, boolean direct, int original) {
         if (!(getter instanceof Level level)) return original;
@@ -19,11 +16,14 @@ public final class Signals {
         LongOpenHashSet queries = Scope.current().getSignalQueries(direct);
         long key = pos.asLong();
         if (!queries.add(key)) return original;
+
         try {
             int result = original;
+
             if (!Offsets.isReadingSource() && Offsets.movedIntoSupport(level, pos, self)) {
                 result = 0;
             }
+
             Cell cell = index.getCell(pos);
             if (cell != null) {
                 for (Overlay overlay : cell.overlays()) {
@@ -31,13 +31,16 @@ public final class Signals {
                     if (!state.isSignalSource()) {
                         continue;
                     }
+
                     int signal = OverlayContext.call(level, pos, overlay, () -> direct ? state.getDirectSignal(level, pos, direction) : state.getSignal(level, pos, direction));
                     result = Math.max(result, signal);
                 }
             }
+
             if (!Offsets.isReadingSource()) {
                 result = Offsets.relocatedSignal(level, pos, direction, direct, result);
             }
+
             return result;
         } finally {
             queries.remove(key);
@@ -48,11 +51,13 @@ public final class Signals {
         for (Overlay overlay : Cells.overlays(level, pos)) {
             if (overlay.getState().isSignalSource()) return true;
         }
+
         return false;
     }
 
     public static int analogOutput(Level level, BlockPos pos) {
         int best = 0;
+
         for (Overlay overlay : Cells.overlays(level, pos)) {
             BlockState state = overlay.getState();
             if (!state.hasAnalogOutputSignal()) {
@@ -65,6 +70,7 @@ public final class Signals {
             //?}
             best = Math.max(best, output);
         }
+
         return best;
     }
 }

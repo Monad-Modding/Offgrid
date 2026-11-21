@@ -25,9 +25,11 @@ public abstract class RebuildTaskMixin {
     private void offgrid$compileOverlays(float x, float y, float z, ChunkBufferBuilderPack pack, CallbackInfoReturnable<?> cir, @Local RenderChunkRegion region, @Local(ordinal = 0) BlockPos origin, @Local Set<RenderType> layers) {
         OverlayGeometry.render(region, origin, type -> {
             BufferBuilder builder = pack.builder(type);
+
             if (layers.add(type)) {
                 builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
             }
+
             return builder;
         });
     }

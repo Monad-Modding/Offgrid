@@ -72,16 +72,20 @@ public abstract class ContraptionMixin implements CarriedCells {
         if (!(level instanceof ServerLevel server)) return;
         BlockPos origin = this.anchor.offset(offset);
         List<BlockPos> moved = new ArrayList<>(this.blocks.size());
+
         for (BlockPos local : this.blocks.keySet()) {
             moved.add(local.offset(origin));
         }
+
         AssembledCell.Held held = AssembledCell.held(server, moved);
+
         if (offset.equals(BlockPos.ZERO)) {
             for (BlockPos extra : held.blocks()) {
                 this.addBlock(level, extra, this.capture(level, extra));
                 moved.add(extra);
             }
         }
+
         this.offgrid$cells.putAll(AssembledCell.assembleLocal(server, origin, moved, held));
     }
 
@@ -103,6 +107,7 @@ public abstract class ContraptionMixin implements CarriedCells {
         if (!this.offgrid$cells.isEmpty()) {
             tag.put(offgrid$CELLS, AssembledCell.writeAll(this.offgrid$cells));
         }
+
         return tag;
     }
 

@@ -144,6 +144,7 @@ public abstract class ClientLevelMixin {
         Cell cell = index == null ? null : index.getCell(pos);
         if (cell == null || !cell.hasOverlays()) return;
         BlockPos host = pos.immutable();
+
         for (Overlay overlay : cell.overlays()) {
             OverlayContext.run(level, host, overlay, () -> overlay.getState().getBlock().animateTick(overlay.getState(), level, host, random));
         }

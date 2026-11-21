@@ -62,7 +62,6 @@ public class MixedSlabBlock extends BaseEntityBlock {
     public static final IntegerProperty LIGHT = IntegerProperty.create("light", 0, 15);
     public static final BooleanProperty OPAQUE = BooleanProperty.create("opaque");
     public static final BooleanProperty WEATHERING = BooleanProperty.create("weathering");
-    private static final float WEATHER_CHANCE = 0.05688889F;
 
     public MixedSlabBlock(Properties properties) {
         super(properties);
@@ -107,6 +106,7 @@ public class MixedSlabBlock extends BaseEntityBlock {
         if (context instanceof EntityCollisionContext entityContext && entityContext.getEntity() instanceof Player player) {
             return MixedSlabs.halfShape(state.getValue(AXIS), MixedSlabs.targetsSecond(player, pos, state.getValue(AXIS)));
         }
+
         return Shapes.block();
     }
 
@@ -146,7 +146,8 @@ public class MixedSlabBlock extends BaseEntityBlock {
     @Override
     public float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos) {
         BlockState half = targetedHalf(state, level, pos, player);
-        return half == null ? super.getDestroyProgress(state, player, level, pos) : half.getDestroyProgress(player, level, pos);
+        if (half == null) return super.getDestroyProgress(state, player, level, pos);
+        return half.getDestroyProgress(player, level, pos);
     }
 
     //? if >=1.21 {
@@ -160,6 +161,7 @@ public class MixedSlabBlock extends BaseEntityBlock {
         level.levelEvent(player, LevelEvent.PARTICLES_DESTROY_BLOCK, pos, Block.getId(half));
         //?}
         level.gameEvent(GameEvent.BLOCK_DESTROY, pos, GameEvent.Context.of(player, half));
+
         return state;
     }
     //?} else {
@@ -170,6 +172,7 @@ public class MixedSlabBlock extends BaseEntityBlock {
             super.playerWillDestroy(level, pos, state, player);
             return;
         }
+
         level.levelEvent(player, LevelEvent.PARTICLES_DESTROY_BLOCK, pos, Block.getId(half));
         level.gameEvent(GameEvent.BLOCK_DESTROY, pos, GameEvent.Context.of(player, half));
     }
@@ -188,8 +191,9 @@ public class MixedSlabBlock extends BaseEntityBlock {
             super.playerDestroy(level, player, pos, state, blockEntity, tool);
             return;
         }
+
         player.awardStat(Stats.BLOCK_MINED.get(half.getBlock()));
-        player.causeFoodExhaustion(0.005F);
+        player.causeFoodExhaustion(0.005f);
         BlockEntity halfEntity = entity.getHalfEntity(second);
         MixedSlabs.viewingHalf(level, pos, half, halfEntity, () -> Block.dropResources(half, level, pos, halfEntity, player, tool));
     }
@@ -201,6 +205,7 @@ public class MixedSlabBlock extends BaseEntityBlock {
         BlockState remaining = entity.getHalf(remainingSecond);
         if (remaining == null) return false;
         CompoundTag kept = entity.saveHalfEntity(remainingSecond);
+
         if (!level.setBlock(pos, remaining, level.isClientSide() ? Block.UPDATE_ALL_IMMEDIATE : Block.UPDATE_ALL)) return false;
         BlockEntity restored = kept == null ? null : level.getBlockEntity(pos);
         if (restored != null) {
@@ -208,6 +213,7 @@ public class MixedSlabBlock extends BaseEntityBlock {
             restored.setChanged();
             level.sendBlockUpdated(pos, remaining, remaining, Block.UPDATE_ALL);
         }
+
         return true;
     }
 
@@ -227,8 +233,9 @@ public class MixedSlabBlock extends BaseEntityBlock {
         }
     }
 
-    private static BlockState weather(BlockState half, ServerLevel level, BlockPos pos, RandomSource random) {
-        if (!(half.getBlock() instanceof ChangeOverTimeBlock<?> aging) || random.nextFloat() >= WEATHER_CHANCE) return half;
+    private BlockState weather(BlockState half, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (!(half.getBlock() instanceof ChangeOverTimeBlock<?> aging)) return half;
+        if (random.nextFloat() >= 0.05688889f) return half;
         //? if >=1.21.2 {
         /*return aging.getNextState(half, level, pos, random).orElse(half);
         *///?} else {
@@ -239,17 +246,20 @@ public class MixedSlabBlock extends BaseEntityBlock {
     //? if >=1.21.2 {
     /*@Override
     public InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        return this.wax(stack, state, level, pos, player, hit) ? InteractionResult.SUCCESS : InteractionResult.TRY_WITH_EMPTY_HAND;
+        if (this.wax(stack, state, level, pos, player, hit)) return InteractionResult.SUCCESS;
+        return InteractionResult.TRY_WITH_EMPTY_HAND;
     }
     *///?} else if >=1.20.5 {
     @Override
     public ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        return this.wax(stack, state, level, pos, player, hit) ? ItemInteractionResult.sidedSuccess(level.isClientSide()) : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (this.wax(stack, state, level, pos, player, hit)) return ItemInteractionResult.sidedSuccess(level.isClientSide());
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
     //?} else {
     /*@Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        return this.wax(player.getItemInHand(hand), state, level, pos, player, hit) ? InteractionResult.sidedSuccess(level.isClientSide()) : InteractionResult.PASS;
+        if (this.wax(player.getItemInHand(hand), state, level, pos, player, hit)) return InteractionResult.sidedSuccess(level.isClientSide());
+        return InteractionResult.PASS;
     }
     *///?}
 
@@ -260,15 +270,19 @@ public class MixedSlabBlock extends BaseEntityBlock {
         boolean second = MixedSlabs.targetsSecond(hit, pos, state.getValue(AXIS));
         Optional<BlockState> waxed = HoneycombItem.getWaxed(entity.getHalf(second));
         if (waxed.isEmpty()) return false;
+
         if (player instanceof ServerPlayer serverPlayer) {
             CriteriaTriggers.ITEM_USED_ON_BLOCK.trigger(serverPlayer, pos, stack);
         }
+
         if (!player.getAbilities().instabuild) {
             stack.shrink(1);
         }
+
         MixedSlabs.replaceHalf(level, pos, second, waxed.get());
         level.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(player, level.getBlockState(pos)));
         level.levelEvent(player, LevelEvent.PARTICLES_AND_SOUND_WAX_ON, pos, 0);
+
         return true;
     }
 
@@ -281,15 +295,16 @@ public class MixedSlabBlock extends BaseEntityBlock {
         return dropHalves(state, params, moving.first(), moving.second(), null, null, blockEntity);
     }
 
-    private static List<ItemStack> dropHalves(BlockState state, LootParams.Builder params, BlockState first, BlockState second, @Nullable BlockEntity firstEntity, @Nullable BlockEntity secondEntity, @Nullable BlockEntity original) {
+    private List<ItemStack> dropHalves(BlockState state, LootParams.Builder params, BlockState first, BlockState second, @Nullable BlockEntity firstEntity, @Nullable BlockEntity secondEntity, @Nullable BlockEntity original) {
         List<ItemStack> drops = new ArrayList<>(halfDrops(params, first, firstEntity));
         drops.addAll(halfDrops(params, second, secondEntity));
         params.withParameter(LootContextParams.BLOCK_STATE, state);
         params.withOptionalParameter(LootContextParams.BLOCK_ENTITY, original);
+
         return drops;
     }
 
-    private static List<ItemStack> halfDrops(LootParams.Builder params, BlockState half, @Nullable BlockEntity halfEntity) {
+    private List<ItemStack> halfDrops(LootParams.Builder params, BlockState half, @Nullable BlockEntity halfEntity) {
         params.withParameter(LootContextParams.BLOCK_STATE, half);
         params.withOptionalParameter(LootContextParams.BLOCK_ENTITY, halfEntity);
         return half.getDrops(params);

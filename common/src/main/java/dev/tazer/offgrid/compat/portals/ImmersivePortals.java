@@ -16,17 +16,15 @@ import qouteall.imm_ptl.core.chunk_loading.ImmPtlChunkTracking;
 /*import qouteall.imm_ptl.core.chunk_loading.NewChunkTrackingGraph;
 *///?}
 
-public final class ImmersivePortals {
+public class ImmersivePortals {
 
     private static Boolean loaded;
-
-    private ImmersivePortals() {
-    }
 
     public static boolean isLoaded() {
         if (loaded == null) {
             loaded = Integrations.isLoaded("imm_ptl_core") || Integrations.isLoaded("immersive_portals") || Integrations.isLoaded("immersive_portals_core");
         }
+
         return loaded;
     }
 

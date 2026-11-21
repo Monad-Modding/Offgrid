@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.util.Set;
 *///?}
 
-public final class NeoForgePlatform implements Platform {
+public class NeoForgePlatform implements Platform {
 
     @Override
     public String getName() {

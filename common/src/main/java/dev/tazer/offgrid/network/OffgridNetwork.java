@@ -10,7 +10,7 @@ import dev.tazer.offgrid.compat.create.CarriedOverlays;
 
 import java.util.List;
 
-public final class OffgridNetwork {
+public class OffgridNetwork {
 
     public static final PacketType<ChunkSync> CHUNK = PacketType.clientbound("chunk", ChunkSync.class, ChunkSync::write, ChunkSync::read);
     public static final PacketType<CellSync> CELL = PacketType.clientbound("cell", CellSync.class, CellSync::write, CellSync::read);
@@ -27,9 +27,6 @@ public final class OffgridNetwork {
     public static final PacketType<UseCarriedOverlay> USE_CARRIED = PacketType.serverbound("use_carried", UseCarriedOverlay.class, UseCarriedOverlay::write, UseCarriedOverlay::read, CarriedOverlays::use);
     //?}
     public static final PacketType<PickOverlay> PICK = PacketType.serverbound("pick", PickOverlay.class, PickOverlay::write, PickOverlay::read, Interactions::pick);
-
-    private OffgridNetwork() {
-    }
 
     public static List<PacketType<?>> all() {
         //? if <26 {

@@ -12,10 +12,7 @@ import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.storage.TagValueInput;
 *///?}
 
-public final class BlockEntities {
-
-    private BlockEntities() {
-    }
+public class BlockEntities {
 
     @Nullable
     public static BlockEntity viewedAt(BlockPos pos) {
@@ -36,6 +33,7 @@ public final class BlockEntities {
             action.run();
             return;
         }
+
         Scope.run(Scope.VIEWED_ENTITY, blockEntity, action);
     }
 

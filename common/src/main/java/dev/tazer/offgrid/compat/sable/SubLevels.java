@@ -8,10 +8,7 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-public final class SubLevels {
-
-    private SubLevels() {
-    }
+public class SubLevels {
 
     public static Vec3 project(Level level, Vec3 pos) {
         return SableCompanion.INSTANCE.projectOutOfSubLevel(level, pos);

@@ -34,25 +34,22 @@ import net.minecraft.util.RandomSource;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class OverlayCracks {
+public class OverlayCracks {
 
-    private static final double RANGE_SQR = 1024.0;
-    private static final int EXPIRY_TICKS = 400;
     private static final Int2ObjectMap<Destruction> DESTRUCTIONS = new Int2ObjectOpenHashMap<>();
 
     @Nullable
     private static ClientLevel destructionLevel;
 
-    private OverlayCracks() {
-    }
-
     public static void apply(OverlayDestruction packet) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) return;
+
         if (level != destructionLevel) {
             DESTRUCTIONS.clear();
             destructionLevel = level;
         }
+
         if (packet.stage() < 0 || packet.stage() > 9) {
             DESTRUCTIONS.remove(packet.breaker());
         } else {
@@ -65,11 +62,13 @@ public final class OverlayCracks {
         Minecraft minecraft = Minecraft.getInstance();
         ClientLevel level = minecraft.level;
         if (level == null) return;
+
         for (Crack crack : collect(level, camera)) {
             BlockState state = crack.overlay().getState();
             if (state.getRenderShape() != RenderShape.MODEL) {
                 continue;
             }
+
             BlockPos host = crack.host();
             Vec3 offset = crack.overlay().getOffset();
             poseStack.pushPose();
@@ -91,9 +90,9 @@ public final class OverlayCracks {
             poseStack.pushPose();
             SubLevelView.enter(poseStack, camera, host, overlay.getOffset(), partialTick);
             //? if >=1.21 {
-            VertexConsumer consumer = new SheetedDecalTextureGenerator(minecraft.renderBuffers().crumblingBufferSource().getBuffer(ModelBakery.DESTROY_TYPES.get(crack.stage())), poseStack.last(), 1.0F);
+            VertexConsumer consumer = new SheetedDecalTextureGenerator(minecraft.renderBuffers().crumblingBufferSource().getBuffer(ModelBakery.DESTROY_TYPES.get(crack.stage())), poseStack.last(), 1);
             //?} else {
-            /*VertexConsumer consumer = new SheetedDecalTextureGenerator(minecraft.renderBuffers().crumblingBufferSource().getBuffer(ModelBakery.DESTROY_TYPES.get(crack.stage())), poseStack.last().pose(), poseStack.last().normal(), 1.0F);
+            /*VertexConsumer consumer = new SheetedDecalTextureGenerator(minecraft.renderBuffers().crumblingBufferSource().getBuffer(ModelBakery.DESTROY_TYPES.get(crack.stage())), poseStack.last().pose(), poseStack.last().normal(), 1);
             *///?}
             OverlayContext.run(level, host, overlay, () -> minecraft.getBlockRenderer().renderBreakingTexture(overlay.getState(), host, level, poseStack, consumer));
             poseStack.popPose();
@@ -124,45 +123,52 @@ public final class OverlayCracks {
             DESTRUCTIONS.clear();
             destructionLevel = level;
         }
+
         OverlayHitResult target = OverlayBreaking.getTarget();
         int stage = OverlayBreaking.getStage();
         boolean breaking = target != null && stage >= 0;
         if (!breaking && DESTRUCTIONS.isEmpty()) return List.of();
         List<Crack> cracks = new ArrayList<>();
+
         if (breaking) {
             add(cracks, level, target.getBlockPos(), target.getOverlayId(), stage);
         }
+
         long now = level.getGameTime();
         ObjectIterator<Destruction> iterator = DESTRUCTIONS.values().iterator();
         while (iterator.hasNext()) {
             Destruction destruction = iterator.next();
-            if (now - destruction.updated() > EXPIRY_TICKS) {
+            if (now - destruction.updated() > 400) {
                 iterator.remove();
-            } else if (SubLevelSpace.distanceSqr(level, destruction.host(), camera) <= RANGE_SQR) {
+            } else if (SubLevelSpace.distanceSqr(level, destruction.host(), camera) <= 1024) {
                 add(cracks, level, destruction.host(), destruction.id(), destruction.stage());
             }
         }
+
         return cracks;
     }
 
     private static void add(List<Crack> cracks, ClientLevel level, BlockPos host, int id, int stage) {
         Overlay overlay = Cells.find(level, host, id);
         if (overlay == null) return;
+
         for (int i = 0; i < cracks.size(); i++) {
             Crack existing = cracks.get(i);
             if (existing.overlay() == overlay) {
                 if (stage > existing.stage()) {
                     cracks.set(i, new Crack(host, overlay, stage));
                 }
+
                 return;
             }
         }
+
         cracks.add(new Crack(host, overlay, stage));
     }
 
-    private record Destruction(BlockPos host, int id, int stage, long updated) {
+    public record Destruction(BlockPos host, int id, int stage, long updated) {
     }
 
-    private record Crack(BlockPos host, Overlay overlay, int stage) {
+    public record Crack(BlockPos host, Overlay overlay, int stage) {
     }
 }

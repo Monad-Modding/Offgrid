@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class OculusOverlayTags extends OverlayShaderTags {
+public class OculusOverlayTags extends OverlayShaderTags {
 
     private final List<BlockSensitiveBufferBuilder> touched = new ArrayList<>();
 
@@ -26,6 +26,7 @@ public final class OculusOverlayTags extends OverlayShaderTags {
     public void enter(OverlayGeometry.Entry entry) {
         Object2IntMap<BlockState> ids = WorldRenderingSettings.INSTANCE.getBlockStateIds();
         this.active = ids != null;
+
         if (!this.active) return;
         BlockPos host = entry.host();
         this.blockId = (short) ids.getOrDefault(entry.state(), -1);
@@ -40,6 +41,7 @@ public final class OculusOverlayTags extends OverlayShaderTags {
             builder.beginBlock(this.blockId, (short) -1, this.localX, this.localY, this.localZ);
             this.touched.add(builder);
         }
+
         return consumer;
     }
 
@@ -48,6 +50,7 @@ public final class OculusOverlayTags extends OverlayShaderTags {
         for (BlockSensitiveBufferBuilder builder : this.touched) {
             builder.endBlock();
         }
+
         this.touched.clear();
         this.active = false;
     }

@@ -71,6 +71,7 @@ public abstract class SchematicPrinterMixin implements OverlayPrinter {
         this.offgrid$overlays.clear();
         this.offgrid$overlays.addAll(this.offgrid$planned);
         this.offgrid$overlayIndex = -1;
+
         return placed;
     }
 
@@ -111,14 +112,17 @@ public abstract class SchematicPrinterMixin implements OverlayPrinter {
         this.offgrid$world = world;
         PrintedOverlay overlay = this.offgrid$current();
         if (overlay == null) return;
+
         if (world == null) {
             cir.setReturnValue(false);
             return;
         }
+
         boolean printable = overlay.isPrintable(world);
         if (!printable && this.offgrid$busy && world.isLoaded(overlay.pos()) && !overlay.isPlaced(world)) {
             this.offgrid$overlays.add(overlay);
         }
+
         cir.setReturnValue(printable);
     }
 
@@ -127,12 +131,13 @@ public abstract class SchematicPrinterMixin implements OverlayPrinter {
         PrintedOverlay overlay = this.offgrid$current();
         if (overlay == null) return;
         ci.cancel();
+
         if (!(this.offgrid$world instanceof ServerLevel level)) return;
         Overlay placed = Overlays.add(level, overlay.pos(), overlay.state(), overlay.offset(), overlay.tag());
         if (placed == null) return;
         this.offgrid$printedOverlay = true;
         SoundType sound = overlay.state().getSoundType();
-        level.playSound(null, overlay.pos(), sound.getPlaceSound(), SoundSource.BLOCKS, (sound.getVolume() + 1.0F) / 2.0F, sound.getPitch() * 0.8F);
+        level.playSound(null, overlay.pos(), sound.getPlaceSound(), SoundSource.BLOCKS, (sound.getVolume() + 1) / 2, sound.getPitch() * 0.8f);
     }
 
     @Inject(method = "handleCurrentTarget", at = @At("RETURN"), remap = false)
@@ -148,21 +153,26 @@ public abstract class SchematicPrinterMixin implements OverlayPrinter {
     @Inject(method = "markAllBlockRequirements", at = @At("RETURN"), cancellable = true, remap = false)
     private void offgrid$requireOverlays(CallbackInfoReturnable<Integer> cir, @Local(argsOnly = true) MaterialChecklist checklist, @Local(argsOnly = true) Level level) {
         int count = cir.getReturnValueI();
+
         for (PrintedOverlay overlay : this.offgrid$planned) {
             if (!level.isLoaded(overlay.pos())) {
                 checklist.warnBlockNotLoaded();
                 continue;
             }
+
             if (overlay.isPlaced(level)) {
                 continue;
             }
+
             ItemRequirement requirement = ItemRequirement.of(overlay.state(), null);
             if (requirement.isEmpty() || requirement.isInvalid()) {
                 continue;
             }
+
             checklist.require(requirement);
             count++;
         }
+
         cir.setReturnValue(count);
     }
 
@@ -187,7 +197,8 @@ public abstract class SchematicPrinterMixin implements OverlayPrinter {
     @Unique
     @Nullable
     private PrintedOverlay offgrid$current() {
-        return this.offgrid$overlayIndex >= 0 && this.offgrid$overlayIndex < this.offgrid$overlays.size() ? this.offgrid$overlays.get(this.offgrid$overlayIndex) : null;
+        if (this.offgrid$overlayIndex >= 0 && this.offgrid$overlayIndex < this.offgrid$overlays.size()) return this.offgrid$overlays.get(this.offgrid$overlayIndex);
+        return null;
     }
 }
 //?}

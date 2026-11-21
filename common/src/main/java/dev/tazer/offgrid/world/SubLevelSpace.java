@@ -8,10 +8,7 @@ import dev.tazer.offgrid.compat.Integrations;
 import dev.tazer.offgrid.compat.sable.SubLevels;
 //?}
 
-public final class SubLevelSpace {
-
-    private SubLevelSpace() {
-    }
+public class SubLevelSpace {
 
     public static boolean isActive() {
         //? if >=1.21 && <1.21.2 {

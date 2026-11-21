@@ -19,25 +19,18 @@ import org.joml.Vector3fc;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 //?}
 
-public final class QuadClipper {
-
-    private static final int FLOATS = 5;
-    private static final float EPSILON = 1.0E-5F;
-    private static final double MIN_AREA = 1.0E-8;
-    private static final float FACE_EPSILON = 1.0E-3F;
-    private static final float MERGE_DISTANCE = 1.0E-4F;
-
-    private QuadClipper() {
-    }
+public class QuadClipper {
 
     public static List<BakedQuad> clip(List<BakedQuad> quads, List<AABB> open) {
         if (quads.isEmpty()) return quads;
         if (open instanceof HostFaces faces) return underFaces(quads, faces);
         if (open instanceof Layers.HostOutline host) return underHost(quads, host);
         List<BakedQuad> clipped = new ArrayList<>(quads.size());
+
         for (BakedQuad quad : quads) {
             clip(quad, open, clipped);
         }
+
         return clipped;
     }
 
@@ -47,59 +40,71 @@ public final class QuadClipper {
         int axis = direction(quad).getAxis().ordinal();
         float plane = corners[axis];
         float[] points = new float[12];
+
         for (int vertex = 0; vertex < 4; vertex++) {
             for (int component = 0; component < 3; component++) {
-                float value = corners[vertex * FLOATS + component];
-                if (component == axis && Math.abs(value - plane) >= FACE_EPSILON) return null;
+                float value = corners[vertex * 5 + component];
+                if (component == axis && Math.abs(value - plane) >= 1.0E-3f) return null;
                 points[vertex * 3 + component] = component == axis ? plane : value;
             }
         }
+
         int first = axis == 0 ? 1 : 0;
         int second = axis == 2 ? 1 : 2;
         float area = signedArea(points, 3, 4, first, second);
-        if (Math.abs(area) < MIN_AREA) return null;
+        if (Math.abs(area) < 1.0E-8) return null;
         return new HostFaces.Face(axis, plane, points, Math.signum(area));
     }
 
     private static List<BakedQuad> underFaces(List<BakedQuad> quads, HostFaces host) {
         List<BakedQuad> kept = new ArrayList<>(quads.size());
+
         for (BakedQuad quad : quads) {
             float[] corners = read(quad);
             int axis = direction(quad).getAxis().ordinal();
             float plane = corners[axis];
             boolean flat = true;
+
             for (int vertex = 1; vertex < 4; vertex++) {
-                flat &= Math.abs(corners[vertex * FLOATS + axis] - plane) < FACE_EPSILON;
+                flat &= Math.abs(corners[vertex * 5 + axis] - plane) < 1.0E-3f;
             }
+
             if (!flat) {
                 kept.add(quad);
                 continue;
             }
+
             List<float[]> pieces = new ArrayList<>();
             pieces.add(corners);
             boolean cut = false;
+
             for (HostFaces.Face face : host.getFaces()) {
-                if (face.axis() != axis || Math.abs(face.plane() - plane) >= FACE_EPSILON) {
+                if (face.axis() != axis || Math.abs(face.plane() - plane) >= 1.0E-3f) {
                     continue;
                 }
+
                 List<float[]> remaining = subtract(pieces, face);
                 if (remaining != pieces) {
                     pieces = remaining;
                     cut = true;
                 }
+
                 if (pieces.isEmpty()) break;
             }
+
             if (!cut) {
                 kept.add(quad);
                 continue;
             }
+
             for (float[] piece : pieces) {
-                int count = piece.length / FLOATS;
-                if (count >= 3 && area(piece, count) > MIN_AREA) {
+                int count = piece.length / 5;
+                if (count >= 3 && area(piece, count) > 1.0E-8) {
                     emit(quad, piece, count, kept);
                 }
             }
         }
+
         return kept;
     }
 
@@ -109,11 +114,13 @@ public final class QuadClipper {
         float[] points = face.points();
         List<float[]> result = new ArrayList<>(pieces.size() + 4);
         boolean changed = false;
+
         for (float[] piece : pieces) {
             if (!overlaps(piece, points, first, second)) {
                 result.add(piece);
                 continue;
             }
+
             changed = true;
             float[] remaining = piece;
             for (int edge = 0; edge < 4 && remaining != null; edge++) {
@@ -122,16 +129,19 @@ public final class QuadClipper {
                 float ay = points[edge * 3 + second];
                 float bx = points[next * 3 + first];
                 float by = points[next * 3 + second];
-                if (Math.abs(bx - ax) < EPSILON && Math.abs(by - ay) < EPSILON) {
+                if (Math.abs(bx - ax) < 1.0E-5f && Math.abs(by - ay) < 1.0E-5f) {
                     continue;
                 }
+
                 float[] outside = clipHalf(remaining, first, second, ax, ay, bx, by, -face.winding());
                 if (outside != null) {
                     result.add(outside);
                 }
+
                 remaining = clipHalf(remaining, first, second, ax, ay, bx, by, face.winding());
             }
         }
+
         return changed ? result : pieces;
     }
 
@@ -140,54 +150,65 @@ public final class QuadClipper {
         float minY = Float.MAX_VALUE;
         float maxX = -Float.MAX_VALUE;
         float maxY = -Float.MAX_VALUE;
+
         for (int vertex = 0; vertex < 4; vertex++) {
             minX = Math.min(minX, points[vertex * 3 + first]);
             maxX = Math.max(maxX, points[vertex * 3 + first]);
             minY = Math.min(minY, points[vertex * 3 + second]);
             maxY = Math.max(maxY, points[vertex * 3 + second]);
         }
-        int count = piece.length / FLOATS;
+
+        int count = piece.length / 5;
         float pieceMinX = Float.MAX_VALUE;
         float pieceMinY = Float.MAX_VALUE;
         float pieceMaxX = -Float.MAX_VALUE;
         float pieceMaxY = -Float.MAX_VALUE;
+
         for (int vertex = 0; vertex < count; vertex++) {
-            pieceMinX = Math.min(pieceMinX, piece[vertex * FLOATS + first]);
-            pieceMaxX = Math.max(pieceMaxX, piece[vertex * FLOATS + first]);
-            pieceMinY = Math.min(pieceMinY, piece[vertex * FLOATS + second]);
-            pieceMaxY = Math.max(pieceMaxY, piece[vertex * FLOATS + second]);
+            pieceMinX = Math.min(pieceMinX, piece[vertex * 5 + first]);
+            pieceMaxX = Math.max(pieceMaxX, piece[vertex * 5 + first]);
+            pieceMinY = Math.min(pieceMinY, piece[vertex * 5 + second]);
+            pieceMaxY = Math.max(pieceMaxY, piece[vertex * 5 + second]);
         }
-        return pieceMinX < maxX - EPSILON && pieceMaxX > minX + EPSILON && pieceMinY < maxY - EPSILON && pieceMaxY > minY + EPSILON;
+
+        return pieceMinX < maxX - 1.0E-5f && pieceMaxX > minX + 1.0E-5f && pieceMinY < maxY - 1.0E-5f && pieceMaxY > minY + 1.0E-5f;
     }
 
     @Nullable
     private static float[] clipHalf(float[] polygon, int first, int second, float ax, float ay, float bx, float by, float side) {
-        int count = polygon.length / FLOATS;
-        float[] out = new float[(count + 1) * FLOATS];
+        int count = polygon.length / 5;
+        float[] out = new float[(count + 1) * 5];
         int written = 0;
-        for (int index = 0; index < count; index++) {
-            int current = index * FLOATS;
-            int next = ((index + 1) % count) * FLOATS;
+
+        for (int i = 0; i < count; i++) {
+            int current = i * 5;
+            int next = ((i + 1) % count) * 5;
             float a = side * edgeDistance(polygon[current + first], polygon[current + second], ax, ay, bx, by);
             float b = side * edgeDistance(polygon[next + first], polygon[next + second], ax, ay, bx, by);
-            boolean aInside = a >= -EPSILON;
-            boolean bInside = b >= -EPSILON;
+            boolean aInside = a >= -1.0E-5f;
+            boolean bInside = b >= -1.0E-5f;
+
             if (aInside) {
-                System.arraycopy(polygon, current, out, written * FLOATS, FLOATS);
+                System.arraycopy(polygon, current, out, written * 5, 5);
                 written++;
             }
-            if (aInside != bInside && Math.abs(a - b) > 0.0F) {
+
+            if (aInside != bInside && Math.abs(a - b) > 0f) {
                 float t = a / (a - b);
-                for (int component = 0; component < FLOATS; component++) {
-                    out[written * FLOATS + component] = polygon[current + component] + (polygon[next + component] - polygon[current + component]) * t;
+
+                for (int component = 0; component < 5; component++) {
+                    out[written * 5 + component] = polygon[current + component] + (polygon[next + component] - polygon[current + component]) * t;
                 }
+
                 written++;
             }
         }
+
         if (written < 3) return null;
-        float[] trimmed = new float[written * FLOATS];
+        float[] trimmed = new float[written * 5];
         System.arraycopy(out, 0, trimmed, 0, trimmed.length);
-        return area(trimmed, written) > MIN_AREA ? trimmed : null;
+
+        return area(trimmed, written) > 1.0E-8 ? trimmed : null;
     }
 
     private static float edgeDistance(float x, float y, float ax, float ay, float bx, float by) {
@@ -195,66 +216,79 @@ public final class QuadClipper {
     }
 
     private static float signedArea(float[] points, int stride, int count, int first, int second) {
-        float sum = 0.0F;
-        for (int index = 0; index < count; index++) {
-            int next = (index + 1) % count;
-            sum += points[index * stride + first] * points[next * stride + second] - points[next * stride + first] * points[index * stride + second];
+        float sum = 0;
+
+        for (int i = 0; i < count; i++) {
+            int next = (i + 1) % count;
+            sum += points[i * stride + first] * points[next * stride + second] - points[next * stride + first] * points[i * stride + second];
         }
-        return sum * 0.5F;
+
+        return sum * 0.5f;
     }
 
     private static List<BakedQuad> underHost(List<BakedQuad> quads, List<AABB> host) {
         List<BakedQuad> kept = new ArrayList<>(quads.size());
+
         for (BakedQuad quad : quads) {
             float[] corners = read(quad);
             int axis = direction(quad).getAxis().ordinal();
             float plane = corners[axis];
             boolean flat = true;
+
             for (int vertex = 1; vertex < 4; vertex++) {
-                flat &= Math.abs(corners[vertex * FLOATS + axis] - plane) < FACE_EPSILON;
+                flat &= Math.abs(corners[vertex * 5 + axis] - plane) < 1.0E-3f;
             }
+
             VoxelShape covered = flat ? coveredFaces(host, axis, plane) : Shapes.empty();
             if (covered.isEmpty()) {
                 kept.add(quad);
                 continue;
             }
+
             clip(quad, Shapes.join(Shapes.block(), covered, BooleanOp.ONLY_FIRST).toAabbs(), kept);
         }
+
         return kept;
     }
 
     private static VoxelShape coveredFaces(List<AABB> host, int axis, float plane) {
         VoxelShape covered = Shapes.empty();
+
         for (AABB box : host) {
-            if (Math.abs(min(box, axis) - plane) < FACE_EPSILON || Math.abs(max(box, axis) - plane) < FACE_EPSILON) {
+            if (Math.abs(min(box, axis) - plane) < 1.0E-3f || Math.abs(max(box, axis) - plane) < 1.0E-3f) {
                 covered = Shapes.or(covered, Shapes.create(switch (axis) {
-                    case 0 -> new AABB(plane - FACE_EPSILON, box.minY, box.minZ, plane + FACE_EPSILON, box.maxY, box.maxZ);
-                    case 1 -> new AABB(box.minX, plane - FACE_EPSILON, box.minZ, box.maxX, plane + FACE_EPSILON, box.maxZ);
-                    default -> new AABB(box.minX, box.minY, plane - FACE_EPSILON, box.maxX, box.maxY, plane + FACE_EPSILON);
+                    case 0 -> new AABB(plane - 1.0E-3f, box.minY, box.minZ, plane + 1.0E-3f, box.maxY, box.maxZ);
+                    case 1 -> new AABB(box.minX, plane - 1.0E-3f, box.minZ, box.maxX, plane + 1.0E-3f, box.maxZ);
+                    default -> new AABB(box.minX, box.minY, plane - 1.0E-3f, box.maxX, box.maxY, plane + 1.0E-3f);
                 }));
             }
         }
+
         return covered;
     }
 
     private static void clip(BakedQuad quad, List<AABB> open, List<BakedQuad> out) {
         float[] corners = read(quad);
+
         for (AABB box : open) {
             if (inside(corners, box)) {
                 out.add(quad);
                 return;
             }
         }
-        float[] buffer = new float[FLOATS * 16];
-        float[] scratch = new float[FLOATS * 16];
+
+        float[] buffer = new float[5 * 16];
+        float[] scratch = new float[5 * 16];
+
         for (AABB box : open) {
-            System.arraycopy(corners, 0, buffer, 0, FLOATS * 4);
+            System.arraycopy(corners, 0, buffer, 0, 5 * 4);
             int count = 4;
             for (int axis = 0; axis < 3 && count > 0; axis++) {
                 count = clipPlane(buffer, count, scratch, axis, (float) min(box, axis), true);
                 count = clipPlane(scratch, count, buffer, axis, (float) max(box, axis), false);
             }
-            if (count >= 3 && area(buffer, count) > MIN_AREA) {
+
+            if (count >= 3 && area(buffer, count) > 1.0E-8) {
                 emit(quad, buffer, count, out);
             }
         }
@@ -262,36 +296,43 @@ public final class QuadClipper {
 
     private static int clipPlane(float[] in, int count, float[] out, int axis, float plane, boolean lower) {
         int written = 0;
-        for (int index = 0; index < count; index++) {
-            int current = index * FLOATS;
-            int next = ((index + 1) % count) * FLOATS;
+
+        for (int i = 0; i < count; i++) {
+            int current = i * 5;
+            int next = ((i + 1) % count) * 5;
             float a = in[current + axis];
             float b = in[next + axis];
-            boolean aInside = lower ? a >= plane - EPSILON : a <= plane + EPSILON;
-            boolean bInside = lower ? b >= plane - EPSILON : b <= plane + EPSILON;
+            boolean aInside = lower ? a >= plane - 1.0E-5f : a <= plane + 1.0E-5f;
+            boolean bInside = lower ? b >= plane - 1.0E-5f : b <= plane + 1.0E-5f;
+
             if (aInside) {
-                System.arraycopy(in, current, out, written * FLOATS, FLOATS);
+                System.arraycopy(in, current, out, written * 5, 5);
                 written++;
             }
+
             if (aInside != bInside) {
                 float t = (plane - a) / (b - a);
-                for (int component = 0; component < FLOATS; component++) {
-                    out[written * FLOATS + component] = in[current + component] + (in[next + component] - in[current + component]) * t;
+
+                for (int component = 0; component < 5; component++) {
+                    out[written * 5 + component] = in[current + component] + (in[next + component] - in[current + component]) * t;
                 }
-                out[written * FLOATS + axis] = plane;
+
+                out[written * 5 + axis] = plane;
                 written++;
             }
         }
+
         return written;
     }
 
     private static boolean inside(float[] corners, AABB box) {
         for (int vertex = 0; vertex < 4; vertex++) {
             for (int axis = 0; axis < 3; axis++) {
-                float value = corners[vertex * FLOATS + axis];
-                if (value < min(box, axis) - EPSILON || value > max(box, axis) + EPSILON) return false;
+                float value = corners[vertex * 5 + axis];
+                if (value < min(box, axis) - 1.0E-5f || value > max(box, axis) + 1.0E-5f) return false;
             }
         }
+
         return true;
     }
 
@@ -312,12 +353,13 @@ public final class QuadClipper {
     }
 
     private static double area(float[] polygon, int count) {
-        double x = 0.0;
-        double y = 0.0;
-        double z = 0.0;
-        for (int index = 1; index + 1 < count; index++) {
-            int a = index * FLOATS;
-            int b = (index + 1) * FLOATS;
+        double x = 0;
+        double y = 0;
+        double z = 0;
+
+        for (int i = 1; i + 1 < count; i++) {
+            int a = i * 5;
+            int b = (i + 1) * 5;
             double ax = polygon[a] - polygon[0];
             double ay = polygon[a + 1] - polygon[1];
             double az = polygon[a + 2] - polygon[2];
@@ -328,21 +370,26 @@ public final class QuadClipper {
             y += az * bx - ax * bz;
             z += ax * by - ay * bx;
         }
+
         return x * x + y * y + z * z;
     }
 
     private static void emit(BakedQuad quad, float[] polygon, int count, List<BakedQuad> out) {
-        float[] distinct = new float[count * FLOATS];
+        float[] distinct = new float[count * 5];
         int kept = 0;
-        for (int index = 0; index < count; index++) {
-            if (kept > 0 && samePosition(polygon, index * FLOATS, distinct, (kept - 1) * FLOATS)) continue;
-            System.arraycopy(polygon, index * FLOATS, distinct, kept * FLOATS, FLOATS);
+
+        for (int i = 0; i < count; i++) {
+            if (kept > 0 && samePosition(polygon, i * 5, distinct, (kept - 1) * 5)) continue;
+            System.arraycopy(polygon, i * 5, distinct, kept * 5, 5);
             kept++;
         }
-        while (kept > 1 && samePosition(distinct, (kept - 1) * FLOATS, distinct, 0)) {
+
+        while (kept > 1 && samePosition(distinct, (kept - 1) * 5, distinct, 0)) {
             kept--;
         }
+
         if (kept < 3) return;
+
         for (int start = 1; start + 1 < kept; start += 2) {
             int third = start + 2 < kept ? start + 2 : start + 1;
             out.add(build(quad, distinct, 0, start, start + 1, third));
@@ -351,24 +398,27 @@ public final class QuadClipper {
 
     private static boolean samePosition(float[] first, int firstOffset, float[] second, int secondOffset) {
         for (int component = 0; component < 3; component++) {
-            if (Math.abs(first[firstOffset + component] - second[secondOffset + component]) > MERGE_DISTANCE) return false;
+            if (Math.abs(first[firstOffset + component] - second[secondOffset + component]) > 1.0E-4f) return false;
         }
+
         return true;
     }
 
     //? if >=26 {
     /*private static float[] read(BakedQuad quad) {
-        float[] corners = new float[FLOATS * 4];
+        float[] corners = new float[5 * 4];
+
         for (int vertex = 0; vertex < 4; vertex++) {
             Vector3fc position = quad.position(vertex);
             long uv = quad.packedUV(vertex);
-            int offset = vertex * FLOATS;
+            int offset = vertex * 5;
             corners[offset] = position.x();
             corners[offset + 1] = position.y();
             corners[offset + 2] = position.z();
             corners[offset + 3] = UVPair.unpackU(uv);
             corners[offset + 4] = UVPair.unpackV(uv);
         }
+
         return corners;
     }
 
@@ -381,28 +431,30 @@ public final class QuadClipper {
     }
 
     private static Vector3fc position(float[] polygon, int vertex) {
-        int offset = vertex * FLOATS;
+        int offset = vertex * 5;
         return new Vector3f(polygon[offset], polygon[offset + 1], polygon[offset + 2]);
     }
 
     private static long uv(float[] polygon, int vertex) {
-        int offset = vertex * FLOATS;
+        int offset = vertex * 5;
         return UVPair.pack(polygon[offset + 3], polygon[offset + 4]);
     }
     *///?} else {
     private static float[] read(BakedQuad quad) {
         int[] vertices = quad.getVertices();
         int stride = vertices.length / 4;
-        float[] corners = new float[FLOATS * 4];
+        float[] corners = new float[5 * 4];
+
         for (int vertex = 0; vertex < 4; vertex++) {
             int source = vertex * stride;
-            int offset = vertex * FLOATS;
+            int offset = vertex * 5;
             corners[offset] = Float.intBitsToFloat(vertices[source]);
             corners[offset + 1] = Float.intBitsToFloat(vertices[source + 1]);
             corners[offset + 2] = Float.intBitsToFloat(vertices[source + 2]);
             corners[offset + 3] = Float.intBitsToFloat(vertices[source + 4]);
             corners[offset + 4] = Float.intBitsToFloat(vertices[source + 5]);
         }
+
         return corners;
     }
 
@@ -415,9 +467,10 @@ public final class QuadClipper {
         int stride = source.length / 4;
         int[] vertices = new int[source.length];
         int[] order = {first, second, third, fourth};
+
         for (int vertex = 0; vertex < 4; vertex++) {
             int target = vertex * stride;
-            int offset = order[vertex] * FLOATS;
+            int offset = order[vertex] * 5;
             System.arraycopy(source, 0, vertices, target, stride);
             vertices[target] = Float.floatToRawIntBits(polygon[offset]);
             vertices[target + 1] = Float.floatToRawIntBits(polygon[offset + 1]);
@@ -425,6 +478,7 @@ public final class QuadClipper {
             vertices[target + 4] = Float.floatToRawIntBits(polygon[offset + 3]);
             vertices[target + 5] = Float.floatToRawIntBits(polygon[offset + 4]);
         }
+
         return new BakedQuad(vertices, quad.getTintIndex(), quad.getDirection(), quad.getSprite(), quad.isShade());
     }
     //?}

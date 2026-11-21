@@ -22,6 +22,7 @@ public abstract class ProjectileMixin {
             original.call(result);
             return;
         }
+
         OverlayContext.run(level, result.getBlockPos(), overlay, () -> original.call(result));
     }
 }

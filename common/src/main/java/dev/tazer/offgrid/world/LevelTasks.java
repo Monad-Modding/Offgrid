@@ -8,7 +8,7 @@ import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-public final class LevelTasks {
+public class LevelTasks {
 
     private final LongLinkedOpenHashSet promotions = new LongLinkedOpenHashSet();
     private final LongLinkedOpenHashSet revalidations = new LongLinkedOpenHashSet();

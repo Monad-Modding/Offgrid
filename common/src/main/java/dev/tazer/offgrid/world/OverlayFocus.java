@@ -10,20 +10,17 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-public final class OverlayFocus {
-
-    private static final double REACH_BUFFER = 4.0;
-
-    private OverlayFocus() {
-    }
+public class OverlayFocus {
 
     public static void focus(Level level, Player player, BlockPos host, Overlay overlay) {
         OffgridIndex index = OffgridIndex.of(level);
         if (index == null) return;
         Long2ObjectOpenHashMap<Focus> next = without(index, player.getUUID());
+
         if (overlay.getState().hasBlockEntity()) {
             next.put(host.asLong(), new Focus(player.getUUID(), overlay.getId()));
         }
+
         index.setFocuses(next);
     }
 
@@ -54,18 +51,21 @@ public final class OverlayFocus {
         OffgridIndex index = OffgridIndex.of(level);
         if (index == null || index.getFocuses().isEmpty()) return;
         Long2ObjectOpenHashMap<Focus> next = null;
+
         for (Long2ObjectMap.Entry<Focus> entry : index.getFocuses().long2ObjectEntrySet()) {
             BlockPos host = BlockPos.of(entry.getLongKey());
             Focus focus = entry.getValue();
             Player player = level.getPlayerByUUID(focus.player());
             Overlay overlay = Cells.find(level, host, focus.overlayId());
-            if (player == null || player.isRemoved() || overlay == null || overlay.getBlockEntity() == null || !Players.canReach(player, host, REACH_BUFFER)) {
+            if (player == null || player.isRemoved() || overlay == null || overlay.getBlockEntity() == null || !Players.canReach(player, host, 4)) {
                 if (next == null) {
                     next = new Long2ObjectOpenHashMap<>(index.getFocuses());
                 }
+
                 next.remove(entry.getLongKey());
             }
         }
+
         if (next != null) {
             index.setFocuses(next);
         }

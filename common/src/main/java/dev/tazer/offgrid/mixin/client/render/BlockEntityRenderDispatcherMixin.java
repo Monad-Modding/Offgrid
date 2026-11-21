@@ -30,6 +30,7 @@ public abstract class BlockEntityRenderDispatcherMixin {
             original.call(renderer, state, poseStack, collector, camera);
             return;
         }
+
         poseStack.pushPose();
         poseStack.translate(offset.x, offset.y, offset.z);
         original.call(renderer, state, poseStack, collector, camera);
@@ -43,6 +44,7 @@ public abstract class BlockEntityRenderDispatcherMixin {
             original.call(renderer, blockEntity, partialTick, poseStack, buffers, light, overlay);
             return;
         }
+
         poseStack.pushPose();
         poseStack.translate(offset.x, offset.y, offset.z);
         Offsets.suppress(() -> original.call(renderer, blockEntity, partialTick, poseStack, buffers, light, overlay));

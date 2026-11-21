@@ -16,9 +16,9 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
 import java.util.concurrent.CompletableFuture;
 
 //? if >=26 {
-/*public final class OffgridEntityTypeTagProvider extends FabricTagsProvider.EntityTypeTagsProvider {
+/*public class OffgridEntityTypeTagProvider extends FabricTagsProvider.EntityTypeTagsProvider {
 *///?} else {
-public final class OffgridEntityTypeTagProvider extends FabricTagProvider.EntityTypeTagProvider {
+public class OffgridEntityTypeTagProvider extends FabricTagProvider.EntityTypeTagProvider {
 //?}
 
     public OffgridEntityTypeTagProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registries) {

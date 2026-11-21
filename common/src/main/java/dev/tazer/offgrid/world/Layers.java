@@ -30,12 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-public final class Layers {
-
-    private static final int MAX_SNOW_LAYERS = 8;
-
-    private Layers() {
-    }
+public class Layers {
 
     public static boolean isLayer(BlockState state) {
         return state.is(OffgridTags.LAYERS);
@@ -46,8 +41,13 @@ public final class Layers {
     }
 
     public static boolean yields(BlockState layer, BlockPlaceContext context) {
-        if (!isLayer(layer) || OverlayContext.current() != null || !(context.getItemInHand().getItem() instanceof BlockItem item)) return false;
-        return OffgridSettings.of(context.getLevel()).allowsLayering() && cutsThrough(layer, item.getBlock().defaultBlockState());
+        if (!isLayer(layer)) return false;
+        if (OverlayContext.current() != null) return false;
+        if (context.getItemInHand().getItem() instanceof BlockItem item) {
+            return OffgridSettings.of(context.getLevel()).allowsLayering() && cutsThrough(layer, item.getBlock().defaultBlockState());
+        }
+
+        return false;
     }
 
     private static boolean cutsThrough(BlockState layer, BlockState placing) {
@@ -63,6 +63,7 @@ public final class Layers {
         for (Overlay overlay : Cells.overlays(level, pos)) {
             if (isLayer(overlay.getState()) && Overlays.isZero(overlay.getOffset()) && Blocklogging.at(level, pos, overlay) != null) return overlay;
         }
+
         return null;
     }
 
@@ -78,9 +79,11 @@ public final class Layers {
         if (index == null || index.isEmpty()) return null;
         Cell cell = index.getCell(pos);
         if (cell == null || !cell.hasOverlays()) return null;
+
         for (Overlay overlay : cell.overlays()) {
             if (isLayer(overlay.getState()) && Overlays.isZero(overlay.getOffset()) && Blocklogging.at(getter, pos, overlay) != null) return overlay.getState();
         }
+
         return null;
     }
 
@@ -104,7 +107,9 @@ public final class Layers {
 
     public static InteractionResult preserving(BlockItem item, BlockPlaceContext context, Supplier<InteractionResult> place) {
         Level level = context.getLevel();
-        if (Scope.get(Scope.REPLACED_LAYERS) != null || OverlayContext.current() != null || !OffgridSettings.of(level).allowsLayering()) return place.get();
+        if (Scope.get(Scope.REPLACED_LAYERS) != null) return place.get();
+        if (OverlayContext.current() != null) return place.get();
+        if (!OffgridSettings.of(level).allowsLayering()) return place.get();
         if (!cutsLayers(item.getBlock().defaultBlockState())) return place.get();
         List<Replaced> replaced = new ArrayList<>(2);
         InteractionResult result = Scope.with(Scope.REPLACED_LAYERS, replaced, place);
@@ -113,6 +118,7 @@ public final class Layers {
                 restore(level, layer);
             }
         }
+
         return result;
     }
 
@@ -126,7 +132,10 @@ public final class Layers {
         if (replaced.level() != level) return;
         BlockPos pos = replaced.pos();
         BlockState layer = replaced.layer();
-        if (Blocklogging.of(layer, Cells.realState(level, pos)) == null || layerIn(level, pos) != null || !Overlays.survives(level, pos, layer, Vec3.ZERO, null, null)) return;
+        if (Blocklogging.of(layer, Cells.realState(level, pos)) == null) return;
+        if (layerIn(level, pos) != null) return;
+        if (!Overlays.survives(level, pos, layer, Vec3.ZERO, null, null)) return;
+
         if (level instanceof ServerLevel serverLevel) {
             Overlays.add(serverLevel, pos, layer, Vec3.ZERO, null);
         } else if (Cells.overlays(level, pos).size() < Overlays.MAX_PER_CELL && !Overlays.obstructed(level, pos, layer, Vec3.ZERO, null)) {
@@ -145,6 +154,7 @@ public final class Layers {
             host = Cells.realState(level, cell);
             if (!isHost(host)) return;
         }
+
         BlockState snow = Blocks.SNOW.defaultBlockState();
         if (Covers.isCovered(host) || Blocklogging.of(snow, host) == null || sheltered(host)) return;
         BlockPos target = cell;
@@ -153,13 +163,16 @@ public final class Layers {
             BlockState current = existing.getState();
             if (!current.is(Blocks.SNOW)) return;
             int layers = current.getValue(SnowLayerBlock.LAYERS);
-            if (layers >= Math.min(maxLayers, MAX_SNOW_LAYERS) || !OverlayContext.call(level, target, existing, () -> biome.shouldSnow(level, target))) return;
+            if (layers >= Math.min(maxLayers, 8)) return;
+            if (!OverlayContext.call(level, target, existing, () -> biome.shouldSnow(level, target))) return;
             BlockState grown = current.setValue(SnowLayerBlock.LAYERS, layers + 1);
             if (Blocklogging.of(grown, host) != null) {
                 OverlayContext.run(level, target, existing, () -> level.setBlockAndUpdate(target, grown));
             }
+
             return;
         }
+
         Overlay probe = new Overlay(-1, Blocks.AIR.defaultBlockState(), Vec3.ZERO, null);
         if (OverlayContext.call(level, target, probe, () -> biome.shouldSnow(level, target)) && Overlays.survives(level, target, snow, Vec3.ZERO, null, null)) {
             Overlays.add(level, target, snow, Vec3.ZERO, null);
@@ -170,21 +183,23 @@ public final class Layers {
         VoxelShape outline = host.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());
         if (outline.isEmpty()) return false;
         VoxelShape columns = Shapes.empty();
+
         for (AABB box : outline.toAabbs()) {
-            double minX = Math.max(0.0, box.minX);
-            double minZ = Math.max(0.0, box.minZ);
-            double maxX = Math.min(1.0, box.maxX);
-            double maxZ = Math.min(1.0, box.maxZ);
+            double minX = Math.max(0, box.minX);
+            double minZ = Math.max(0, box.minZ);
+            double maxX = Math.min(1, box.maxX);
+            double maxZ = Math.min(1, box.maxZ);
             if (minX >= maxX || minZ >= maxZ) continue;
-            columns = Shapes.or(columns, Shapes.box(minX, 0.0, minZ, maxX, 1.0, maxZ));
+            columns = Shapes.or(columns, Shapes.box(minX, 0, minZ, maxX, 1, maxZ));
         }
+
         return Shapes.join(Shapes.block(), columns, BooleanOp.ONLY_FIRST).isEmpty();
     }
 
     public record Replaced(Level level, BlockPos pos, BlockState layer) {
     }
 
-    public static final class HostOutline extends AbstractList<AABB> {
+    public static class HostOutline extends AbstractList<AABB> {
 
         private final List<AABB> boxes;
 

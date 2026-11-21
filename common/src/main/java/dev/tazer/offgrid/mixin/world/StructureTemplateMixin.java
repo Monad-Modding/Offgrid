@@ -48,7 +48,9 @@ public abstract class StructureTemplateMixin {
     @Inject(method = "fillFromWorld", at = @At("TAIL"))
     private void offgrid$captureCells(CallbackInfo ci, @Local(argsOnly = true) Level level, @Local(argsOnly = true, ordinal = 0) BlockPos origin, @Local(argsOnly = true) Vec3i size) {
         this.offgrid$cells.clear();
+
         if (size.getX() < 1 || size.getY() < 1 || size.getZ() < 1) return;
+
         for (BlockPos pos : BlockPos.betweenClosed(origin, origin.offset(size.getX() - 1, size.getY() - 1, size.getZ() - 1))) {
             AssembledCell cell = AssembledCell.copy(level, pos, pos.subtract(origin));
             if (cell != null) {
@@ -64,13 +66,16 @@ public abstract class StructureTemplateMixin {
         for (AssembledCell cell : this.offgrid$cells) {
             AssembledCell.CODEC.encodeStart(NbtOps.INSTANCE, cell).result().ifPresent(cells::add);
         }
+
         cir.getReturnValue().put(offgrid$CELLS, cells);
     }
 
     @Inject(method = "load", at = @At("TAIL"))
     private void offgrid$loadCells(CallbackInfo ci, @Local(argsOnly = true) CompoundTag tag) {
         this.offgrid$cells.clear();
+
         if (!(tag.get(offgrid$CELLS) instanceof ListTag cells)) return;
+
         for (Tag cell : cells) {
             AssembledCell.CODEC.parse(NbtOps.INSTANCE, cell).result().ifPresent(this.offgrid$cells::add);
         }
@@ -80,14 +85,17 @@ public abstract class StructureTemplateMixin {
     private static AssembledCell offgrid$process(ServerLevelAccessor accessor, BlockPos offset, BlockPos pivot, StructurePlaceSettings settings, AssembledCell cell) {
         if (settings.getProcessors().isEmpty()) return cell;
         List<AssembledCell.AssembledOverlay> processed = new ArrayList<>(cell.overlays().size());
+
         for (AssembledCell.AssembledOverlay overlay : cell.overlays()) {
             List<StructureTemplate.StructureBlockInfo> result = StructureTemplate.processBlockInfos(accessor, offset, pivot, settings, List.of(new StructureTemplate.StructureBlockInfo(cell.origin(), overlay.state(), overlay.tag())));
             if (result.isEmpty() || result.get(0).state().isAir()) {
                 continue;
             }
+
             StructureTemplate.StructureBlockInfo info = result.get(0);
             processed.add(new AssembledCell.AssembledOverlay(info.state(), overlay.offset(), info.nbt(), overlay.trigger()));
         }
+
         return new AssembledCell(cell.origin(), cell.offset(), List.copyOf(processed));
     }
 
@@ -95,23 +103,28 @@ public abstract class StructureTemplateMixin {
     private void offgrid$placeCells(CallbackInfoReturnable<Boolean> cir, @Local(argsOnly = true) ServerLevelAccessor accessor, @Local(argsOnly = true, ordinal = 0) BlockPos offset, @Local(argsOnly = true, ordinal = 1) BlockPos pivot, @Local(argsOnly = true) StructurePlaceSettings settings) {
         if (!cir.getReturnValueZ() || this.offgrid$cells.isEmpty()) return;
         BoundingBox bounds = settings.getBoundingBox();
+
         for (AssembledCell template : this.offgrid$cells) {
             AssembledCell cell = offgrid$process(accessor, offset, pivot, settings, template);
             BlockPos target = StructureTemplate.calculateRelativePosition(settings, cell.origin()).offset(offset);
             if (bounds != null && !bounds.isInside(target)) {
                 continue;
             }
+
             if (accessor instanceof ServerLevel level) {
                 cell.place(level, target, settings.getMirror(), settings.getRotation());
                 continue;
             }
+
             if (!(accessor instanceof WorldGenRegion)) {
                 OffgridIndex index = OffgridIndex.of(accessor);
                 if (index != null) {
                     cell.write(index.detachedChunk(ChunkPos.asLong(SectionPos.blockToSectionCoord(target.getX()), SectionPos.blockToSectionCoord(target.getZ()))), target, settings.getMirror(), settings.getRotation());
                 }
+
                 continue;
             }
+
             ChunkAccess chunk = accessor.getChunk(SectionPos.blockToSectionCoord(target.getX()), SectionPos.blockToSectionCoord(target.getZ()), ChunkStatus.EMPTY, false);
             OffgridChunk data = chunk == null ? null : Services.PLATFORM.getOrCreateGeneratingChunkData(accessor.getLevel(), chunk);
             if (data != null) {

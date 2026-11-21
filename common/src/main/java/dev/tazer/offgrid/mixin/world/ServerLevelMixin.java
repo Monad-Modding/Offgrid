@@ -58,11 +58,14 @@ public abstract class ServerLevelMixin {
             if (OverlayFocus.isFocused(level, pos) && Scope.get(Scope.FRAME) == null) {
                 Cells.sync(level, pos);
             }
+
             return;
         }
+
         if (Cells.contains(level, frame.getHost(), frame.getOverlay())) {
             Cells.sync(level, frame.getHost());
         }
+
         ci.cancel();
     }
 

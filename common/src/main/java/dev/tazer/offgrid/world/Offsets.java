@@ -9,10 +9,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-public final class Offsets {
-
-    private Offsets() {
-    }
+public class Offsets {
 
     @Nullable
     public static Vec3 at(@Nullable BlockGetter getter, BlockPos pos) {
@@ -56,18 +53,22 @@ public final class Offsets {
 
     public static int relocatedSignal(Level level, BlockPos pos, Direction direction, boolean direct, int original) {
         int best = original;
+
         for (Direction side : Direction.values()) {
             BlockPos neighbour = pos.relative(side);
             if (at(level, neighbour) == null || !level.hasChunkAt(neighbour)) {
                 continue;
             }
+
             BlockState state = level.getBlockState(neighbour);
             if (!state.isSignalSource() || Support.direction(state) != side.getOpposite() || !movedIntoSupport(level, neighbour, state)) {
                 continue;
             }
+
             int signal = Scope.with(Scope.READING_SOURCE, Boolean.TRUE, () -> direct ? state.getDirectSignal(level, neighbour, direction) : state.getSignal(level, neighbour, direction));
             best = Math.max(best, signal);
         }
+
         return best;
     }
 
@@ -77,17 +78,11 @@ public final class Offsets {
             if (at(level, neighbour) == null || !level.hasChunkAt(neighbour)) {
                 continue;
             }
+
             BlockState state = level.getBlockState(neighbour);
             if (state.isSignalSource() && Support.direction(state) == side.getOpposite() && movedIntoSupport(level, neighbour, state)) return true;
         }
-        return false;
-    }
 
-    @Nullable
-    public static BlockPos relocationTarget(Level level, BlockPos pos) {
-        if (at(level, pos) == null) return null;
-        BlockState state = level.getBlockState(pos);
-        if (!state.isSignalSource() || !movedIntoSupport(level, pos, state)) return null;
-        return pos.relative(Support.direction(state));
+        return false;
     }
 }

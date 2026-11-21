@@ -37,16 +37,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public final class Interactions {
+public class Interactions {
 
-    private static final double REACH_BUFFER = 2.0;
-    private static final double HIT_TOLERANCE = 1.0000001;
-    private static final double DESTRUCTION_RANGE_SQR = 1024.0;
     private static final Map<UUID, BreakSession> BREAKING = new HashMap<>();
     private static final Map<UUID, SignEdit> SIGN_EDITS = new HashMap<>();
-
-    private Interactions() {
-    }
 
     public static void use(UseOverlay packet, ServerPlayer player) {
         ServerLevel level = player.serverLevel();
@@ -82,6 +76,7 @@ public final class Interactions {
             }
             //?}
         }
+
         resync(player, level, host);
         resync(player, level, host.relative(hit.getDirection()));
     }
@@ -90,14 +85,18 @@ public final class Interactions {
         ServerLevel level = player.serverLevel();
         BlockPos host = BlockPos.of(packet.pos());
         Overlay overlay = Cells.find(level, host, packet.id());
+
         switch (packet.phase()) {
             case START -> {
                 OverlayFocus.clear(level, player);
+
                 if (!withinReach(player, host)) return;
+
                 if (overlay == null || !level.mayInteract(player, host)) {
                     resync(player, level, host);
                     return;
                 }
+
                 clearDestruction(BREAKING.put(player.getUUID(), new BreakSession(level, player.getId(), packet.pos(), packet.id(), level.getGameTime(), -1)));
                 OverlayContext.run(level, host, overlay, () -> overlay.getState().attack(level, host, player));
             }
@@ -105,11 +104,14 @@ public final class Interactions {
             case FINISH -> {
                 BreakSession session = BREAKING.remove(player.getUUID());
                 clearDestruction(session);
+
                 if (!withinReach(player, host)) return;
+
                 if (overlay == null || !level.mayInteract(player, host) || !player.isCreative() && !brokeInTime(level, host, overlay, player, session, packet)) {
                     resync(player, level, host);
                     return;
                 }
+
                 boolean destroyed = OverlayContext.call(level, host, overlay, () -> player.gameMode.destroyBlock(host));
                 if (!destroyed) {
                     resync(player, level, host);
@@ -135,11 +137,13 @@ public final class Interactions {
         if (frame == null || frame.getOverlay() == null || frame.getOverlay().getBlockEntity() != sign) return false;
         SIGN_EDITS.put(player.getUUID(), new SignEdit(sign.getBlockPos().asLong(), frame.getOverlay().getId()));
         OpenOverlaySign packet = new OpenOverlaySign(sign.getBlockPos().asLong(), frame.getOverlay().getId(), front);
+
         if (frame.getLevel() instanceof ServerLevel signLevel) {
             ImmersivePortals.sending(signLevel, player, () -> OffgridNetwork.sendToPlayer(player, OffgridNetwork.OPEN_SIGN, packet));
         } else {
             OffgridNetwork.sendToPlayer(player, OffgridNetwork.OPEN_SIGN, packet);
         }
+
         return true;
     }
 
@@ -158,6 +162,7 @@ public final class Interactions {
             OverlayContext.run(level, pos, overlay, () -> sign.updateSignText(player, front, lines));
             //?}
         }
+
         return true;
     }
 
@@ -170,6 +175,7 @@ public final class Interactions {
             if (session.level() != level) {
                 continue;
             }
+
             ServerPlayer player = level.getServer().getPlayerList().getPlayer(entry.getKey());
             BlockPos host = BlockPos.of(session.pos());
             Overlay overlay = Cells.find(level, host, session.id());
@@ -178,8 +184,9 @@ public final class Interactions {
                 clearDestruction(session);
                 continue;
             }
+
             float perTick = OverlayContext.call(level, host, overlay, () -> overlay.getState().getDestroyProgress(player, level, host));
-            int stage = Math.min(9, (int) (perTick * (level.getGameTime() - session.startedAt() + 1) * 10.0F));
+            int stage = Math.min(9, (int) (perTick * (level.getGameTime() - session.startedAt() + 1) * 10));
             if (stage != session.stage()) {
                 entry.setValue(session.withStage(stage));
                 sendDestruction(level, session.breaker(), host, session.id(), stage);
@@ -193,18 +200,18 @@ public final class Interactions {
     }
 
     private static boolean withinReach(ServerPlayer player, BlockPos host) {
-        return Players.canReach(player, host, REACH_BUFFER);
+        return Players.canReach(player, host, 2);
     }
 
     private static boolean hits(BlockHitResult hit, BlockPos host, Overlay overlay) {
         Vec3 relative = hit.getLocation().subtract(Vec3.atCenterOf(host)).subtract(overlay.getOffset());
-        return Math.abs(relative.x) < HIT_TOLERANCE && Math.abs(relative.y) < HIT_TOLERANCE && Math.abs(relative.z) < HIT_TOLERANCE;
+        return Math.abs(relative.x) < 1.0000001 && Math.abs(relative.y) < 1.0000001 && Math.abs(relative.z) < 1.0000001;
     }
 
     private static boolean brokeInTime(ServerLevel level, BlockPos host, Overlay overlay, ServerPlayer player, @Nullable BreakSession session, BreakOverlay packet) {
         float perTick = OverlayContext.call(level, host, overlay, () -> overlay.getState().getDestroyProgress(player, level, host));
-        if (perTick <= 0.0F) return false;
-        if (perTick >= 1.0F) return true;
+        if (perTick <= 0) return false;
+        if (perTick >= 1f) return true;
         if (session == null || session.pos() != packet.pos() || session.id() != packet.id()) return false;
         long elapsed = level.getGameTime() - session.startedAt();
         int expected = (int) Math.ceil(1.0 / perTick);
@@ -219,11 +226,13 @@ public final class Interactions {
 
     private static void sendDestruction(ServerLevel level, int breaker, BlockPos host, int id, int stage) {
         OverlayDestruction packet = new OverlayDestruction(breaker, host.asLong(), id, stage);
+
         for (ServerPlayer viewer : Cells.playersTracking(level, host)) {
             if (viewer.getId() == breaker) {
                 continue;
             }
-            if (SubLevelSpace.distanceSqr(level, host, viewer.position()) < DESTRUCTION_RANGE_SQR) {
+
+            if (SubLevelSpace.distanceSqr(level, host, viewer.position()) < 1024) {
                 ImmersivePortals.sending(level, viewer, () -> OffgridNetwork.sendToPlayer(viewer, OffgridNetwork.DESTRUCTION, packet));
             }
         }
@@ -234,13 +243,13 @@ public final class Interactions {
         Cells.sendTo(player, level, pos);
     }
 
-    private record BreakSession(ServerLevel level, int breaker, long pos, int id, long startedAt, int stage) {
+    public record BreakSession(ServerLevel level, int breaker, long pos, int id, long startedAt, int stage) {
 
         private BreakSession withStage(int stage) {
             return new BreakSession(this.level, this.breaker, this.pos, this.id, this.startedAt, stage);
         }
     }
 
-    private record SignEdit(long pos, int id) {
+    public record SignEdit(long pos, int id) {
     }
 }

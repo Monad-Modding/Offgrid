@@ -23,10 +23,7 @@ import net.minecraftforge.client.model.data.ModelData;
 import java.util.List;
 import java.util.function.Function;
 
-public final class ForgeOverlayGeometry {
-
-    private ForgeOverlayGeometry() {
-    }
+public class ForgeOverlayGeometry {
 
     public static void render(BlockAndTintGetter region, BlockPos origin, Function<RenderType, VertexConsumer> buffers) {
         OverlayShaderTags tags = Integrations.isLoaded(Integrations.OCULUS) ? new OculusOverlayTags() : OverlayShaderTags.create();
@@ -53,11 +50,13 @@ public final class ForgeOverlayGeometry {
                     for (RenderType type : model.getRenderTypes(state, random, data)) {
                         poseStack.pushPose();
                         poseStack.translate(entry.x(origin), entry.y(origin), entry.z(origin));
+
                         if (entry.open() == null) {
                             dispatcher.renderBatched(state, entry.host(), region, poseStack, buffers.apply(type), entry.culls(), random, data, type);
                         } else {
                             dispatcher.getModelRenderer().tesselateBlock(region, model, state, entry.host(), poseStack, buffers.apply(type), entry.culls(), random, seed, OverlayTexture.NO_OVERLAY, data, type);
                         }
+
                         poseStack.popPose();
                     }
                 });

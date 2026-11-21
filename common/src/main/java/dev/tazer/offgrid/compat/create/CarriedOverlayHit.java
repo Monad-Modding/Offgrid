@@ -6,7 +6,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-public final class CarriedOverlayHit extends BlockHitResult {
+public class CarriedOverlayHit extends BlockHitResult {
 
     private final int index;
 

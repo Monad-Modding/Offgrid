@@ -17,15 +17,12 @@ import net.minecraft.resources.ResourceKey;
 
 import java.util.function.BiConsumer;
 
-public final class OffgridBlocks {
+public class OffgridBlocks {
 
     public static final ResourceLocation MIXED_SLAB_ID = Offgrid.id("mixed_slab");
 
     private static MixedSlabBlock mixedSlab;
     private static BlockEntityType<MixedSlabBlockEntity> mixedSlabEntity;
-
-    private OffgridBlocks() {
-    }
 
     public static MixedSlabBlock getMixedSlab() {
         return mixedSlab;
@@ -46,7 +43,7 @@ public final class OffgridBlocks {
     }
 
     private static BlockBehaviour.Properties mixedSlabProperties() {
-        BlockBehaviour.Properties properties = BlockBehaviour.Properties.of().mapColor(MapColor.STONE).sound(SoundType.STONE).strength(2.0F, 6.0F).noLootTable()
+        BlockBehaviour.Properties properties = BlockBehaviour.Properties.of().mapColor(MapColor.STONE).sound(SoundType.STONE).strength(2, 6).noLootTable()
                 .lightLevel(state -> state.getValue(MixedSlabBlock.LIGHT))
                 .isRedstoneConductor((state, level, pos) -> state.getValue(MixedSlabBlock.OPAQUE))
                 .isSuffocating((state, level, pos) -> state.getValue(MixedSlabBlock.OPAQUE))

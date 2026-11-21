@@ -11,10 +11,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
-public final class MixedSlabParticles {
-
-    private MixedSlabParticles() {
-    }
+public class MixedSlabParticles {
 
     public static boolean crack(ClientLevel level, BlockPos pos, Direction side) {
         BlockState state = level.getBlockState(pos);
@@ -29,6 +26,7 @@ public final class MixedSlabParticles {
         double x = pos.getX() + random.nextDouble() * (box.maxX - box.minX - 0.2) + 0.1 + box.minX;
         double y = pos.getY() + random.nextDouble() * (box.maxY - box.minY - 0.2) + 0.1 + box.minY;
         double z = pos.getZ() + random.nextDouble() * (box.maxZ - box.minZ - 0.2) + 0.1 + box.minZ;
+
         switch (side) {
             case DOWN -> y = pos.getY() + box.minY - 0.1;
             case UP -> y = pos.getY() + box.maxY + 0.1;
@@ -37,7 +35,9 @@ public final class MixedSlabParticles {
             case WEST -> x = pos.getX() + box.minX - 0.1;
             case EAST -> x = pos.getX() + box.maxX + 0.1;
         }
-        minecraft.particleEngine.add(new TerrainParticle(level, x, y, z, 0.0, 0.0, 0.0, half, pos).setPower(0.2F).scale(0.6F));
+
+        minecraft.particleEngine.add(new TerrainParticle(level, x, y, z, 0, 0, 0, half, pos).setPower(0.2f).scale(0.6f));
+
         return true;
     }
 }

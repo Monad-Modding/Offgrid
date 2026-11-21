@@ -25,6 +25,7 @@ public abstract class ChunkAccessMixin {
         if (!((Object) this instanceof LevelChunk chunk)) return;
         OffgridChunk data = Services.PLATFORM.getChunkData(chunk);
         if (data == null) return;
+
         for (Long2ObjectMap.Entry<Cell> entry : data.getCells().long2ObjectEntrySet()) {
             int light = entry.getValue().light();
             if (light > 0) {

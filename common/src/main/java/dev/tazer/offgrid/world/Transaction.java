@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-public final class Transaction {
+public class Transaction {
 
     @Nullable
     private final Transaction previous;
@@ -29,19 +29,24 @@ public final class Transaction {
         for (int slot = 0; slot < before.length; slot++) {
             before[slot] = inventory.getItem(slot).copy();
         }
+
         Transaction transaction = new Transaction(Scope.get(Scope.TRANSACTION));
         InteractionResult result = Scope.with(Scope.TRANSACTION, transaction, action);
+
         if (transaction.refused) {
             for (int slot = 0; slot < before.length; slot++) {
                 if (!ItemStack.matches(inventory.getItem(slot), before[slot])) {
                     inventory.setItem(slot, before[slot]);
                 }
             }
+
             if (player instanceof ServerPlayer serverPlayer) {
                 serverPlayer.containerMenu.sendAllDataToRemote();
             }
+
             return InteractionResult.FAIL;
         }
+
         for (Runnable effect : transaction.deferred) {
             if (transaction.previous != null) {
                 transaction.previous.deferred.add(effect);
@@ -49,6 +54,7 @@ public final class Transaction {
                 effect.run();
             }
         }
+
         return result;
     }
 
@@ -60,6 +66,7 @@ public final class Transaction {
         Transaction transaction = Scope.get(Scope.TRANSACTION);
         if (transaction == null) return false;
         transaction.deferred.add(effect);
+
         return true;
     }
 

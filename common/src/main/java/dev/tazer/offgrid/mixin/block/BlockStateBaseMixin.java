@@ -63,12 +63,14 @@ public abstract class BlockStateBaseMixin {
         if (cell.offset() != null && !result.isEmpty() && level.getBlockState(pos).is(this.asState().getBlock())) {
             result = result.move(cell.offset().x, cell.offset().y, cell.offset().z);
         }
+
         for (Overlay overlay : cell.overlays()) {
             VoxelShape collision = OverlayShapes.collision(level, pos, overlay, context);
             if (!collision.isEmpty()) {
                 result = Shapes.or(result, collision);
             }
         }
+
         return result;
     }
 
@@ -108,6 +110,7 @@ public abstract class BlockStateBaseMixin {
     private void offgrid$notifyOverlays(Level level, BlockPos pos, Block block, @Nullable Orientation orientation, boolean moving, CallbackInfo ci) {
         Cell cell = Overlays.notifiedCell(level, pos);
         if (cell == null) return;
+
         for (Overlay overlay : cell.overlays()) {
             if (Cells.contains(level, pos, overlay)) {
                 OverlayContext.run(level, pos, overlay, () -> overlay.getState().handleNeighborChanged(level, pos, block, orientation, moving));
@@ -119,6 +122,7 @@ public abstract class BlockStateBaseMixin {
     private void offgrid$notifyOverlays(Level level, BlockPos pos, Block block, BlockPos fromPos, boolean moving, CallbackInfo ci) {
         Cell cell = Overlays.notifiedCell(level, pos);
         if (cell == null) return;
+
         for (Overlay overlay : cell.overlays()) {
             if (Cells.contains(level, pos, overlay)) {
                 OverlayContext.run(level, pos, overlay, () -> overlay.getState().handleNeighborChanged(level, pos, block, fromPos, moving));
@@ -130,6 +134,7 @@ public abstract class BlockStateBaseMixin {
     private void offgrid$notifyOverlays(Level level, BlockPos pos, Block block, BlockPos fromPos, boolean moving, CallbackInfo ci) {
         Cell cell = Overlays.notifiedCell(level, pos);
         if (cell == null) return;
+
         for (Overlay overlay : cell.overlays()) {
             if (Cells.contains(level, pos, overlay)) {
                 OverlayContext.run(level, pos, overlay, () -> overlay.getState().neighborChanged(level, pos, block, fromPos, moving));

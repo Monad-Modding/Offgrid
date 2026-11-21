@@ -34,15 +34,12 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public final class Overlays {
+public class Overlays {
 
     public static final int MAX_PER_CELL = 8;
 
     private static final int[] NONE = new int[0];
     private static final double SLIVER = 1.0 / 16.0 - Support.EPSILON;
-
-    private Overlays() {
-    }
 
     public static boolean canOffset(BlockState state) {
         return state.is(OffgridTags.CAN_OFFSET) && (!state.is(OffgridTags.CAN_BLOCKLOG) || Blocklogging.isAxial(state));
@@ -57,7 +54,7 @@ public final class Overlays {
     }
 
     public static boolean isZero(Vec3 offset) {
-        return offset.x == 0.0 && offset.y == 0.0 && offset.z == 0.0;
+        return offset.x == 0 && offset.y == 0 && offset.z == 0;
     }
 
     public static boolean obstructed(Level level, BlockPos host, BlockState state, Vec3 offset, @Nullable Overlay ignore) {
@@ -75,15 +72,18 @@ public final class Overlays {
         Vec3 currentOffset = cell.offset() != null && canOffset(current) ? cell.offset() : Vec3.ZERO;
         if (OverlayContext.outside(() -> obstructedInWorld(level, pos, current, currentOffset, null, true))) return false;
         Transaction.refuse();
+
         return true;
     }
 
     private static boolean obstructedInWorld(Level level, BlockPos host, BlockState state, Vec3 offset, @Nullable Overlay ignore, boolean replacingHost) {
         VoxelShape shape = OverlayShapes.of(level, host, state, offset, ignore);
         if (shape.isEmpty()) return false;
+
         for (Overlay existing : Cells.overlays(level, host)) {
             if (existing != ignore && existing.isSamePlacement(state, offset)) return true;
         }
+
         return collidesInWorld(level, host, shape, ignore, replacingHost);
     }
 
@@ -109,14 +109,17 @@ public final class Overlays {
                     if (!occupantShape.isEmpty() && Shapes.joinIsNotEmpty(shape, occupantShape.move(dx, dy, dz), BooleanOp.AND) && !edgeContact(shape, occupantShape.move(dx, dy, dz))) return true;
                 }
             }
+
             for (Overlay existing : Cells.overlays(level, cell)) {
                 if (existing == ignore) {
                     continue;
                 }
+
                 VoxelShape existingShape = OverlayShapes.of(level, cell, existing);
                 if (!existingShape.isEmpty() && Shapes.joinIsNotEmpty(shape, existingShape.move(dx, dy, dz), BooleanOp.AND) && !edgeContact(shape, existingShape.move(dx, dy, dz))) return true;
             }
         }
+
         return false;
     }
 
@@ -140,18 +143,23 @@ public final class Overlays {
     @Nullable
     public static Overlay add(ServerLevel level, BlockPos host, BlockState state, Vec3 offset, @Nullable CompoundTag tag) {
         OffgridChunk data = Cells.data(level, host, true);
-        if (data == null || data.getOrEmpty(host.asLong()).overlays().size() >= MAX_PER_CELL || obstructed(level, host, state, offset, null)) return null;
+        if (data == null) return null;
+        if (data.getOrEmpty(host.asLong()).overlays().size() >= MAX_PER_CELL) return null;
+        if (obstructed(level, host, state, offset, null)) return null;
         Overlay overlay = new Overlay(data.allocateId(), state, offset, tag);
         overlay.materialize(level, host);
         Cells.update(level, host, cell -> cell.with(overlay));
         OverlayContext.run(level, host, overlay, () -> BlockStates.placed(state, level, host, Blocks.AIR.defaultBlockState()));
         level.updateNeighborsAt(host, state.getBlock());
+
         if (Connections.isConnector(state)) {
             Connections.update(level, host);
         }
+
         if (Layers.isLayer(state)) {
             Layers.queueUnderside(level, host);
         }
+
         return overlay;
     }
 
@@ -167,6 +175,7 @@ public final class Overlays {
         Cell cell = Cells.get(level, pos);
         if (cell == null || cell.isEmpty()) return;
         BlockState state = Cells.realState(level, pos);
+
         if (cell.offset() != null) {
             if (state.isAir()) {
                 Cells.update(level, pos, existing -> existing.withOffset(null));
@@ -175,14 +184,17 @@ public final class Overlays {
                 state = Cells.realState(level, pos);
             }
         }
+
         for (Overlay overlay : List.copyOf(Cells.overlays(level, pos))) {
             if (!Cells.contains(level, pos, overlay)) {
                 continue;
             }
+
             if (!survives(level, pos, overlay.getState(), overlay.getOffset(), overlay, null) || obstructed(level, pos, overlay.getState(), overlay.getOffset(), overlay)) {
                 destroy(level, pos, overlay);
             }
         }
+
         if (state.isAir() && Cells.hasOverlays(level, pos)) {
             schedulePromotion(level, pos);
         }
@@ -195,12 +207,15 @@ public final class Overlays {
         OverlayContext.run(level, host, overlay, () -> BlockStates.removed(state, level, host, Blocks.AIR.defaultBlockState(), blockEntity));
         overlay.discardBlockEntity();
         Cells.update(level, host, cell -> cell.without(overlay), effects ? new int[]{overlay.getId()} : NONE);
+
         if (level instanceof ServerLevel serverLevel) {
             serverLevel.updateNeighborsAt(host, state.getBlock());
             revalidate(serverLevel, host);
+
             if (Connections.isConnector(state)) {
                 Connections.update(serverLevel, host);
             }
+
             if (Layers.isLayer(state)) {
                 Layers.queueUnderside(serverLevel, host);
             }
@@ -210,6 +225,7 @@ public final class Overlays {
     public static void destroy(ServerLevel level, BlockPos host, Overlay overlay) {
         if (!Cells.contains(level, host, overlay)) return;
         OverlayContext.run(level, host, overlay, () -> level.destroyBlock(host, true));
+
         if (Cells.contains(level, host, overlay)) {
             remove(level, host, overlay, true);
         }
@@ -220,13 +236,16 @@ public final class Overlays {
             if (!Cells.contains(level, host, overlay)) {
                 continue;
             }
+
             BlockState state = overlay.getState();
             if (!OverlayContext.call(level, host, overlay, () -> breakable.test(state))) {
                 continue;
             }
+
             BlockEntity blockEntity = overlay.getBlockEntity();
             List<ItemStack> stacks = OverlayContext.call(level, host, overlay, () -> Block.getDrops(state, level, host, blockEntity));
             remove(level, host, overlay, true);
+
             for (ItemStack stack : stacks) {
                 drops.accept(stack);
             }
@@ -241,6 +260,7 @@ public final class Overlays {
 
     public static void burn(FireBlock fire, Level level, BlockPos pos, int chance, RandomSource random) {
         if (!(level instanceof ServerLevel server) || !Cells.hasOverlays(level, pos)) return;
+
         for (Overlay overlay : Cells.overlays(level, pos)) {
             int odds = ((FireBlockAccessor) fire).offgrid$getBurnOdds(overlay.getState());
             if (odds > 0 && random.nextInt(chance) < odds) {
@@ -252,6 +272,7 @@ public final class Overlays {
     public static void explode(ServerLevel level, List<BlockPos> blown) {
         OffgridIndex index = OffgridIndex.of(level);
         if (index == null || index.isEmpty()) return;
+
         for (BlockPos pos : blown) {
             if (Cells.hasOverlays(level, pos)) {
                 destroyAll(level, pos);
@@ -261,37 +282,47 @@ public final class Overlays {
 
     public static boolean applyState(Level level, BlockPos host, Overlay overlay, BlockState requested, int flags) {
         if (!Cells.contains(level, host, overlay)) return !isRemoval(requested) && Placement.commit(level, host, overlay, requested);
+
         if (isRemoval(requested)) {
             OverlayContext.Frame frame = OverlayContext.at(level, host);
             remove(level, host, overlay, frame != null && frame.hasDestroyEffects());
             return true;
         }
+
         BlockState oldState = overlay.getState();
         BlockState newState = Blocklogging.refit(level, host, overlay, requested);
         if (newState == null || newState == oldState) return false;
+
         if (!oldState.is(newState.getBlock()) && worsens(level, host, overlay, oldState, newState)) {
             Transaction.refuse();
             return false;
         }
+
         BlockEntity blockEntity = overlay.getBlockEntity();
         overlay.setState(newState);
         OverlayContext.run(level, host, overlay, () -> {
             BlockStates.removed(oldState, level, host, newState, blockEntity);
             BlockStates.placed(newState, level, host, oldState);
         });
+
         if (newState.hasBlockEntity()) {
             overlay.materialize(level, host);
         }
+
         Cells.update(level, host, Cell::relit);
+
         if (level instanceof ServerLevel serverLevel && (Layers.isLayer(oldState) || Layers.isLayer(newState))) {
             Layers.queueUnderside(serverLevel, host);
         }
+
         if (level instanceof ServerLevel serverLevel && (flags & Block.UPDATE_NEIGHBORS) != 0) {
             serverLevel.updateNeighborsAt(host, oldState.getBlock());
+
             if (newState.hasAnalogOutputSignal()) {
                 serverLevel.updateNeighbourForOutputSignal(host, newState.getBlock());
             }
         }
+
         return true;
     }
 
@@ -321,19 +352,24 @@ public final class Overlays {
             if (cell.offset() != null && !keepsOffset(level, pos, oldState, newState, cell.offset())) {
                 Cells.update(level, pos, existing -> existing.withOffset(null));
             }
+
             if (cell.hasOverlays()) {
                 validateHost(level, pos, newState);
             }
         }
+
         validateNeighbours(level, pos);
         queueOffsetNeighbours(level, index, pos);
+
         if (newState.hasProperty(BlockStateProperties.SNOWY) && !oldState.is(newState.getBlock())) {
             index.getTasks().getUndersides().add(pos.asLong());
         }
+
         FluidState fluid = newState.getFluidState();
         if (!fluid.isEmpty()) {
             flood(level, pos, fluid);
         }
+
         if (Connections.involves(level, pos)) {
             Connections.update(level, pos);
         }
@@ -353,13 +389,16 @@ public final class Overlays {
             schedulePromotion(level, host);
             return;
         }
+
         VoxelShape hostShape = OverlayContext.outside(() -> newState.getShape(level, host, CollisionContext.empty()));
+
         for (Overlay overlay : Cells.overlays(level, host)) {
             boolean keep = survives(level, host, overlay.getState(), overlay.getOffset(), overlay, newState);
             if (keep && !hostShape.isEmpty()) {
                 VoxelShape shape = OverlayShapes.of(level, host, overlay);
                 keep = shape.isEmpty() || !Shapes.joinIsNotEmpty(shape, hostShape, BooleanOp.AND);
             }
+
             if (!keep) {
                 destroy(level, host, overlay);
             }
@@ -373,6 +412,7 @@ public final class Overlays {
                 if (!dependsOn(level, cell, overlay.getState(), overlay.getOffset(), overlay, changed)) {
                     continue;
                 }
+
                 if (!survives(level, cell, overlay.getState(), overlay.getOffset(), overlay, null)) {
                     destroy(level, cell, overlay);
                 }
@@ -386,6 +426,7 @@ public final class Overlays {
                 destroy(level, changed, overlay);
             }
         }
+
         validateNeighbours(level, changed);
         OffgridIndex index = OffgridIndex.of(level);
         if (index != null) {
@@ -395,6 +436,7 @@ public final class Overlays {
 
     private static void flood(ServerLevel level, BlockPos changed, FluidState fluid) {
         AABB changedBox = new AABB(changed);
+
         for (BlockPos cursor : BlockPos.betweenClosed(changed.offset(-1, -1, -1), changed.offset(1, 1, 1))) {
             BlockPos host = cursor.immutable();
             for (Overlay overlay : Cells.overlays(level, host)) {
@@ -402,6 +444,7 @@ public final class Overlays {
                 if (!bounds.deflate(Support.EPSILON).intersects(changedBox)) {
                     continue;
                 }
+
                 FluidState around = OverlayFluids.around(level, host, overlay.getState(), overlay.getOffset(), changed, fluid);
                 OverlayFluids.settle(level, host, overlay, around);
             }
@@ -415,6 +458,7 @@ public final class Overlays {
             if (cell == null || cell.offset() == null) {
                 continue;
             }
+
             BlockState state = Cells.realState(level, neighbour);
             if (dependsOn(level, neighbour, state, cell.offset(), null, changed)) {
                 index.getTasks().getRevalidations().add(neighbour.asLong());
@@ -443,17 +487,21 @@ public final class Overlays {
             validateHost(level, host, current);
             return;
         }
+
         Overlay chosen = null;
+
         for (Overlay overlay : Cells.overlays(level, host)) {
             if (survives(level, host, overlay.getState(), overlay.getOffset(), overlay, Blocks.AIR.defaultBlockState())) {
                 chosen = overlay;
                 break;
             }
         }
+
         if (chosen == null) {
             destroyAll(level, host);
             return;
         }
+
         Overlay promoted = chosen;
         Vec3 offset = promoted.getOffset();
         CompoundTag tag = promoted.saveBlockEntity();
@@ -468,6 +516,7 @@ public final class Overlays {
             BlockEntities.load(real, tag, level.registryAccess());
             real.setChanged();
         }
+
         broadcastBlock(level, host, real);
         Cells.sync(level, host);
     }
@@ -475,9 +524,11 @@ public final class Overlays {
     private static void broadcastBlock(ServerLevel level, BlockPos pos, @Nullable BlockEntity blockEntity) {
         ClientboundBlockUpdatePacket update = new ClientboundBlockUpdatePacket(level, pos);
         Packet<ClientGamePacketListener> data = blockEntity == null ? null : blockEntity.getUpdatePacket();
+
         for (ServerPlayer player : Cells.playersTracking(level, pos)) {
             ImmersivePortals.sending(level, player, () -> {
                 player.connection.send(update);
+
                 if (data != null) {
                     player.connection.send(data);
                 }

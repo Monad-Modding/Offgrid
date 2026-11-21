@@ -1,12 +1,7 @@
 package dev.tazer.offgrid.world;
 
 import dev.tazer.offgrid.compat.portals.ImmersivePortals;
-import dev.tazer.offgrid.network.CellData;
-import dev.tazer.offgrid.network.CellSync;
-import dev.tazer.offgrid.network.ChunkSync;
-import dev.tazer.offgrid.network.OffgridNetwork;
-import dev.tazer.offgrid.network.OverlayData;
-import dev.tazer.offgrid.network.PacketType;
+import dev.tazer.offgrid.network.*;
 import dev.tazer.offgrid.platform.Services;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.core.BlockPos;
@@ -27,15 +22,12 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.UnaryOperator;
 
-public final class Cells {
+public class Cells {
 
     private static final int[] NONE = new int[0];
 
     private static BiConsumer<Level, BlockPos> clientListener = (level, pos) -> {
     };
-
-    private Cells() {
-    }
 
     public static void setClientListener(BiConsumer<Level, BlockPos> listener) {
         clientListener = listener;
@@ -83,6 +75,7 @@ public final class Cells {
             OffgridChunk tracked = index.getChunk(ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4));
             if (tracked != null) return tracked;
         }
+
         LevelChunk chunk = chunkAt(level, pos);
         if (chunk == null) return null;
         return create ? Services.PLATFORM.getOrCreateChunkData(chunk) : Services.PLATFORM.getChunkData(chunk);
@@ -114,19 +107,23 @@ public final class Cells {
         if (index != null) {
             index.track(chunk.getPos().toLong(), data);
         }
+
         if (before.light() != after.light()) {
             level.getChunkSource().getLightEngine().checkBlock(pos);
         }
+
         if (!(level instanceof ServerLevel serverLevel)) {
             clientListener.accept(level, pos);
         } else {
             if (notify) {
                 sync(serverLevel, pos, after, broken);
             }
+
             if (!after.isEmpty()) {
                 Covers.queue(serverLevel, pos);
             }
         }
+
         return true;
     }
 
@@ -160,6 +157,7 @@ public final class Cells {
             CompoundTag tag = blockEntity == null ? null : BlockEntities.updateTag(blockEntity, level.registryAccess());
             overlays.add(new OverlayData(overlay.getId(), overlay.getState(), overlay.getOffset(), tag));
         }
+
         return new CellData(pos, cell.offset(), overlays);
     }
 
@@ -168,9 +166,11 @@ public final class Cells {
         OffgridChunk data = Services.PLATFORM.getChunkData(chunk);
         if (data == null || data.getCells().isEmpty()) return null;
         List<CellData> cells = new ArrayList<>(data.getCells().size());
+
         for (Long2ObjectMap.Entry<Cell> entry : data.getCells().long2ObjectEntrySet()) {
             cells.add(snapshot(level, entry.getLongKey(), entry.getValue()));
         }
+
         return new ChunkSync(chunk.getPos().toLong(), cells);
     }
 
@@ -209,6 +209,7 @@ public final class Cells {
         OffgridChunk data = index.getChunk(chunk.getPos().toLong());
         if (data == null) return;
         index.untrack(chunk.getPos().toLong());
+
         for (Cell cell : data.getCells().values()) {
             for (Overlay overlay : cell.overlays()) {
                 if (overlay.getBlockEntity() != null) {

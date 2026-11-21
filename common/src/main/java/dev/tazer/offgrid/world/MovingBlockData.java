@@ -33,6 +33,7 @@ public record MovingBlockData(@Nullable BlockState first, @Nullable BlockState s
         BlockState first = null;
         BlockState second = null;
         Stationary stationary = Stationary.NONE;
+
         if (merge != null) {
             first = merge.first();
             second = merge.second();
@@ -41,6 +42,7 @@ public record MovingBlockData(@Nullable BlockState first, @Nullable BlockState s
             first = slab.getFirst();
             second = slab.getSecond();
         }
+
         AssembledCell cell = capturedCell(level, source, moving.getBlockPos());
         if (first != null || cell != null) {
             holder.offgrid$setMovingBlockData(new MovingBlockData(first, second, cell, stationary));
@@ -53,10 +55,12 @@ public record MovingBlockData(@Nullable BlockState first, @Nullable BlockState s
             OffgridIndex index = OffgridIndex.of(level);
             return index == null ? null : index.takeMovingCell(moving.asLong(), level.getGameTime());
         }
+
         AssembledCell cell = AssembledCell.assemble(serverLevel, source);
         if (cell != null && !cell.overlays().isEmpty()) {
             Cells.sendTracking(serverLevel, source, OffgridNetwork.MOVING_CELL, new MovingCell(moving.asLong(), cell));
         }
+
         return cell;
     }
 
@@ -65,9 +69,11 @@ public record MovingBlockData(@Nullable BlockState first, @Nullable BlockState s
         MovingBlockData data = holder.offgrid$getMovingBlockData();
         if (data == null) return;
         holder.offgrid$setMovingBlockData(null);
+
         if (data.hasHalves() && level.getBlockEntity(pos) instanceof MixedSlabBlockEntity slab) {
             slab.setHalves(data.first(), data.second());
         }
+
         if (data.cell() != null && level instanceof ServerLevel serverLevel) {
             data.cell().disassemble(serverLevel, pos, Rotation.NONE);
             AssembledCell.reevaluate(serverLevel, List.of(pos));

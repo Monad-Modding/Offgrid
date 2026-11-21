@@ -27,33 +27,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class CarriedOverlays {
-
-    private static final double TRACKING_RANGE_SQR = 160.0 * 160.0;
-
-    private CarriedOverlays() {
-    }
+public class CarriedOverlays {
 
     @Nullable
     public static BlockHitResult clip(CarriedCells carried, Map<BlockPos, BlockState> hosts, Vec3 localFrom, Vec3 localTo, @Nullable BlockHitResult blocks) {
         BlockHitResult best = blocks;
         double nearest = blocks == null ? Double.MAX_VALUE : blocks.getLocation().distanceToSqr(localFrom);
+
         for (Map.Entry<BlockPos, AssembledCell> entry : carried.offgrid$getCarriedCells().entrySet()) {
             BlockPos local = entry.getKey();
             List<AssembledCell.AssembledOverlay> overlays = entry.getValue().overlays();
-            for (int index = 0; index < overlays.size(); index++) {
-                VoxelShape shape = outline(overlays.get(index), hosts.get(local));
+            for (int i = 0; i < overlays.size(); i++) {
+                VoxelShape shape = outline(overlays.get(i), hosts.get(local));
                 BlockHitResult hit = shape.isEmpty() ? null : shape.clip(localFrom, localTo, local);
                 if (hit == null) {
                     continue;
                 }
+
                 double distance = hit.getLocation().distanceToSqr(localFrom);
                 if (distance < nearest) {
                     nearest = distance;
-                    best = new CarriedOverlayHit(hit.getLocation(), hit.getDirection(), local, index);
+                    best = new CarriedOverlayHit(hit.getLocation(), hit.getDirection(), local, i);
                 }
             }
         }
+
         return best;
     }
 
@@ -69,7 +67,7 @@ public final class CarriedOverlays {
         AssembledCell cell = carried == null ? null : carried.offgrid$getCarriedCells().get(local);
         if (cell == null || packet.index() < 0 || packet.index() >= cell.overlays().size()) return;
         Vec3 global = carrier.offgrid$toGlobal(Vec3.atCenterOf(local));
-        if (player.distanceToSqr(global) > Math.pow(Players.reach(player) + 2.0, 2.0)) return;
+        if (player.distanceToSqr(global) > Math.pow(Players.reach(player) + 2, 2)) return;
         AssembledCell.AssembledOverlay overlay = cell.overlays().get(packet.index());
         if (!isUsable(overlay.state())) return;
         BlockState toggled = overlay.state().cycle(BlockStateProperties.POWERED);
@@ -79,24 +77,26 @@ public final class CarriedOverlays {
         carried.offgrid$getCarriedCells().put(local, changed);
         carried.offgrid$getCarriedBlockEntities().remove(overlay);
         Level level = player.level();
-        level.playSound(null, global.x, global.y, global.z, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.3F, toggled.getValue(BlockStateProperties.POWERED) ? 0.6F : 0.5F);
+        level.playSound(null, global.x, global.y, global.z, SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.3f, toggled.getValue(BlockStateProperties.POWERED) ? 0.6f : 0.5f);
         CarriedCellSync sync = new CarriedCellSync(entity.getId(), packet.pos(), changed);
+
         for (ServerPlayer viewer : player.serverLevel().players()) {
-            if (viewer.distanceToSqr(entity) <= TRACKING_RANGE_SQR) {
+            if (viewer.distanceToSqr(entity) <= (160 * 160)) {
                 OffgridNetwork.sendToPlayer(viewer, OffgridNetwork.CARRIED_CELL, sync);
             }
         }
     }
 
     public static void apply(Level level, CarriedCellSync packet) {
-        if (!(level.getEntity(packet.entity()) instanceof ContraptionCarrier carrier)) return;
-        CarriedCells carried = carrier.offgrid$getCarried();
-        if (carried == null) return;
-        BlockPos local = BlockPos.of(packet.pos());
-        AssembledCell previous = packet.cell() == null ? carried.offgrid$getCarriedCells().remove(local) : carried.offgrid$getCarriedCells().put(local, packet.cell());
-        if (previous != null) {
-            for (AssembledCell.AssembledOverlay overlay : previous.overlays()) {
-                carried.offgrid$getCarriedBlockEntities().remove(overlay);
+        if (level.getEntity(packet.entity()) instanceof ContraptionCarrier carrier) {
+            CarriedCells carried = carrier.offgrid$getCarried();
+            if (carried == null) return;
+            BlockPos local = BlockPos.of(packet.pos());
+            AssembledCell previous = packet.cell() == null ? carried.offgrid$getCarriedCells().remove(local) : carried.offgrid$getCarriedCells().put(local, packet.cell());
+            if (previous != null) {
+                for (AssembledCell.AssembledOverlay overlay : previous.overlays()) {
+                    carried.offgrid$getCarriedBlockEntities().remove(overlay);
+                }
             }
         }
     }

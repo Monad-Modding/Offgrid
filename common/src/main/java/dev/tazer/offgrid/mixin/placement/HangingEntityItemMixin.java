@@ -32,7 +32,10 @@ public abstract class HangingEntityItemMixin {
         *///?} else {
         boolean painting = this.type == EntityType.PAINTING;
         //?}
-        if (original || !painting || !direction.getAxis().isVertical() || !OffgridSettings.of(placer.level()).anyFacePaintings()) return original;
+        if (original) return original;
+        if (!painting) return original;
+        if (!direction.getAxis().isVertical()) return original;
+        if (!OffgridSettings.of(placer.level()).anyFacePaintings()) return original;
         return placer.mayUseItemAt(pos, direction, stack);
     }
 }

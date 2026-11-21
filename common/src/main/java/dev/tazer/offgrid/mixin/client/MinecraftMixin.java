@@ -20,11 +20,13 @@ public abstract class MinecraftMixin {
             original.call();
             return;
         }
+
         Overlay overlay = Cells.find(minecraft.level, hit.getBlockPos(), hit.getOverlayId());
         if (overlay == null) {
             original.call();
             return;
         }
+
         overlay.materialize(minecraft.level, hit.getBlockPos());
         OverlayContext.run(minecraft.level, hit.getBlockPos(), overlay, original::call);
     }

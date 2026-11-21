@@ -10,10 +10,7 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 import org.joml.Vector3dc;
 
-public final class SubLevelRenders {
-
-    private SubLevelRenders() {
-    }
+public class SubLevelRenders {
 
     public static boolean isOnSubLevel(BlockPos host) {
         return SableCompanion.INSTANCE.getContainingClient(host) != null;
@@ -30,6 +27,7 @@ public final class SubLevelRenders {
         poseStack.mulPose(new Quaternionf(pose.orientation()));
         poseStack.scale((float) scale.x(), (float) scale.y(), (float) scale.z());
         poseStack.translate(host.getX() + offset.x - pivot.x(), host.getY() + offset.y - pivot.y(), host.getZ() + offset.z - pivot.z());
+
         return true;
     }
 }

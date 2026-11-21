@@ -19,6 +19,7 @@ public abstract class BlockMixin {
         if (shift != Vec3.ZERO) {
             entity.setPos(entity.getX() + shift.x, entity.getY() + shift.y, entity.getZ() + shift.z);
         }
+
         return original.call(level, entity);
     }
 }

@@ -14,13 +14,10 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-public final class OverlayShapes {
+public class OverlayShapes {
 
     private static final double ROPE_MIN = 7.5 / 16.0;
     private static final double ROPE_MAX = 8.5 / 16.0;
-
-    private OverlayShapes() {
-    }
 
     public static VoxelShape of(BlockState state, Vec3 offset) {
         VoxelShape shape = state.getShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, CollisionContext.empty());
@@ -44,7 +41,7 @@ public final class OverlayShapes {
             try {
                 VoxelShape shape = state.getShape(level, host, CollisionContext.empty());
                 return shape.isEmpty() ? shape : shape.move(offset.x, offset.y, offset.z);
-            } catch (RuntimeException exception) {
+            } catch (RuntimeException e) {
                 return of(state, offset);
             }
         }));
@@ -77,11 +74,13 @@ public final class OverlayShapes {
         if (context == CollisionContext.empty() || !(getter instanceof Level level)) return collision(overlay);
         Vec3 offset = overlay.getOffset();
         VoxelShape shape;
+
         try {
             shape = OverlayContext.call(level, host, overlay, () -> overlay.getState().getCollisionShape(level, host, context));
-        } catch (RuntimeException exception) {
+        } catch (RuntimeException e) {
             return collision(overlay);
         }
+
         return shape.isEmpty() ? shape : shape.move(offset.x, offset.y, offset.z);
     }
 

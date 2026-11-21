@@ -34,9 +34,11 @@ public class SubLevelAssemblyHelperMixin {
     @WrapMethod(method = "moveBlocks")
     private static void offgrid$moveCells(ServerLevel level, SubLevelAssemblyHelper.AssemblyTransform transform, Iterable<BlockPos> blocks, Operation<Void> original) {
         List<BlockPos> moved = new ArrayList<>();
+
         for (BlockPos pos : blocks) {
             moved.add(pos.immutable());
         }
+
         boolean leaving = !moved.isEmpty() && SubLevels.contains(level, moved.get(0));
         AssembledCell.Held held = leaving ? AssembledCell.everything(level, moved) : AssembledCell.held(level, moved);
         moved.addAll(held.blocks());
@@ -44,27 +46,35 @@ public class SubLevelAssemblyHelperMixin {
         ServerLevel target = transform.getLevel();
         Set<BlockPos> sources = new LinkedHashSet<>(moved);
         sources.addAll(assembled.keySet());
+
         if (!leaving) {
             List<BlockPos> stale = new ArrayList<>(sources.size());
+
             for (BlockPos pos : sources) {
                 stale.add(transform.apply(pos));
             }
+
             AssembledCell.clear(target, stale);
         }
+
         Map<BlockPos, Direction.Axis> slabs = new LinkedHashMap<>();
+
         for (BlockPos pos : moved) {
             BlockState state = level.getBlockState(pos);
             if (state.getBlock() instanceof MixedSlabBlock) {
                 slabs.put(transform.apply(pos), state.getValue(MixedSlabBlock.AXIS));
             }
         }
+
         SubLevelLanding landing = new SubLevelLanding(transform, assembled, moved, slabs);
         SubLevelLanding.begin(landing);
+
         try {
             original.call(level, transform, moved);
         } finally {
             SubLevelLanding.end();
         }
+
         landing.land();
         AssembledCell.reevaluate(level, sources);
     }

@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.Map;
 
-public final class SubLevelLanding {
+public class SubLevelLanding {
     private static final Deque<SubLevelLanding> ACTIVE = new ArrayDeque<>();
 
     private final ServerLevel target;
@@ -53,6 +53,7 @@ public final class SubLevelLanding {
         this.landed = true;
         Rotation rotation = this.transform.getRotation();
         AssembledCell.landAll(this.target, this.cells, this.moved, this.transform::apply, state -> state.rotate(rotation), offset -> AssembledCell.rotate(offset, rotation));
+
         for (Map.Entry<BlockPos, Direction.Axis> slab : this.slabs.entrySet()) {
             MixedSlabs.rotate(this.target, slab.getKey(), slab.getValue(), rotation);
         }

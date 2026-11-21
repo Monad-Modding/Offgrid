@@ -1,13 +1,7 @@
 package dev.tazer.offgrid.mixin.world;
 
 import dev.tazer.offgrid.slab.MixedSlabs;
-import dev.tazer.offgrid.world.BlockEntities;
-import dev.tazer.offgrid.world.Connections;
-import dev.tazer.offgrid.world.OffgridIndex;
-import dev.tazer.offgrid.world.OffgridIndexHolder;
-import dev.tazer.offgrid.world.OverlayContext;
-import dev.tazer.offgrid.world.OverlayFocus;
-import dev.tazer.offgrid.world.Overlays;
+import dev.tazer.offgrid.world.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -38,11 +32,13 @@ public abstract class LevelMixin implements OffgridIndexHolder {
             cir.setReturnValue(frame.getOverlay().getState());
             return;
         }
+
         BlockState viewed = Connections.viewedAt((Level) (Object) this, pos);
         if (viewed != null) {
             cir.setReturnValue(viewed);
             return;
         }
+
         BlockState half = MixedSlabs.viewedHalf(pos);
         if (half != null) {
             cir.setReturnValue(half);
@@ -65,6 +61,7 @@ public abstract class LevelMixin implements OffgridIndexHolder {
             cir.setReturnValue(Overlays.applyState(level, frame.getHost(), frame.getOverlay(), state, flags));
             return;
         }
+
         if (Overlays.refusesChange(level, pos, state)) {
             cir.setReturnValue(false);
         }
@@ -78,6 +75,7 @@ public abstract class LevelMixin implements OffgridIndexHolder {
             cir.setReturnValue(frame.getOverlay().materialize(level, frame.getHost()));
             return;
         }
+
         BlockEntity viewed = BlockEntities.viewedAt(pos);
         if (viewed != null) {
             cir.setReturnValue(viewed);

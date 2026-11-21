@@ -75,19 +75,22 @@ public abstract class EntityMixin {
         OffgridIndex index = OffgridIndex.of(level);
         if (index == null || index.isEmpty()) return;
         AABB box = this.getBoundingBox().deflate(1.0E-7);
-        BlockPos min = BlockPos.containing(box.minX - 1.0, box.minY - 1.0, box.minZ - 1.0);
-        BlockPos max = BlockPos.containing(box.maxX + 1.0, box.maxY + 1.0, box.maxZ + 1.0);
+        BlockPos min = BlockPos.containing(box.minX - 1, box.minY - 1, box.minZ - 1);
+        BlockPos max = BlockPos.containing(box.maxX + 1, box.maxY + 1, box.maxZ + 1);
         for (BlockPos cursor : BlockPos.betweenClosed(min, max)) {
             Cell cell = index.getCell(cursor);
             if (cell == null || !cell.hasOverlays()) {
                 continue;
             }
+
             BlockPos host = cursor.immutable();
+
             for (Overlay overlay : cell.overlays()) {
                 Vec3 offset = overlay.getOffset();
                 if (!new AABB(host).move(offset.x, offset.y, offset.z).intersects(box)) {
                     continue;
                 }
+
                 OverlayContext.run(level, host, overlay, () -> touch.accept(host, overlay));
             }
         }
@@ -110,7 +113,7 @@ public abstract class EntityMixin {
         BlockState stepped = this.offgrid$steppedState(pos, state);
         if (stepped == null) return;
         SoundType sound = stepped.getSoundType();
-        ((Entity) (Object) this).playSound(sound.getStepSound(), sound.getVolume() * 0.15F, sound.getPitch());
+        ((Entity) (Object) this).playSound(sound.getStepSound(), sound.getVolume() * 0.15f, sound.getPitch());
         ci.cancel();
     }
 
@@ -133,21 +136,26 @@ public abstract class EntityMixin {
         AABB box = this.getBoundingBox();
         Overlay best = null;
         double bestTop = Double.NEGATIVE_INFINITY;
+
         for (Overlay overlay : cell.overlays()) {
             VoxelShape shape = OverlayShapes.collision(this.level(), pos, overlay);
             if (shape.isEmpty()) {
                 continue;
             }
+
             AABB bounds = shape.bounds().move(pos);
             if (bounds.maxX <= box.minX + Support.EPSILON || bounds.minX >= box.maxX - Support.EPSILON || bounds.maxZ <= box.minZ + Support.EPSILON || bounds.minZ >= box.maxZ - Support.EPSILON) {
                 continue;
             }
+
             if (Math.abs(bounds.maxY - this.getY()) > 0.05 || bounds.maxY <= bestTop) {
                 continue;
             }
+
             bestTop = bounds.maxY;
             best = overlay;
         }
+
         return best;
     }
 }

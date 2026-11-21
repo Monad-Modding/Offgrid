@@ -10,9 +10,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.jetbrains.annotations.Nullable;
 
-public final class OffgridIndex {
-
-    private static final long MOVING_CELL_LIFETIME = 40L;
+public class OffgridIndex {
 
     private final LevelTasks tasks = new LevelTasks();
     private final Long2ObjectOpenHashMap<MovingCellEntry> movingCells = new Long2ObjectOpenHashMap<>();
@@ -31,11 +29,14 @@ public final class OffgridIndex {
     }
 
     public static boolean hasCellsInSection(ChunkAccess chunk, int sectionIndex) {
-        if (!(chunk instanceof LevelChunk levelChunk)) return false;
-        OffgridIndex index = of(levelChunk.getLevel());
-        if (index == null || index.isEmpty()) return false;
-        OffgridChunk data = index.getChunk(chunk.getPos().toLong());
-        return data != null && data.hasCellsInSection(chunk.getSectionYFromSectionIndex(sectionIndex));
+        if (chunk instanceof LevelChunk levelChunk) {
+            OffgridIndex index = of(levelChunk.getLevel());
+            if (index == null || index.isEmpty()) return false;
+            OffgridChunk data = index.getChunk(chunk.getPos().toLong());
+            return data != null && data.hasCellsInSection(chunk.getSectionYFromSectionIndex(sectionIndex));
+        }
+
+        return false;
     }
 
     @Nullable
@@ -49,14 +50,14 @@ public final class OffgridIndex {
     }
 
     public void putMovingCell(long pos, AssembledCell cell, long time) {
-        this.movingCells.values().removeIf(entry -> time - entry.time() > MOVING_CELL_LIFETIME);
+        this.movingCells.values().removeIf(entry -> time - entry.time() > 40L);
         this.movingCells.put(pos, new MovingCellEntry(cell, time));
     }
 
     @Nullable
     public AssembledCell takeMovingCell(long pos, long time) {
         MovingCellEntry entry = this.movingCells.remove(pos);
-        return entry == null || time - entry.time() > MOVING_CELL_LIFETIME ? null : entry.cell();
+        return entry == null || time - entry.time() > 40L ? null : entry.cell();
     }
 
     public boolean isEmpty() {
@@ -95,6 +96,7 @@ public final class OffgridIndex {
         if (chunk != null) return chunk;
         OffgridChunk created = new OffgridChunk();
         this.track(chunkKey, created);
+
         return created;
     }
 
@@ -126,6 +128,6 @@ public final class OffgridIndex {
         this.tasks.clear();
     }
 
-    private record MovingCellEntry(AssembledCell cell, long time) {
+    public record MovingCellEntry(AssembledCell cell, long time) {
     }
 }

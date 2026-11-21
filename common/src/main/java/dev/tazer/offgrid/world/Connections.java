@@ -15,13 +15,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.Supplier;
 
-public final class Connections {
+public class Connections {
 
     private static final String NONE = "none";
-    private static final int SETTLE_BUDGET = 256;
-
-    private Connections() {
-    }
 
     public static <T> T viewing(BlockState asking, BlockPos pos, Supplier<T> action) {
         if (!isConnector(asking)) return action.get();
@@ -47,10 +43,12 @@ public final class Connections {
         if (index == null || index.isEmpty()) return null;
         Cell cell = index.getCell(pos);
         if (cell == null || !cell.hasOverlays()) return null;
+
         for (Overlay overlay : cell.overlays()) {
             BlockState state = overlay.getState();
             if (isConnector(state) && Blocklogging.at(getter, pos, state, overlay.getOffset()) != null) return state;
         }
+
         return null;
     }
 
@@ -59,7 +57,8 @@ public final class Connections {
         BlockState logged = loggedAt(getter, neighbour);
         if (logged == null) return neighbourState;
         Direction toward = between(neighbour, pos);
-        return toward != null && Blocklogging.canArm(logged, Blocklogging.hostState(getter, neighbour), toward) ? logged : neighbourState;
+        if (toward != null && Blocklogging.canArm(logged, Blocklogging.hostState(getter, neighbour), toward)) return logged;
+        return neighbourState;
     }
 
     public static BlockState forCulling(BlockState asking, BlockGetter getter, BlockPos neighbour, BlockState neighbourState) {
@@ -72,10 +71,12 @@ public final class Connections {
     public static void update(ServerLevel level, BlockPos pos) {
         Scope scope = Scope.current();
         enqueueAround(pos);
+
         if (scope.isSettling()) return;
         scope.setSettling(true);
+
         try {
-            int budget = SETTLE_BUDGET;
+            int budget = 256;
             while (!scope.getSettleQueue().isEmpty() && budget-- > 0) {
                 BlockPos next = scope.getSettleQueue().poll();
                 scope.getSettleQueued().remove(next.asLong());
@@ -90,9 +91,11 @@ public final class Connections {
 
     public static boolean involves(BlockGetter getter, BlockPos pos) {
         if (loggedAt(getter, pos) != null) return true;
+
         for (Direction direction : Direction.values()) {
             if (loggedAt(getter, pos.relative(direction)) != null) return true;
         }
+
         return false;
     }
 
@@ -120,17 +123,21 @@ public final class Connections {
 
     public static BlockState along(BlockState state, Direction.Axis axis) {
         BlockState along = state;
+
         for (Direction direction : Direction.Plane.HORIZONTAL) {
             along = direction.getAxis() == axis ? connect(along, direction) : disconnect(along, direction);
         }
+
         return settlePost(along);
     }
 
     public static BlockState bare(BlockState state) {
         BlockState bare = state;
+
         for (Direction direction : Direction.Plane.HORIZONTAL) {
             bare = disconnect(bare, direction);
         }
+
         return settlePost(bare);
     }
 
@@ -146,6 +153,7 @@ public final class Connections {
 
     private static void enqueueAround(BlockPos pos) {
         enqueue(pos);
+
         for (Direction direction : Direction.values()) {
             enqueue(pos.relative(direction));
         }
@@ -161,11 +169,13 @@ public final class Connections {
     private static void settle(ServerLevel level, BlockPos pos) {
         if (!level.hasChunkAt(pos)) return;
         BlockState host = Blocklogging.hostState(level, pos);
+
         for (Overlay overlay : List.copyOf(Cells.overlays(level, pos))) {
             BlockState current = overlay.getState();
             if (!isConnector(current) || Blocklogging.at(level, pos, overlay) == null) {
                 continue;
             }
+
             BlockState natural = OverlayContext.call(level, pos, overlay, () -> Block.updateFromNeighbourShapes(current, level, pos));
             BlockState fitted = Blocklogging.fit(natural, host, current);
             if (fitted == null && Blocklogging.runAxis(natural, host) != null) {
@@ -173,10 +183,12 @@ public final class Connections {
                 enqueueAround(pos);
                 continue;
             }
+
             if (fitted != null && fitted != current && Overlays.applyState(level, pos, overlay, fitted, Block.UPDATE_CLIENTS)) {
                 enqueueAround(pos);
             }
         }
+
         BlockState real = Cells.realState(level, pos);
         if (!isConnector(real)) return;
         BlockState natural = OverlayContext.outside(() -> Block.updateFromNeighbourShapes(real, level, pos));
@@ -191,15 +203,18 @@ public final class Connections {
         for (Direction direction : Direction.values()) {
             if (from.getX() + direction.getStepX() == to.getX() && from.getY() + direction.getStepY() == to.getY() && from.getZ() + direction.getStepZ() == to.getZ()) return direction;
         }
+
         return null;
     }
 
     @Nullable
     private static Property<?> side(BlockState state, Direction direction) {
         String name = direction.getSerializedName();
+
         for (Property<?> property : state.getProperties()) {
             if (property.getName().equals(name)) return property;
         }
+
         return null;
     }
 
@@ -214,6 +229,7 @@ public final class Connections {
             boolean none = value instanceof Boolean flag ? !flag : NONE.equals(property.getName(value));
             if (none != connected) return state.setValue(property, value);
         }
+
         return state;
     }
 

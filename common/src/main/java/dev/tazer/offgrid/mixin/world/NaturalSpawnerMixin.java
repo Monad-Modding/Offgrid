@@ -19,10 +19,14 @@ public abstract class NaturalSpawnerMixin {
     @ModifyReturnValue(method = "isValidEmptySpawnBlock", at = @At("RETURN"))
     private static boolean offgrid$overlaysBlockSpawns(boolean original, BlockGetter level, BlockPos pos, BlockState state, FluidState fluid, EntityType<?> type) {
         if (!original) return false;
+
         for (Overlay overlay : Cells.overlays(level, pos)) {
             BlockState overlayState = overlay.getState();
-            if (overlayState.isSignalSource() || overlayState.is(BlockTags.PREVENT_MOB_SPAWNING_INSIDE) || type.isBlockDangerous(overlayState)) return false;
+            if (overlayState.isSignalSource()) return false;
+            if (overlayState.is(BlockTags.PREVENT_MOB_SPAWNING_INSIDE)) return false;
+            if (type.isBlockDangerous(overlayState)) return false;
         }
+
         return true;
     }
 }

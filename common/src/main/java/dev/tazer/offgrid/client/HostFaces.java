@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class HostFaces extends AbstractList<AABB> {
+public class HostFaces extends AbstractList<AABB> {
 
     private static final Direction[] SIDES = {null, Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
     private static final Map<BlockState, Cached> CACHE = new ConcurrentHashMap<>();
@@ -34,9 +34,11 @@ public final class HostFaces extends AbstractList<AABB> {
     private HostFaces(List<Face> faces) {
         this.faces = List.copyOf(faces);
         List<AABB> bounds = new ArrayList<>(faces.size());
+
         for (Face face : faces) {
             bounds.add(face.bounds());
         }
+
         this.bounds = List.copyOf(bounds);
     }
 
@@ -52,6 +54,7 @@ public final class HostFaces extends AbstractList<AABB> {
             cached = new Cached(model, compute(host, pos, model));
             CACHE.put(host, cached);
         }
+
         return cached.faces() == null ? fallback : cached.faces();
     }
 
@@ -61,11 +64,13 @@ public final class HostFaces extends AbstractList<AABB> {
         List<Face> faces = new ArrayList<>();
         List<BlockStateModelPart> parts = new ArrayList<>();
         model.collectParts(RandomSource.create(host.getSeed(pos)), parts);
+
         for (BlockStateModelPart part : parts) {
             for (Direction side : SIDES) {
                 add(faces, part.getQuads(side));
             }
         }
+
         return faces.isEmpty() ? null : new HostFaces(faces);
     }
     *///?} else {
@@ -74,10 +79,12 @@ public final class HostFaces extends AbstractList<AABB> {
         List<Face> faces = new ArrayList<>();
         RandomSource random = RandomSource.create();
         long seed = host.getSeed(pos);
+
         for (Direction side : SIDES) {
             random.setSeed(seed);
             add(faces, model.getQuads(host, side, random));
         }
+
         return faces.isEmpty() ? null : new HostFaces(faces);
     }
     //?}
@@ -105,7 +112,7 @@ public final class HostFaces extends AbstractList<AABB> {
         return this.bounds.size();
     }
 
-    private record Cached(Object model, @Nullable HostFaces faces) {
+    public record Cached(Object model, @Nullable HostFaces faces) {
     }
 
     public record Face(int axis, float plane, float[] points, float winding) {
@@ -113,12 +120,14 @@ public final class HostFaces extends AbstractList<AABB> {
         public AABB bounds() {
             double[] min = {Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE};
             double[] max = {-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE};
+
             for (int vertex = 0; vertex < 4; vertex++) {
                 for (int component = 0; component < 3; component++) {
                     min[component] = Math.min(min[component], this.points[vertex * 3 + component]);
                     max[component] = Math.max(max[component], this.points[vertex * 3 + component]);
                 }
             }
+
             return new AABB(min[0], min[1], min[2], max[0], max[1], max[2]);
         }
     }

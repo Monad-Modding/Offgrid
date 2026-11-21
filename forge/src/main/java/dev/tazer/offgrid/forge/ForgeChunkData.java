@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class ForgeChunkData implements ICapabilitySerializable<CompoundTag> {
+public class ForgeChunkData implements ICapabilitySerializable<CompoundTag> {
 
     public static final Capability<OffgridChunk> CAPABILITY = CapabilityManager.get(new CapabilityToken<>() {
     });
@@ -59,14 +59,17 @@ public final class ForgeChunkData implements ICapabilitySerializable<CompoundTag
         if (pending == null || pending.isEmpty()) return;
         OffgridChunk data = chunk.getCapability(CAPABILITY).resolve().orElse(null);
         if (data == null) return;
+
         for (Long2ObjectMap.Entry<Cell> entry : pending.getCells().long2ObjectEntrySet()) {
             Cell cell = entry.getValue();
             List<Overlay> overlays = new ArrayList<>(cell.overlays().size());
             for (Overlay overlay : cell.overlays()) {
                 overlays.add(new Overlay(data.allocateId(), overlay.getState(), overlay.getOffset(), overlay.getBlockEntityTag()));
             }
+
             data.put(entry.getLongKey(), Cell.of(cell.offset(), overlays));
         }
+
         chunk.setUnsaved(true);
     }
 
@@ -82,9 +85,11 @@ public final class ForgeChunkData implements ICapabilitySerializable<CompoundTag
     @Override
     public CompoundTag serializeNBT() {
         CompoundTag tag = new CompoundTag();
+
         if (!this.data.isEmpty()) {
             OffgridChunk.CODEC.encodeStart(NbtOps.INSTANCE, this.data).result().ifPresent(encoded -> tag.put(KEY, encoded));
         }
+
         return tag;
     }
 

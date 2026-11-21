@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
-public final class Overlay {
+public class Overlay {
 
     public static final Codec<Overlay> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.INT.fieldOf("id").forGetter(Overlay::getId),
@@ -67,11 +67,14 @@ public final class Overlay {
     public void setState(BlockState state) {
         this.state = state;
         this.tickerResolved = false;
+
         if (this.blockEntity == null) return;
+
         if (this.blockEntity.getBlockState().getBlock() == state.getBlock() && state.hasBlockEntity()) {
             this.blockEntity.setBlockState(state);
             return;
         }
+
         this.discardBlockEntity();
         this.blockEntityTag = null;
     }
@@ -82,23 +85,29 @@ public final class Overlay {
             if (this.blockEntity.getLevel() != level) {
                 this.blockEntity.setLevel(level);
             }
+
             return this.blockEntity;
         }
+
         if (!(this.state.getBlock() instanceof EntityBlock entityBlock)) return null;
         BlockEntity created = entityBlock.newBlockEntity(host.immutable(), this.state);
         if (created == null) return null;
         ((OverlayBlockEntity) created).offgrid$setOverlay(this);
+
         if (this.blockEntityTag != null) {
             BlockEntities.load(created, this.blockEntityTag, level.registryAccess());
         }
+
         created.setLevel(level);
         this.blockEntity = created;
         this.tickerResolved = false;
+
         return created;
     }
 
     public void loadBlockEntity(Level level, @Nullable CompoundTag tag) {
         this.blockEntityTag = tag;
+
         if (this.blockEntity != null && tag != null) {
             BlockEntities.load(this.blockEntity, tag, level.registryAccess());
         }
@@ -110,6 +119,7 @@ public final class Overlay {
         if (current != null && !current.isRemoved() && current.getLevel() != null) {
             this.blockEntityTag = BlockEntities.save(current, current.getLevel().registryAccess());
         }
+
         return this.blockEntityTag;
     }
 
@@ -118,6 +128,7 @@ public final class Overlay {
             this.blockEntity.setRemoved();
             this.blockEntity = null;
         }
+
         this.ticker = null;
         this.tickerResolved = false;
     }
@@ -128,9 +139,11 @@ public final class Overlay {
         if (this.tickerResolved) return this.ticker;
         this.tickerResolved = true;
         this.ticker = null;
+
         if (this.blockEntity != null && this.state.getBlock() instanceof EntityBlock entityBlock) {
             this.ticker = entityBlock.getTicker(level, this.state, (BlockEntityType<BlockEntity>) this.blockEntity.getType());
         }
+
         return this.ticker;
     }
 

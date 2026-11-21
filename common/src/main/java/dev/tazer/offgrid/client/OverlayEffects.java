@@ -15,10 +15,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public final class OverlayEffects {
-
-    private OverlayEffects() {
-    }
+public class OverlayEffects {
 
     public static void destroy(Level level, BlockPos host, Overlay overlay) {
         destroy(level, host, overlay, true);
@@ -28,14 +25,16 @@ public final class OverlayEffects {
         BlockState state = overlay.getState();
         VoxelShape shape = OverlayShapes.of(level, host, overlay);
         BlockParticleOption particle = new BlockParticleOption(ParticleTypes.BLOCK, state);
+
         if (!shape.isEmpty()) {
             shape.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
-                double sizeX = Math.min(1.0, maxX - minX);
-                double sizeY = Math.min(1.0, maxY - minY);
-                double sizeZ = Math.min(1.0, maxZ - minZ);
+                double sizeX = Math.min(1, maxX - minX);
+                double sizeY = Math.min(1, maxY - minY);
+                double sizeZ = Math.min(1, maxZ - minZ);
                 int countX = Math.max(2, (int) Math.ceil(sizeX / 0.25));
                 int countY = Math.max(2, (int) Math.ceil(sizeY / 0.25));
                 int countZ = Math.max(2, (int) Math.ceil(sizeZ / 0.25));
+
                 for (int x = 0; x < countX; x++) {
                     for (int y = 0; y < countY; y++) {
                         for (int z = 0; z < countZ; z++) {
@@ -48,10 +47,11 @@ public final class OverlayEffects {
                 }
             });
         }
+
         if (!sound) return;
         Vec3 centre = OverlayShapes.centre(level, host, overlay);
         SoundType type = state.getSoundType();
-        level.playLocalSound(centre.x, centre.y, centre.z, type.getBreakSound(), SoundSource.BLOCKS, (type.getVolume() + 1.0F) / 2.0F, type.getPitch() * 0.8F, false);
+        level.playLocalSound(centre.x, centre.y, centre.z, type.getBreakSound(), SoundSource.BLOCKS, (type.getVolume() + 1) / 2, type.getPitch() * 0.8f, false);
     }
 
     public static void hit(Level level, BlockPos host, Overlay overlay, Direction face) {
@@ -62,6 +62,7 @@ public final class OverlayEffects {
         double x = host.getX() + random.nextDouble() * (bounds.maxX - bounds.minX - 0.2) + 0.1 + bounds.minX;
         double y = host.getY() + random.nextDouble() * (bounds.maxY - bounds.minY - 0.2) + 0.1 + bounds.minY;
         double z = host.getZ() + random.nextDouble() * (bounds.maxZ - bounds.minZ - 0.2) + 0.1 + bounds.minZ;
+
         switch (face) {
             case DOWN -> y = host.getY() + bounds.minY - 0.1;
             case UP -> y = host.getY() + bounds.maxY + 0.1;
@@ -70,6 +71,7 @@ public final class OverlayEffects {
             case WEST -> x = host.getX() + bounds.minX - 0.1;
             case EAST -> x = host.getX() + bounds.maxX + 0.1;
         }
-        level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, overlay.getState()), x, y, z, 0.0, 0.0, 0.0);
+
+        level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, overlay.getState()), x, y, z, 0, 0, 0);
     }
 }

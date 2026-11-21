@@ -14,15 +14,10 @@ import org.jetbrains.annotations.Nullable;
 import net.minecraft.world.entity.decoration.Painting;
 //?}
 
-public final class FlatPaintings {
+public class FlatPaintings {
 
     public static final String FACE_KEY = "offgrid:face";
     public static final String TOP_KEY = "offgrid:top";
-    private static final double WALL_GAP = 0.46875;
-    private static final double DEPTH = 0.0625;
-
-    private FlatPaintings() {
-    }
 
     @Nullable
     public static Direction placingTop() {
@@ -37,9 +32,12 @@ public final class FlatPaintings {
     }
 
     public static boolean isFlat(Entity entity) {
-        if (!(entity instanceof Painting)) return false;
-        Direction direction = entity.getDirection();
-        return direction != null && direction.getAxis().isVertical();
+        if (entity instanceof Painting) {
+            Direction direction = entity.getDirection();
+            return direction != null && direction.getAxis().isVertical();
+        }
+
+        return false;
     }
 
     public static Direction top(Entity entity) {
@@ -68,14 +66,14 @@ public final class FlatPaintings {
 
     public static AABB box(BlockPos pos, Direction face, Direction top, int width, int height) {
         Direction right = right(face, top);
-        double widthShift = width % 2 == 0 ? 0.5 : 0.0;
-        double heightShift = height % 2 == 0 ? 0.5 : 0.0;
-        double x = pos.getX() + 0.5 - face.getStepX() * WALL_GAP - right.getStepX() * widthShift + top.getStepX() * heightShift;
-        double y = pos.getY() + 0.5 - face.getStepY() * WALL_GAP;
-        double z = pos.getZ() + 0.5 - face.getStepZ() * WALL_GAP - right.getStepZ() * widthShift + top.getStepZ() * heightShift;
+        double widthShift = width % 2 == 0 ? 0.5 : 0;
+        double heightShift = height % 2 == 0 ? 0.5 : 0;
+        double x = pos.getX() + 0.5 - face.getStepX() * 0.46875 - right.getStepX() * widthShift + top.getStepX() * heightShift;
+        double y = pos.getY() + 0.5 - face.getStepY() * 0.46875;
+        double z = pos.getZ() + 0.5 - face.getStepZ() * 0.46875 - right.getStepZ() * widthShift + top.getStepZ() * heightShift;
         double sizeX = right.getAxis() == Direction.Axis.X ? width : height;
         double sizeZ = right.getAxis() == Direction.Axis.Z ? width : height;
-        return AABB.ofSize(new Vec3(x, y, z), sizeX, DEPTH, sizeZ);
+        return AABB.ofSize(new Vec3(x, y, z), sizeX, 0.0625, sizeZ);
     }
 
     public static BlockPos lightPos(Entity painting, int width, int height, int column, int row) {

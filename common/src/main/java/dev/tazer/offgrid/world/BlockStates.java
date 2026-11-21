@@ -12,10 +12,7 @@ import net.minecraft.world.Clearable;
 import net.minecraft.world.level.block.Blocks;
 //?}
 
-public final class BlockStates {
-
-    private BlockStates() {
-    }
+public class BlockStates {
 
     public static void removed(BlockState oldState, Level level, BlockPos pos, BlockState newState, @Nullable BlockEntity blockEntity) {
         if (level.isClientSide()) return;
@@ -24,6 +21,7 @@ public final class BlockStates {
         if (blockEntity != null) {
             blockEntity.preRemoveSideEffects(pos, oldState);
         }
+
         if (level instanceof ServerLevel serverLevel) {
             oldState.affectNeighborsAfterRemoval(serverLevel, pos, false);
         }

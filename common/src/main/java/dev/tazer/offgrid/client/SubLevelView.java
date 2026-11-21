@@ -8,10 +8,7 @@ import dev.tazer.offgrid.compat.sable.SubLevelRenders;
 import dev.tazer.offgrid.world.SubLevelSpace;
 //?}
 
-public final class SubLevelView {
-
-    private SubLevelView() {
-    }
+public class SubLevelView {
 
     public static boolean contains(BlockPos pos) {
         //? if >=1.21 && <1.21.2 {

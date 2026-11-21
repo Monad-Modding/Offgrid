@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 
-public final class ForgePlatform implements Platform {
+public class ForgePlatform implements Platform {
 
     @Override
     public String getName() {
@@ -82,6 +82,7 @@ public final class ForgePlatform implements Platform {
             player.connection.send(ForgeNetwork.CHANNEL.toVanillaPacket(packet, NetworkDirection.PLAY_TO_CLIENT));
             return;
         }
+
         ForgeNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }
 }

@@ -8,17 +8,17 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public final class MixedSlabCracks {
-
-    private MixedSlabCracks() {
-    }
+public class MixedSlabCracks {
 
     public static BlockState half(BlockState state, BlockGetter level, BlockPos pos) {
-        if (!(state.getBlock() instanceof MixedSlabBlock)) return state;
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null) return state;
-        boolean second = minecraft.hitResult instanceof BlockHitResult hit && hit.getBlockPos().equals(pos) ? MixedSlabs.targetsSecond(hit, pos, state.getValue(MixedSlabBlock.AXIS)) : MixedSlabs.targetsSecond(minecraft.player, pos, state.getValue(MixedSlabBlock.AXIS));
-        BlockState half = MixedSlabs.half(level, pos, second);
-        return half == null ? state : half;
+        if (state.getBlock() instanceof MixedSlabBlock) {
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft.player == null) return state;
+            boolean second = minecraft.hitResult instanceof BlockHitResult hit && hit.getBlockPos().equals(pos) ? MixedSlabs.targetsSecond(hit, pos, state.getValue(MixedSlabBlock.AXIS)) : MixedSlabs.targetsSecond(minecraft.player, pos, state.getValue(MixedSlabBlock.AXIS));
+            BlockState half = MixedSlabs.half(level, pos, second);
+            return half == null ? state : half;
+        }
+
+        return state;
     }
 }

@@ -11,18 +11,15 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.List;
 import java.util.function.Supplier;
 
-public final class ForgeNetwork {
+public class ForgeNetwork {
 
     private static final String PROTOCOL = "1";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(Offgrid.id("main"), () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
 
-    private ForgeNetwork() {
-    }
-
     public static void register() {
         List<PacketType<?>> types = OffgridNetwork.all();
-        for (int index = 0; index < types.size(); index++) {
-            register(types.get(index), index);
+        for (int i = 0; i < types.size(); i++) {
+            register(types.get(i), i);
         }
     }
 
@@ -34,6 +31,7 @@ public final class ForgeNetwork {
         NetworkEvent.Context network = context.get();
         network.enqueueWork(() -> {
             ServerPlayer sender = network.getSender();
+
             if (type.isServerbound()) {
                 if (sender != null) {
                     type.handleOnServer(packet, sender);

@@ -13,16 +13,11 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
-public final class OverlayBreaking {
-
-    private static final int DESTROY_DELAY = 5;
+public class OverlayBreaking {
 
     @Nullable
     private static OverlayHitResult target;
     private static float progress;
-
-    private OverlayBreaking() {
-    }
 
     @Nullable
     public static OverlayHitResult getTarget() {
@@ -30,8 +25,8 @@ public final class OverlayBreaking {
     }
 
     public static int getStage() {
-        if (target == null || progress <= 0.0F) return -1;
-        return Math.min(9, (int) (progress * 10.0F));
+        if (target == null || progress <= 0) return -1;
+        return Math.min(9, (int) (progress * 10));
     }
 
     public static boolean isAimingAt(BlockPos host) {
@@ -50,25 +45,29 @@ public final class OverlayBreaking {
         BlockPos host = hit.getBlockPos();
         Overlay overlay = Cells.find(level, host, hit.getOverlayId());
         if (overlay == null || !mayBreak(minecraft, level, player, host, overlay)) return false;
+
         if (player.getAbilities().instabuild) {
             send(host, overlay, BreakOverlay.Phase.FINISH);
             destroy(minecraft, level, host, overlay);
-            ((MultiPlayerGameModeAccessor) minecraft.gameMode).offgrid$setDestroyDelay(DESTROY_DELAY);
+            ((MultiPlayerGameModeAccessor) minecraft.gameMode).offgrid$setDestroyDelay(5);
+
             return true;
         }
+
         if (isTarget(host, overlay.getId())) return true;
         stop();
         target = hit;
-        progress = 0.0F;
+        progress = 0;
         send(host, overlay, BreakOverlay.Phase.START);
         OverlayContext.run(level, host, overlay, () -> overlay.getState().attack(level, host, player));
         float perTick = OverlayContext.call(level, host, overlay, () -> overlay.getState().getDestroyProgress(player, level, host));
-        if (perTick >= 1.0F) {
+        if (perTick >= 1) {
             send(host, overlay, BreakOverlay.Phase.FINISH);
             destroy(minecraft, level, host, overlay);
             target = null;
-            progress = 0.0F;
+            progress = 0;
         }
+
         return true;
     }
 
@@ -83,24 +82,28 @@ public final class OverlayBreaking {
             gameMode.offgrid$setDestroyDelay(delay - 1);
             return true;
         }
+
         if (player.getAbilities().instabuild) return start(hit);
         if (!isTarget(hit.getBlockPos(), hit.getOverlayId())) return start(hit);
         BlockPos host = hit.getBlockPos();
         Overlay overlay = Cells.find(level, host, hit.getOverlayId());
         if (overlay == null) {
             target = null;
-            progress = 0.0F;
+            progress = 0;
             return false;
         }
+
         progress += OverlayContext.call(level, host, overlay, () -> overlay.getState().getDestroyProgress(player, level, host));
         OverlayEffects.hit(level, host, overlay, hit.getDirection());
-        if (progress >= 1.0F) {
+
+        if (progress >= 1) {
             send(host, overlay, BreakOverlay.Phase.FINISH);
             destroy(minecraft, level, host, overlay);
             target = null;
-            progress = 0.0F;
-            gameMode.offgrid$setDestroyDelay(DESTROY_DELAY);
+            progress = 0;
+            gameMode.offgrid$setDestroyDelay(5);
         }
+
         return true;
     }
 
@@ -110,8 +113,9 @@ public final class OverlayBreaking {
         if (minecraft.level != null) {
             OffgridNetwork.sendToServer(OffgridNetwork.BREAK, new BreakOverlay(target.getBlockPos().asLong(), target.getOverlayId(), BreakOverlay.Phase.ABORT));
         }
+
         target = null;
-        progress = 0.0F;
+        progress = 0;
     }
 
     private static boolean mayBreak(Minecraft minecraft, ClientLevel level, LocalPlayer player, BlockPos host, Overlay overlay) {

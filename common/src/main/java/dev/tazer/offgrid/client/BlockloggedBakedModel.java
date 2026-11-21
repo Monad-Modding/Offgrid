@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public final class BlockloggedBakedModel implements BakedModel {
+public class BlockloggedBakedModel implements BakedModel {
 
     private final BakedModel model;
     private final List<AABB> open;

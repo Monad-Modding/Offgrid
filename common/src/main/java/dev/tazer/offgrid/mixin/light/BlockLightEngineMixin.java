@@ -20,6 +20,7 @@ public abstract class BlockLightEngineMixin {
         if (index == null || index.isEmpty()) return original;
         Cell cell = index.getCell(packedPos);
         if (cell == null || cell.light() <= original) return original;
-        return ((LayerLightSectionStorageAccessor) engine.offgrid$getStorage()).offgrid$lightOnInSection(SectionPos.blockToSection(packedPos)) ? cell.light() : original;
+        if (((LayerLightSectionStorageAccessor) engine.offgrid$getStorage()).offgrid$lightOnInSection(SectionPos.blockToSection(packedPos))) return cell.light();
+        return original;
     }
 }

@@ -7,14 +7,16 @@ import net.fabricmc.loader.api.ModContainer;
 import java.util.HashSet;
 import java.util.Set;
 
-public final class FabricMixinPlugin extends ConditionalMixinPlugin {
+public class FabricMixinPlugin extends ConditionalMixinPlugin {
 
     @Override
     protected Set<String> findModIds() {
         Set<String> ids = new HashSet<>();
+
         for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
             ids.add(mod.getMetadata().getId());
         }
+
         return ids;
     }
 

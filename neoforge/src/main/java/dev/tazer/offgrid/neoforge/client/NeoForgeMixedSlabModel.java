@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class NeoForgeMixedSlabModel implements BlockStateModel {
+public class NeoForgeMixedSlabModel implements BlockStateModel {
 
     private final BlockStateModel fallback;
 
@@ -38,6 +38,7 @@ public final class NeoForgeMixedSlabModel implements BlockStateModel {
         MixedSlabs.viewingHalf(level, pos, entity.getFirst(), entity.getHalfEntity(false), () -> model(entity.getFirst()).collectParts(level, pos, entity.getFirst(), random, parts));
         List<BlockStateModelPart> second = new ArrayList<>();
         MixedSlabs.viewingHalf(level, pos, entity.getSecond(), entity.getHalfEntity(true), () -> model(entity.getSecond()).collectParts(level, pos, entity.getSecond(), random, second));
+
         for (BlockStateModelPart part : second) {
             parts.add(new RetintedPart(part));
         }
@@ -50,8 +51,12 @@ public final class NeoForgeMixedSlabModel implements BlockStateModel {
 
     @Override
     public Material.Baked particleMaterial(BlockAndTintGetter level, BlockPos pos, BlockState state) {
-        if (!(level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) || !entity.isComplete()) return this.fallback.particleMaterial();
-        return model(entity.getSecond()).particleMaterial(level, pos, entity.getSecond());
+        if (level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) {
+            if (!entity.isComplete()) return this.fallback.particleMaterial();
+            return model(entity.getSecond()).particleMaterial(level, pos, entity.getSecond());
+        }
+
+        return this.fallback.particleMaterial();
     }
 
     @Override
@@ -63,11 +68,15 @@ public final class NeoForgeMixedSlabModel implements BlockStateModel {
     @Override
     @BakedQuad.MaterialFlags
     public int materialFlags(BlockAndTintGetter level, BlockPos pos, BlockState state) {
-        if (!(level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) || !entity.isComplete()) return this.fallback.materialFlags();
-        return model(entity.getFirst()).materialFlags(level, pos, entity.getFirst()) | model(entity.getSecond()).materialFlags(level, pos, entity.getSecond());
+        if (level.getBlockEntity(pos) instanceof MixedSlabBlockEntity entity) {
+            if (!entity.isComplete()) return this.fallback.materialFlags();
+            return model(entity.getFirst()).materialFlags(level, pos, entity.getFirst()) | model(entity.getSecond()).materialFlags(level, pos, entity.getSecond());
+        }
+
+        return this.fallback.materialFlags();
     }
 
-    private static BlockStateModel model(BlockState state) {
+    private BlockStateModel model(BlockState state) {
         return Minecraft.getInstance().getModelManager().getBlockStateModelSet().get(state);
     }
 
@@ -82,15 +91,17 @@ public final class NeoForgeMixedSlabModel implements BlockStateModel {
         return new BakedQuad(quad.position0(), quad.position1(), quad.position2(), quad.position3(), quad.packedUV0(), quad.packedUV1(), quad.packedUV2(), quad.packedUV3(), quad.direction(), retinted, quad.bakedNormals(), quad.bakedColors());
     }
 
-    private record RetintedPart(BlockStateModelPart part) implements BlockStateModelPart {
+    public record RetintedPart(BlockStateModelPart part) implements BlockStateModelPart {
 
         @Override
         public List<BakedQuad> getQuads(@Nullable Direction direction) {
             List<BakedQuad> quads = this.part.getQuads(direction);
             List<BakedQuad> retinted = new ArrayList<>(quads.size());
+
             for (BakedQuad quad : quads) {
                 retinted.add(retint(quad));
             }
+
             return retinted;
         }
 
@@ -141,7 +152,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class NeoForgeMixedSlabModel implements IDynamicBakedModel {
+public class NeoForgeMixedSlabModel implements IDynamicBakedModel {
 
     private final BakedModel fallback;
 
@@ -149,7 +160,7 @@ public final class NeoForgeMixedSlabModel implements IDynamicBakedModel {
         this.fallback = fallback;
     }
 
-    private static BakedModel modelOf(BlockState state) {
+    private BakedModel modelOf(BlockState state) {
         return Minecraft.getInstance().getBlockRenderer().getBlockModel(state);
     }
 
@@ -159,16 +170,17 @@ public final class NeoForgeMixedSlabModel implements IDynamicBakedModel {
         return entity.getModelData().derive().with(NeoForgeMixedSlabBlockEntity.FIRST_DATA, halfData(level, pos, entity, false)).with(NeoForgeMixedSlabBlockEntity.SECOND_DATA, halfData(level, pos, entity, true)).build();
     }
 
-    private static ModelData halfData(BlockAndTintGetter level, BlockPos pos, MixedSlabBlockEntity entity, boolean second) {
+    private ModelData halfData(BlockAndTintGetter level, BlockPos pos, MixedSlabBlockEntity entity, boolean second) {
         BlockState half = entity.getHalf(second);
         BlockEntity halfEntity = entity.getHalfEntity(second);
         if (half == null || halfEntity == null) return ModelData.EMPTY;
         AtomicReference<ModelData> data = new AtomicReference<>(ModelData.EMPTY);
         MixedSlabs.viewingHalf(level, pos, half, halfEntity, () -> data.set(modelOf(half).getModelData(level, pos, half, halfEntity.getModelData())));
+
         return data.get();
     }
 
-    private static ModelData halfData(ModelData data, boolean second) {
+    private ModelData halfData(ModelData data, boolean second) {
         ModelData half = data.get(second ? NeoForgeMixedSlabBlockEntity.SECOND_DATA : NeoForgeMixedSlabBlockEntity.FIRST_DATA);
         return half == null ? ModelData.EMPTY : half;
     }
@@ -181,12 +193,14 @@ public final class NeoForgeMixedSlabModel implements IDynamicBakedModel {
         List<BakedQuad> quads = new ArrayList<>();
         this.addHalf(quads, first, false, side, random, halfData(data, false), renderType);
         this.addHalf(quads, second, true, side, random, halfData(data, true), renderType);
+
         return quads;
     }
 
     private void addHalf(List<BakedQuad> quads, BlockState half, boolean second, @Nullable Direction side, RandomSource random, ModelData data, @Nullable RenderType renderType) {
         BakedModel model = modelOf(half);
         if (renderType != null && !model.getRenderTypes(half, random, data).contains(renderType)) return;
+
         for (BakedQuad quad : model.getQuads(half, side, random, data, renderType)) {
             quads.add(second && quad.isTinted() ? new BakedQuad(quad.getVertices(), quad.getTintIndex() + MixedSlabColors.SECOND_TINT_OFFSET, quad.getDirection(), quad.getSprite(), quad.isShade(), quad.hasAmbientOcclusion()) : quad);
         }

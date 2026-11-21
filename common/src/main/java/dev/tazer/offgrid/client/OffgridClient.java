@@ -34,10 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public final class OffgridClient {
-
-    private OffgridClient() {
-    }
+public class OffgridClient {
 
     public static void init() {
         Cells.setClientListener(ClientCells::markDirty);
@@ -58,20 +55,25 @@ public final class OffgridClient {
         Cell cell = Cells.get(level, pos);
         if (cell == null || cell.isEmpty()) return List.of();
         List<String> lines = new ArrayList<>();
+
         if (cell.offset() != null) {
             lines.add("offset: " + pixels(cell.offset()));
         }
+
         for (Overlay overlay : cell.overlays()) {
             BlockState state = overlay.getState();
             lines.add("");
             lines.add(ChatFormatting.UNDERLINE + "Targeted Overlay: " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ());
             lines.add(String.valueOf(BuiltInRegistries.BLOCK.getKey(state.getBlock())));
+
             for (Property<?> property : state.getProperties()) {
                 lines.add(property.getName() + ": " + valueName(state, property));
             }
+
             if (!Overlays.isZero(overlay.getOffset())) {
                 lines.add("offset: " + pixels(overlay.getOffset()));
             }
+
             if (Blocklogging.at(level, pos, overlay) != null) {
                 lines.add("blocklogged: " + ChatFormatting.GREEN + "true");
             }
@@ -79,6 +81,7 @@ public final class OffgridClient {
             state.getTags().map(tag -> "#" + tag.location()).forEach(lines::add);
             //?}
         }
+
         return lines;
     }
 
@@ -95,7 +98,7 @@ public final class OffgridClient {
     }
 
     private static String pixel(double value) {
-        double pixels = value * 16.0;
+        double pixels = value * 16;
         long whole = Math.round(pixels);
         return Math.abs(pixels - whole) < 1.0E-4 ? Long.toString(whole) : String.format(Locale.ROOT, "%.2f", pixels);
     }
@@ -104,6 +107,7 @@ public final class OffgridClient {
         ClientLevel level = Minecraft.getInstance().level;
         if (level != null && level.getEntity(packet.entity()) instanceof SurfaceMounted mounted) {
             mounted.offgrid$setSurfaceOffset(packet.offset());
+
             if (mounted instanceof HangingEntity hanging) {
                 hanging.getPositionCodec().setBase(Vec3.atLowerCornerOf(hanging.getPos()).add(packet.offset()));
             }

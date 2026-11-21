@@ -7,10 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
 
-public final class OverlayContext {
-
-    private OverlayContext() {
-    }
+public class OverlayContext {
 
     @Nullable
     public static Frame current() {
@@ -38,6 +35,7 @@ public final class OverlayContext {
 
     public static void run(Level level, BlockPos host, Overlay overlay, Runnable action) {
         Frame frame = push(level, host, overlay);
+
         try {
             action.run();
         } finally {
@@ -47,6 +45,7 @@ public final class OverlayContext {
 
     public static <T> T call(Level level, BlockPos host, Overlay overlay, Supplier<T> action) {
         Frame frame = push(level, host, overlay);
+
         try {
             return action.get();
         } finally {
@@ -58,6 +57,7 @@ public final class OverlayContext {
         Frame current = Scope.get(Scope.FRAME);
         if (current == null) return action.get();
         Frame frame = enter(new Frame(null, BlockPos.ZERO, null, current));
+
         try {
             return action.get();
         } finally {
@@ -77,7 +77,7 @@ public final class OverlayContext {
         return frame;
     }
 
-    public static final class Frame {
+    public static class Frame {
 
         @Nullable
         private final Level level;

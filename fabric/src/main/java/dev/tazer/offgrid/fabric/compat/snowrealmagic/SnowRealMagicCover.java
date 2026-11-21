@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import snownee.snow.block.SnowVariant;
 
-public final class SnowRealMagicCover implements Covers.Cover {
+public class SnowRealMagicCover implements Covers.Cover {
 
     @Override
     public boolean covers(BlockState state) {

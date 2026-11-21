@@ -6,10 +6,7 @@ import dev.tazer.offgrid.forge.compat.oculus.OculusMeshAppender;
 import net.minecraft.core.BlockPos;
 import org.embeddedt.embeddium.api.ChunkMeshEvent;
 
-public final class EmbeddiumMeshing {
-
-    private EmbeddiumMeshing() {
-    }
+public class EmbeddiumMeshing {
 
     public static void register() {
         ChunkMeshEvent.BUS.addListener(EmbeddiumMeshing::onChunkMesh);
@@ -18,10 +15,12 @@ public final class EmbeddiumMeshing {
     private static void onChunkMesh(ChunkMeshEvent event) {
         BlockPos origin = event.getSectionOrigin().origin();
         if (!OverlayGeometry.hasOverlays(event.getWorld(), origin)) return;
+
         if (Integrations.isLoaded(Integrations.OCULUS)) {
             event.addMeshAppender(OculusMeshAppender::render);
             return;
         }
+
         event.addMeshAppender(context -> ForgeOverlayGeometry.render(context.blockRenderView(), context.sectionOrigin().origin(), context.vertexConsumerProvider()));
     }
 }
